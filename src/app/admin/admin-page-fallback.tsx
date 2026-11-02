@@ -1,3 +1,4 @@
+import { AdminPageIntro } from "./admin-page-intro";
 import type { ReactNode } from "react";
 
 /**
@@ -12,6 +13,7 @@ export function AdminPageFallback({
   filters,
   rows: _rows = 0,
   list,
+  action,
 }: {
   title?: string;
   description?: string;
@@ -19,15 +21,13 @@ export function AdminPageFallback({
   rows?: number;
   /** The page's own row placeholder (list-skeletons.tsx), shaped like its real rows. */
   list?: ReactNode;
+  /** The page top's button, when the page has one (same size, so the title doesn't move). */
+  action?: ReactNode;
 }) {
   return (
     <div data-page-loading="" aria-busy="true" className="flex flex-col gap-6 px-4 py-6 md:px-6">
-      {title || description ? (
-        <div className="flex flex-col gap-1.5">
-          {title ? <h1 className="font-semibold text-lg tracking-tight">{title}</h1> : null}
-          {description ? <p className="text-sm text-muted-foreground">{description}</p> : null}
-        </div>
-      ) : null}
+      {/* The same page top as the page (its animated band in the dashboard), so nothing moves when it arrives. */}
+      {title ? <AdminPageIntro action={action} description={description ?? ""} title={title} /> : null}
       {/* When the list was empty last time, its rows hide themselves and the
           empty box's shape shows instead (RememberedRows); the filters hide
           too, as on the real empty page. */}

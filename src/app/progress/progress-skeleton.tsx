@@ -78,7 +78,17 @@ export function ProgressSkeleton() {
             with the same count sit together — a draw, not a place. People with none are not listed.
           </p>
         </div>
-        <NameRowsSkeleton remember="progress" />
+        {/* As the board (progress-board.tsx): a count strip, then the names. */}
+        <div className="flex flex-col" data-edge-board="">
+          <div className="flex flex-col">
+            <section className="flex flex-col" data-edge-group="">
+              <div className="flex flex-col gap-1" data-edge-group-head="">
+                <SkLine className="w-14" size="xs" />
+              </div>
+              <NameRowsSkeleton remember="progress" />
+            </section>
+          </div>
+        </div>
       </section>
     </>
   );
@@ -108,7 +118,8 @@ export function ProgressPersonalSkeleton() {
           max={12}
           remember="progress-badges"
           rows={Array.from({ length: 12 }, (_, i) => (
-            <Skeleton className="h-5 w-16 rounded-md" key={i} />
+            // A badge's size (ui/badge.tsx: 22px tall, small words), in a few widths.
+            <Skeleton className={`h-5.5 rounded-md ${["w-18", "w-14", "w-36"][i % 3]}`} key={i} />
           ))}
         />
       </section>

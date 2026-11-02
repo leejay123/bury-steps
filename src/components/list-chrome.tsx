@@ -1,6 +1,6 @@
 "use client";
 
-import { AlertCircle, Search } from "lucide-react";
+import { AlertCircle, Mail, Search } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { InputGroup, InputGroupAddon, InputGroupInput } from "@/components/ui/input-group";
 import { Label } from "@/components/ui/label";
@@ -8,6 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { SkLine, WalkRowsSkeleton } from "@/components/list-skeletons";
 import { RememberedRows } from "@/components/remembered-rows";
+import { WalkTableCardSkeleton } from "@/components/walk-table-card";
 import { RememberedCount } from "@/components/remembered-text";
 
 /** Search box matching the real lists — shown while the rows load, not a grey bar. */
@@ -75,7 +76,11 @@ export function WalkListChrome() {
       </div>
       {
         <TabsContent className="mt-4" value="upcoming">
-          <div className="flex flex-col gap-4 has-[>[data-reveal-list][hidden]]:hidden">
+          {/* The shadcn.io design's table (walk-table-card.tsx), as its placeholder. */}
+          <div className="hidden [html[data-design=shadcnio]_&]:contents">
+            <WalkTableCardSkeleton remember="admin-walks" />
+          </div>
+          <div className="flex flex-col gap-4 has-[>[data-reveal-list][hidden]]:hidden [html[data-design=shadcnio]_&]:hidden">
             <div className="flex flex-col gap-3 sm:flex-row sm:items-end" data-edge-bar="">
               <ListSearch label="Search upcoming walks" placeholder="Search by walk or meeting point…" />
               <FilterSelect
@@ -206,6 +211,11 @@ export function MessagesFilterChrome() {
         value="all"
         width="sm:w-40"
       />
+      {/* As the real bar (contact-messages-list.tsx): Unread only, off. */}
+      <Button className="shrink-0 gap-1.5" tabIndex={-1} type="button" variant="outline">
+        <Mail />
+        Unread only
+      </Button>
     </div>
   );
 }

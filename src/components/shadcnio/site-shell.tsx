@@ -10,7 +10,7 @@ import { EfferdTopTools } from "./efferd-top-tools";
 import { SetPageCrumb } from "./page-crumb";
 import { Guides } from "./parts";
 import type { SearchItem } from "./search-panel";
-import { SIDEBAR_KEY, SIDEBAR_TOGGLE_EVENT } from "./sidebar-state";
+import { SIDEBAR_KEY, SIDEBAR_TOGGLE_EVENT, syncGuestDash } from "./sidebar-state";
 
 /**
  * Every page in the shadcn.io design except the homepage, laid out as
@@ -57,6 +57,11 @@ export function ShadcnSiteShell({
     setDrawerPath(path);
     setDrawer(false);
   }
+
+  // A visitor gets the dashboard's look on a shared walk page only (sidebar-state.ts).
+  useEffect(() => {
+    if (path) syncGuestDash(path);
+  }, [path]);
 
   useEffect(() => {
     let animating = 0;
@@ -162,7 +167,7 @@ export function ShadcnSiteShell({
         {nav}
       </div>
       <div
-        className="relative min-h-[calc(100svh-var(--header-height))] w-full flex-1 items-start bg-background px-0 [--top-spacing:0] lg:grid lg:h-svh lg:min-h-0 lg:grid-cols-[var(--sidebar-width)_minmax(0,1fr)] lg:overflow-hidden lg:[--top-spacing:--spacing(8)]"
+        className="relative min-h-[calc(100svh-var(--header-height))] w-full flex-1 items-start bg-background px-0 [--top-spacing:0] lg:grid lg:h-svh lg:min-h-0 lg:grid-cols-[var(--sidebar-width)_minmax(0,1fr)] lg:overflow-clip lg:[--top-spacing:--spacing(8)]"
         data-slot="docs-shell"
       >
         <aside

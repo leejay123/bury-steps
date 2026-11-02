@@ -22,4 +22,17 @@ export type SidebarMe = { role: "owner" | "organiser" | "member"; name: string; 
 /** Applies a SidebarMe to <html> (also run by the script below, before the first paint). */
 export const APPLY_ME = `function(m){var d=document.documentElement;d.setAttribute("data-sb-role",m.role);d.style.setProperty("--me-name",JSON.stringify(String(m.name||"")));d.style.setProperty("--me-email",JSON.stringify(String(m.email||"")));if(m.image)d.style.setProperty("--me-img","url("+JSON.stringify(String(m.image))+")");else d.style.removeProperty("--me-img")}`;
 
-export const SIDEBAR_SCRIPT = `try{var d=document.documentElement;if(/(?:^|; )(?:${SIGNED_IN_COOKIE}=1|bs-nav=[^;])/.test(document.cookie))d.setAttribute("data-remembered-in","");if(localStorage.getItem("${SIDEBAR_KEY}")==="collapsed")d.setAttribute("data-docs-sidebar","collapsed");var c=document.cookie.match(/(?:^|; )${ME_COOKIE}=([^;]*)/);if(c)(${APPLY_ME})(JSON.parse(decodeURIComponent(c[1])))}catch(e){}`;
+/**
+ * A shared walk link (/w/<token>) seen by someone signed out: the dashboard's
+ * look too (html[data-guest-dash]), with a visitor's short menu and Sign in.
+ */
+export const GUEST_DASH_PATH = /^\/w\/[^/]+\/?$/;
+
+/** Sets html[data-guest-dash] for this page (a new page, or someone signing in or out). */
+export function syncGuestDash(path: string) {
+  const d = document.documentElement;
+  if (!d.hasAttribute("data-remembered-in") && GUEST_DASH_PATH.test(path)) d.setAttribute("data-guest-dash", "");
+  else d.removeAttribute("data-guest-dash");
+}
+
+export const SIDEBAR_SCRIPT = `try{var d=document.documentElement;if(/(?:^|; )(?:${SIGNED_IN_COOKIE}=1|bs-nav=[^;])/.test(document.cookie))d.setAttribute("data-remembered-in","");else if(${GUEST_DASH_PATH}.test(location.pathname))d.setAttribute("data-guest-dash","");if(localStorage.getItem("${SIDEBAR_KEY}")==="collapsed")d.setAttribute("data-docs-sidebar","collapsed");var c=document.cookie.match(/(?:^|; )${ME_COOKIE}=([^;]*)/);if(c)(${APPLY_ME})(JSON.parse(decodeURIComponent(c[1])))}catch(e){}`;

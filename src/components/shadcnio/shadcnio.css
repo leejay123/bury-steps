@@ -652,18 +652,18 @@ html[data-promo-bar] .globalfooter, html[data-promo-bar] [data-slot="docs-main"]
 .scrollbar-none, [data-slot="docs-sidebar-nav"] { -ms-overflow-style: none; scrollbar-width: none; }
 [data-slot="docs-sidebar-nav"]::-webkit-scrollbar { width: 0; height: 0; display: none; }
 
-/* Bury Steps: only signed-in members get the sidebar (html[data-remembered-in], set before
+/* Bury Steps: only signed-in members get the sidebar (html:is([data-remembered-in], [data-guest-dash]), set before
    the first paint). Everyone else, and the legal pages (they mark themselves with
    data-shadcn-plain), get the header, the page and the footer: the frame lies flat and
    scrolls with the window. */
-:is(html:not([data-remembered-in]) [data-shadcnio-shell], html[data-page-kind="plain"] [data-shadcnio-shell]) :is([data-slot="docs-sidebar"], [data-slot="docs-sidebar-edge"], [data-slot="docs-sidebar-drawer"], .globalnav-leading) { display: none !important; }
-:is(html:not([data-remembered-in]) [data-shadcnio-shell], html[data-page-kind="plain"] [data-shadcnio-shell]) .globalnav-with-leading .globalnav-content { padding-inline-start: max(var(--gn-gutter), env(safe-area-inset-left)); }
-:is(html:not([data-remembered-in]) [data-shadcnio-shell], html[data-page-kind="plain"] [data-shadcnio-shell]) [data-slot="docs-header"] { display: block; position: sticky; top: 0; z-index: 40; }
-:is(html:not([data-remembered-in]) [data-shadcnio-shell], html[data-page-kind="plain"] [data-shadcnio-shell]) [data-slot="docs-shell"] { display: block; height: auto; overflow: visible; }
-:is(html:not([data-remembered-in]) [data-shadcnio-shell], html[data-page-kind="plain"] [data-shadcnio-shell]) [data-slot="docs-main"] { height: auto; padding-top: 0; overflow: visible; }
+:is(html:not([data-remembered-in], [data-guest-dash]) [data-shadcnio-shell], html[data-page-kind="plain"] [data-shadcnio-shell]) :is([data-slot="docs-sidebar"], [data-slot="docs-sidebar-edge"], [data-slot="docs-sidebar-drawer"], .globalnav-leading) { display: none !important; }
+:is(html:not([data-remembered-in], [data-guest-dash]) [data-shadcnio-shell], html[data-page-kind="plain"] [data-shadcnio-shell]) .globalnav-with-leading .globalnav-content { padding-inline-start: max(var(--gn-gutter), env(safe-area-inset-left)); }
+:is(html:not([data-remembered-in], [data-guest-dash]) [data-shadcnio-shell], html[data-page-kind="plain"] [data-shadcnio-shell]) [data-slot="docs-header"] { display: block; position: sticky; top: 0; z-index: 40; }
+:is(html:not([data-remembered-in], [data-guest-dash]) [data-shadcnio-shell], html[data-page-kind="plain"] [data-shadcnio-shell]) [data-slot="docs-shell"] { display: block; height: auto; overflow: visible; }
+:is(html:not([data-remembered-in], [data-guest-dash]) [data-shadcnio-shell], html[data-page-kind="plain"] [data-shadcnio-shell]) [data-slot="docs-main"] { height: auto; padding-top: 0; overflow: visible; }
 /* Members' pages have no footer, as on their dashboard (the legal pages keep it). */
-html[data-remembered-in]:not([data-page-kind="plain"]) [data-shadcnio-shell] [data-slot="docs-footer"] { display: none; }
-html[data-remembered-in]:not([data-page-kind="plain"]) [data-shadcnio-shell] [data-slot="docs-end"] { display: block; }
+html:is([data-remembered-in], [data-guest-dash]):not([data-page-kind="plain"]) [data-shadcnio-shell] [data-slot="docs-footer"] { display: none; }
+html:is([data-remembered-in], [data-guest-dash]):not([data-page-kind="plain"]) [data-shadcnio-shell] [data-slot="docs-end"] { display: block; }
 /* The homepage draws its whole own page (header, footer and all): the frame steps aside. */
 html[data-page-kind="home"] [data-shadcnio-shell] :is([data-slot="docs-header"], [data-slot="docs-sidebar"], [data-slot="docs-sidebar-edge"], [data-slot="docs-sidebar-drawer"], [data-slot="docs-footer"], [data-slot="docs-end"], [data-slot="docs-marks"]) { display: none !important; }
 /* Pages built from their sections fill the column themselves. */
@@ -690,7 +690,7 @@ html[data-page-kind="home"] [data-shadcnio-shell] :is([data-slot="docs-shell"], 
 /* ---- Every page's own head (PageTop, AdminPageIntro, Settings), as shadcn.io's page head:
    a small capital label, a large title, a larger intro, buttons on the right and a line
    across the page underneath. Same markup as the usual look; only this design restyles it. ---- */
-:root[data-design="shadcnio"]:not([data-remembered-in]:not([data-page-kind="home"], [data-page-kind="plain"])) [data-shadcn-top] {
+:root[data-design="shadcnio"]:not(:is([data-remembered-in], [data-guest-dash]):not([data-page-kind="home"], [data-page-kind="plain"])) [data-shadcn-top] {
   position: relative;
   display: flex;
   flex-direction: column;
@@ -704,11 +704,11 @@ html[data-page-kind="home"] [data-shadcnio-shell] :is([data-slot="docs-shell"], 
   text-align: start !important;
 }
 @media (min-width: 48rem) {
-  :root[data-design="shadcnio"]:not([data-remembered-in]:not([data-page-kind="home"], [data-page-kind="plain"])) [data-shadcn-top] { flex-direction: row; align-items: flex-end; justify-content: space-between; gap: 2rem; padding-top: 1rem !important; padding-bottom: 2.5rem !important; }
+  :root[data-design="shadcnio"]:not(:is([data-remembered-in], [data-guest-dash]):not([data-page-kind="home"], [data-page-kind="plain"])) [data-shadcn-top] { flex-direction: row; align-items: flex-end; justify-content: space-between; gap: 2rem; padding-top: 1rem !important; padding-bottom: 2.5rem !important; }
 }
-:root[data-design="shadcnio"]:not([data-remembered-in]:not([data-page-kind="home"], [data-page-kind="plain"])) [data-shadcn-top]::before { content: none !important; }
+:root[data-design="shadcnio"]:not(:is([data-remembered-in], [data-guest-dash]):not([data-page-kind="home"], [data-page-kind="plain"])) [data-shadcn-top]::before { content: none !important; }
 /* Their + marks on that line are drawn by the frame (site-shell.tsx, docs-marks). */
-:root[data-design="shadcnio"]:not([data-remembered-in]:not([data-page-kind="home"], [data-page-kind="plain"])) [data-shadcn-top]::after {
+:root[data-design="shadcnio"]:not(:is([data-remembered-in], [data-guest-dash]):not([data-page-kind="home"], [data-page-kind="plain"])) [data-shadcn-top]::after {
   content: "" !important;
   position: absolute;
   inset: auto -100vw -1px -100vw !important;
@@ -717,23 +717,23 @@ html[data-page-kind="home"] [data-shadcnio-shell] :is([data-slot="docs-shell"], 
   background: none !important;
   pointer-events: none;
 }
-:root[data-design="shadcnio"]:not([data-remembered-in]:not([data-page-kind="home"], [data-page-kind="plain"])) [data-shadcn-top] > div:first-child { display: flex; flex-direction: column; gap: 0.75rem; max-width: 42rem; }
-@media (min-width: 64rem) { :root[data-design="shadcnio"]:not([data-remembered-in]:not([data-page-kind="home"], [data-page-kind="plain"])) [data-shadcn-top] > div:first-child { gap: 1rem; } }
-:root[data-design="shadcnio"]:not([data-remembered-in]:not([data-page-kind="home"], [data-page-kind="plain"])) [data-shadcn-top] [data-page-top-eyebrow] {
+:root[data-design="shadcnio"]:not(:is([data-remembered-in], [data-guest-dash]):not([data-page-kind="home"], [data-page-kind="plain"])) [data-shadcn-top] > div:first-child { display: flex; flex-direction: column; gap: 0.75rem; max-width: 42rem; }
+@media (min-width: 64rem) { :root[data-design="shadcnio"]:not(:is([data-remembered-in], [data-guest-dash]):not([data-page-kind="home"], [data-page-kind="plain"])) [data-shadcn-top] > div:first-child { gap: 1rem; } }
+:root[data-design="shadcnio"]:not(:is([data-remembered-in], [data-guest-dash]):not([data-page-kind="home"], [data-page-kind="plain"])) [data-shadcn-top] [data-page-top-eyebrow] {
   display: block !important;
   font-family: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
   font-size: 0.75rem; line-height: 1rem; font-weight: 500; letter-spacing: 0.1em; text-transform: uppercase;
   color: var(--muted-foreground);
 }
-:root[data-design="shadcnio"]:not([data-remembered-in]:not([data-page-kind="home"], [data-page-kind="plain"])) [data-shadcn-top] [data-page-top-title] {
+:root[data-design="shadcnio"]:not(:is([data-remembered-in], [data-guest-dash]):not([data-page-kind="home"], [data-page-kind="plain"])) [data-shadcn-top] [data-page-top-title] {
   font-size: 1.875rem !important; line-height: 2.25rem !important; font-weight: 600 !important;
   letter-spacing: -0.05em !important; text-wrap: balance; color: var(--foreground) !important;
 }
-@media (min-width: 48rem) { :root[data-design="shadcnio"]:not([data-remembered-in]:not([data-page-kind="home"], [data-page-kind="plain"])) [data-shadcn-top] [data-page-top-title] { font-size: 2.25rem !important; line-height: 2.5rem !important; } }
-:root[data-design="shadcnio"]:not([data-remembered-in]:not([data-page-kind="home"], [data-page-kind="plain"])) [data-shadcn-top] [data-page-top-intro] {
+@media (min-width: 48rem) { :root[data-design="shadcnio"]:not(:is([data-remembered-in], [data-guest-dash]):not([data-page-kind="home"], [data-page-kind="plain"])) [data-shadcn-top] [data-page-top-title] { font-size: 2.25rem !important; line-height: 2.5rem !important; } }
+:root[data-design="shadcnio"]:not(:is([data-remembered-in], [data-guest-dash]):not([data-page-kind="home"], [data-page-kind="plain"])) [data-shadcn-top] [data-page-top-intro] {
   font-size: 1rem !important; line-height: 1.5rem !important; text-wrap: pretty; color: var(--muted-foreground) !important;
 }
-@media (min-width: 48rem) { :root[data-design="shadcnio"]:not([data-remembered-in]:not([data-page-kind="home"], [data-page-kind="plain"])) [data-shadcn-top] [data-page-top-intro] { font-size: 1.125rem !important; line-height: 1.75rem !important; } }
+@media (min-width: 48rem) { :root[data-design="shadcnio"]:not(:is([data-remembered-in], [data-guest-dash]):not([data-page-kind="home"], [data-page-kind="plain"])) [data-shadcn-top] [data-page-top-intro] { font-size: 1.125rem !important; line-height: 1.75rem !important; } }
 
 /* ---- Their form pieces (the Contact page): fields, labels, inputs and the default button size. ---- */
 .style-nova .cn-button-size-default { height: calc(var(--spacing) * 8); gap: calc(var(--spacing) * 1.5); padding-inline: calc(var(--spacing) * 2.5); }
@@ -753,44 +753,44 @@ html[data-page-kind="home"] [data-shadcnio-shell] :is([data-slot="docs-shell"], 
 @media (min-width: 48rem) { .style-nova :is(.cn-input, .cn-textarea) { font-size: 0.875rem; line-height: calc(1.25 / .875); } }
 
 /* ---- Header: the right menu from the first paint. Both menus (and both ends: Sign in, or the
-   bell, Dashboard and avatar) are in the page; html[data-remembered-in], set before the first
+   bell, Dashboard and avatar) are in the page; html:is([data-remembered-in], [data-guest-dash]), set before the first
    paint, shows the signed-in ones (globalnav.tsx, account-tools.tsx). ---- */
 html[data-remembered-in] .globalnav [data-gn-audience="visitor"],
 html:not([data-remembered-in]) .globalnav [data-gn-audience="member"] { display: none !important; }
 html[data-remembered-in] .globalnav-menu-list { --gn-items: var(--gn-items-member) !important; }
 /* On the dashboard pages (signed in, with the sidebar) the sidebar is the menu: no top menu
    and no Dashboard button; search, Customize, light/dark, the bell and the avatar stay. */
-html[data-remembered-in]:not([data-page-kind="home"], [data-page-kind="plain"]) [data-shadcnio-shell] :is([data-gn-id="menu"], .globalnav-menutrigger, .globalnav-dashboard) { display: none !important; }
+html:is([data-remembered-in], [data-guest-dash]):not([data-page-kind="home"], [data-page-kind="plain"]) [data-shadcnio-shell] :is([data-gn-id="menu"], .globalnav-menutrigger, .globalnav-dashboard) { display: none !important; }
 
 /* ---- Signed-in pages: Efferd's app shell 2 (their layout, the site's colours). A full-height
    sidebar (16rem) that folds to its icons (3rem), a top bar inside the page with the sidebar
    button, the page's name, the bell and the avatar, and the page in their padded area up to
-   80rem wide. Chosen before the first paint from html[data-remembered-in] and the page's kind
+   80rem wide. Chosen before the first paint from html:is([data-remembered-in], [data-guest-dash]) and the page's kind
    (site-shell.tsx, efferd-sidebar.tsx). ---- */
-html[data-remembered-in]:not([data-page-kind="home"], [data-page-kind="plain"]) [data-slot="docs-header"] { display: none !important; }
-html[data-remembered-in]:not([data-page-kind="home"], [data-page-kind="plain"]) [data-slot="efferd-header"] { display: flex; }
-html[data-remembered-in]:not([data-page-kind="home"], [data-page-kind="plain"]) :is([data-slot="docs-end"], [data-slot="docs-marks"], [data-slot="guides"], [data-slot="docs-sidebar-edge"]) { display: none !important; }
-html[data-remembered-in]:not([data-page-kind="home"], [data-page-kind="plain"]) [data-slot="docs-sidebar-drawer"] aside { background: var(--background); }
+html:is([data-remembered-in], [data-guest-dash]):not([data-page-kind="home"], [data-page-kind="plain"]) [data-slot="docs-header"] { display: none !important; }
+html:is([data-remembered-in], [data-guest-dash]):not([data-page-kind="home"], [data-page-kind="plain"]) [data-slot="efferd-header"] { display: flex; }
+html:is([data-remembered-in], [data-guest-dash]):not([data-page-kind="home"], [data-page-kind="plain"]) :is([data-slot="docs-end"], [data-slot="docs-marks"], [data-slot="guides"], [data-slot="docs-sidebar-edge"]) { display: none !important; }
+html:is([data-remembered-in], [data-guest-dash]):not([data-page-kind="home"], [data-page-kind="plain"]) [data-slot="docs-sidebar-drawer"] aside { background: var(--background); }
 /* The dashboard page fills the room beside the sidebar, open or folded (a cap left wide
    empty gutters once the sidebar folded away). */
-html[data-remembered-in]:not([data-page-kind="home"], [data-page-kind="plain"]) [data-slot="docs-container"] { max-width: none; padding: 1rem; min-height: 0; }
-@media (min-width: 48rem) { html[data-remembered-in]:not([data-page-kind="home"], [data-page-kind="plain"]) [data-slot="docs-container"] { padding: 1.5rem; } }
-html[data-remembered-in]:not([data-page-kind="home"], [data-page-kind="plain"]) [data-slot="docs-column"] { border-inline: 0 !important; }
-html[data-remembered-in]:not([data-page-kind="home"], [data-page-kind="plain"]) [data-slot="docs-page"] { padding: 0 !important; }
+html:is([data-remembered-in], [data-guest-dash]):not([data-page-kind="home"], [data-page-kind="plain"]) [data-slot="docs-container"] { max-width: none; padding: 1rem; min-height: 0; }
+@media (min-width: 48rem) { html:is([data-remembered-in], [data-guest-dash]):not([data-page-kind="home"], [data-page-kind="plain"]) [data-slot="docs-container"] { padding: 1.5rem; } }
+html:is([data-remembered-in], [data-guest-dash]):not([data-page-kind="home"], [data-page-kind="plain"]) [data-slot="docs-column"] { border-inline: 0 !important; }
+html:is([data-remembered-in], [data-guest-dash]):not([data-page-kind="home"], [data-page-kind="plain"]) [data-slot="docs-page"] { padding: 0 !important; }
 @media (min-width: 64rem) {
-  html[data-remembered-in]:not([data-page-kind="home"], [data-page-kind="plain"]) [data-slot="docs-shell"] { --sidebar-width: 16rem; grid-template-columns: var(--sidebar-width) minmax(0, 1fr); }
+  html:is([data-remembered-in], [data-guest-dash]):not([data-page-kind="home"], [data-page-kind="plain"]) [data-slot="docs-shell"] { --sidebar-width: 16rem; grid-template-columns: var(--sidebar-width) minmax(0, 1fr); }
   /* The sidebar sits over its column and only it changes width when folded, so the page
      beside it isn't laid out again at every step (it glides across instead, site-shell.tsx). */
-  html[data-remembered-in]:not([data-page-kind="home"], [data-page-kind="plain"]) [data-slot="docs-sidebar"] { position: fixed; inset-block: 0; inset-inline-start: 0; width: var(--sidebar-width); margin-top: 0; height: 100svh; background: var(--background); }
+  html:is([data-remembered-in], [data-guest-dash]):not([data-page-kind="home"], [data-page-kind="plain"]) [data-slot="docs-sidebar"] { position: fixed; inset-block: 0; inset-inline-start: 0; width: var(--sidebar-width); margin-top: 0; height: 100svh; background: var(--background); }
   html[data-sidebar-animating] [data-slot="docs-sidebar"] { transition: width .2s linear; }
-  html[data-remembered-in]:not([data-page-kind="home"], [data-page-kind="plain"]) [data-slot="docs-main"] { padding-top: 0; }
-  html[data-remembered-in][data-docs-sidebar="collapsed"]:not([data-page-kind="home"], [data-page-kind="plain"]) [data-slot="docs-shell"] { --sidebar-width: 3rem; grid-template-columns: 3rem minmax(0, 1fr); }
-  html[data-remembered-in][data-docs-sidebar="collapsed"]:not([data-page-kind="home"], [data-page-kind="plain"]) [data-slot="docs-sidebar"] { visibility: visible; pointer-events: auto; transition: none; }
-  html[data-remembered-in][data-docs-sidebar="collapsed"]:not([data-page-kind="home"], [data-page-kind="plain"]) [data-slot="docs-sidebar"] [data-efferd-button] { width: 2rem; height: 2rem; padding: 0.5rem; }
-  html[data-remembered-in][data-docs-sidebar="collapsed"]:not([data-page-kind="home"], [data-page-kind="plain"]) [data-slot="docs-sidebar"] [data-efferd-button] > :not(:first-child) { display: none; }
-  html[data-remembered-in][data-docs-sidebar="collapsed"]:not([data-page-kind="home"], [data-page-kind="plain"]) [data-slot="docs-sidebar"] [data-slot="efferd-nav"] > div > [data-efferd-label] { margin-top: -2rem; opacity: 0; }
-  html[data-remembered-in][data-docs-sidebar="collapsed"]:not([data-page-kind="home"], [data-page-kind="plain"]) [data-slot="docs-sidebar"] [data-efferd-foot] > [data-efferd-label] { display: none; }
-  html[data-remembered-in][data-docs-sidebar="collapsed"]:not([data-page-kind="home"], [data-page-kind="plain"]) [data-slot="docs-sidebar"] [data-slot="efferd-nav"] { overflow: hidden; }
+  html:is([data-remembered-in], [data-guest-dash]):not([data-page-kind="home"], [data-page-kind="plain"]) [data-slot="docs-main"] { padding-top: 0; }
+  html:is([data-remembered-in], [data-guest-dash])[data-docs-sidebar="collapsed"]:not([data-page-kind="home"], [data-page-kind="plain"]) [data-slot="docs-shell"] { --sidebar-width: 3rem; grid-template-columns: 3rem minmax(0, 1fr); }
+  html:is([data-remembered-in], [data-guest-dash])[data-docs-sidebar="collapsed"]:not([data-page-kind="home"], [data-page-kind="plain"]) [data-slot="docs-sidebar"] { visibility: visible; pointer-events: auto; transition: none; }
+  html:is([data-remembered-in], [data-guest-dash])[data-docs-sidebar="collapsed"]:not([data-page-kind="home"], [data-page-kind="plain"]) [data-slot="docs-sidebar"] [data-efferd-button] { width: 2rem; height: 2rem; padding: 0.5rem; }
+  html:is([data-remembered-in], [data-guest-dash])[data-docs-sidebar="collapsed"]:not([data-page-kind="home"], [data-page-kind="plain"]) [data-slot="docs-sidebar"] [data-efferd-button] > :not(:first-child) { display: none; }
+  html:is([data-remembered-in], [data-guest-dash])[data-docs-sidebar="collapsed"]:not([data-page-kind="home"], [data-page-kind="plain"]) [data-slot="docs-sidebar"] [data-slot="efferd-nav"] > div > [data-efferd-label] { margin-top: -2rem; opacity: 0; }
+  html:is([data-remembered-in], [data-guest-dash])[data-docs-sidebar="collapsed"]:not([data-page-kind="home"], [data-page-kind="plain"]) [data-slot="docs-sidebar"] [data-efferd-foot] > [data-efferd-label] { display: none; }
+  html:is([data-remembered-in], [data-guest-dash])[data-docs-sidebar="collapsed"]:not([data-page-kind="home"], [data-page-kind="plain"]) [data-slot="docs-sidebar"] [data-slot="efferd-nav"] { overflow: hidden; }
 }
 @media (prefers-reduced-motion: reduce) { html[data-sidebar-animating] [data-slot="docs-sidebar"] { transition: none; } }
 /* The search and Customize panels opened from the signed-in top bar: the main header's
@@ -798,17 +798,17 @@ html[data-remembered-in]:not([data-page-kind="home"], [data-page-kind="plain"]) 
 [data-efferd-pop] { --gn-ease: cubic-bezier(.4, 0, .6, 1); --gn-color: color-mix(in srgb, var(--foreground) 80%, transparent); --gn-color-secondary: color-mix(in srgb, var(--foreground) 80%, var(--background)); --gn-color-hover: var(--foreground); --gn-color-tertiary: var(--muted-foreground); --gn-rule: var(--border); --gn-focus: var(--ring); --gn-accent: var(--primary); font-size: 17px; }
 [data-efferd-pop][data-search-pop] { padding: 1.25rem 1.5rem; }
 [data-slot="efferd-nav"] { scrollbar-width: thin; scrollbar-color: color-mix(in oklab, var(--foreground) 18%, transparent) transparent; }
-html.dark[data-remembered-in]:not([data-page-kind="home"], [data-page-kind="plain"]) [data-slot="docs-sidebar"] { background: radial-gradient(60% 18% at 10% 0%, color-mix(in oklab, var(--foreground) 8%, transparent), transparent), var(--background); }
+html.dark:is([data-remembered-in], [data-guest-dash]):not([data-page-kind="home"], [data-page-kind="plain"]) [data-slot="docs-sidebar"] { background: radial-gradient(60% 18% at 10% 0%, color-mix(in oklab, var(--foreground) 8%, transparent), transparent), var(--background); }
 [data-slot="efferd-header"] { --gn-background-opened: var(--background); }
 [data-slot="efferd-header"] .globalnav-customize-dot { top: 3px; inset-inline-end: 3px; }
 [data-efferd-pop] .globalnav-group-header { opacity: 1; transform: none; }
-@media (min-width: 64rem) { html[data-remembered-in][data-docs-sidebar="collapsed"]:not([data-page-kind="home"], [data-page-kind="plain"]) [data-slot="docs-sidebar"] [data-efferd-sub] { display: none; } }
+@media (min-width: 64rem) { html:is([data-remembered-in], [data-guest-dash])[data-docs-sidebar="collapsed"]:not([data-page-kind="home"], [data-page-kind="plain"]) [data-slot="docs-sidebar"] [data-efferd-sub] { display: none; } }
 
 /* ---- Signed-in pages' tops: a short version of the homepage hero (their classes' sizes): the
    moving letters spelling the page's name behind (page-top-field.tsx), a small grey line, the
    title, the grey intro and the page's button underneath, centred, edge to edge across the
    page with a line under it. ---- */
-html[data-remembered-in]:not([data-page-kind="home"], [data-page-kind="plain"]) [data-shadcn-top] {
+html:is([data-remembered-in], [data-guest-dash]):not([data-page-kind="home"], [data-page-kind="plain"]) [data-shadcn-top] {
   position: relative !important; isolation: isolate; overflow: hidden;
   display: flex !important; flex-direction: column !important; align-items: center !important; justify-content: center !important;
   gap: 1.25rem !important; text-align: center !important;
@@ -817,41 +817,43 @@ html[data-remembered-in]:not([data-page-kind="home"], [data-page-kind="plain"]) 
 }
 /* From tablets up the title is larger. It stays the top of the page card (one line under
    it), not a second bordered card. */
-@media (min-width: 48rem) { html[data-remembered-in]:not([data-page-kind="home"], [data-page-kind="plain"]) [data-shadcn-top] { min-height: 17rem; padding: 2.5rem 3rem 2.75rem !important; } }
-html[data-remembered-in]:not([data-page-kind="home"], [data-page-kind="plain"]) [data-shadcn-top]::before, html[data-remembered-in]:not([data-page-kind="home"], [data-page-kind="plain"]) [data-shadcn-top]::after { content: none !important; }
-html[data-remembered-in]:not([data-page-kind="home"], [data-page-kind="plain"]) [data-shadcn-top] > div:not(:last-child), html[data-remembered-in]:not([data-page-kind="home"], [data-page-kind="plain"]) [data-shadcn-top] > div:only-of-type { display: flex; flex-direction: column; align-items: center; gap: 0.75rem; max-width: 48rem; margin-inline: auto; }
-html[data-remembered-in]:not([data-page-kind="home"], [data-page-kind="plain"]) [data-shadcn-top] > div > :is(p, h1, h2) { text-align: center; }
-html[data-remembered-in]:not([data-page-kind="home"], [data-page-kind="plain"]) [data-shadcn-top] [data-page-top-eyebrow] { display: block !important; color: var(--muted-foreground); font-size: 0.75rem; line-height: 1rem; font-weight: 400; margin-bottom: 0.25rem; }
-html[data-remembered-in]:not([data-page-kind="home"], [data-page-kind="plain"]) [data-shadcn-top] [data-page-top-title] { font-size: 2.25rem !important; line-height: 1.05 !important; font-weight: 600 !important; letter-spacing: -0.05em !important; text-wrap: balance; color: var(--foreground) !important; }
-@media (min-width: 48rem) { html[data-remembered-in]:not([data-page-kind="home"], [data-page-kind="plain"]) [data-shadcn-top] [data-page-top-title] { font-size: 3rem !important; } }
-html[data-remembered-in]:not([data-page-kind="home"], [data-page-kind="plain"]) [data-shadcn-top] [data-page-top-intro] { color: var(--muted-foreground) !important; font-size: 1rem !important; line-height: 1.5rem !important; max-width: 42rem; text-wrap: balance; }
-@media (min-width: 48rem) { html[data-remembered-in]:not([data-page-kind="home"], [data-page-kind="plain"]) [data-shadcn-top] [data-page-top-intro] { font-size: 1.125rem !important; line-height: 1.75rem !important; } }
-html[data-remembered-in]:not([data-page-kind="home"], [data-page-kind="plain"]) [data-shadcn-top] > div:last-child:not(:only-of-type) { display: flex; justify-content: center; }
-html[data-remembered-in]:not([data-page-kind="home"], [data-page-kind="plain"]) [data-shadcn-top] > a { align-self: center !important; }
+@media (min-width: 48rem) { html:is([data-remembered-in], [data-guest-dash]):not([data-page-kind="home"], [data-page-kind="plain"]) [data-shadcn-top] { min-height: 17rem; padding: 2.5rem 3rem 2.75rem !important; } }
+html:is([data-remembered-in], [data-guest-dash]):not([data-page-kind="home"], [data-page-kind="plain"]) [data-shadcn-top]::before, html:is([data-remembered-in], [data-guest-dash]):not([data-page-kind="home"], [data-page-kind="plain"]) [data-shadcn-top]::after { content: none !important; }
+html:is([data-remembered-in], [data-guest-dash]):not([data-page-kind="home"], [data-page-kind="plain"]) [data-shadcn-top] > div:not(:last-child), html:is([data-remembered-in], [data-guest-dash]):not([data-page-kind="home"], [data-page-kind="plain"]) [data-shadcn-top] > div:only-of-type { display: flex; flex-direction: column; align-items: center; gap: 0.75rem; max-width: 48rem; margin-inline: auto; }
+html:is([data-remembered-in], [data-guest-dash]):not([data-page-kind="home"], [data-page-kind="plain"]) [data-shadcn-top] > div > :is(p, h1, h2) { text-align: center; }
+html:is([data-remembered-in], [data-guest-dash]):not([data-page-kind="home"], [data-page-kind="plain"]) [data-shadcn-top] [data-page-top-eyebrow] { display: block !important; color: var(--muted-foreground); font-size: 0.75rem; line-height: 1rem; font-weight: 400; margin-bottom: 0.25rem; }
+html:is([data-remembered-in], [data-guest-dash]):not([data-page-kind="home"], [data-page-kind="plain"]) [data-shadcn-top] [data-page-top-title] { font-size: 2.25rem !important; line-height: 1.05 !important; font-weight: 600 !important; letter-spacing: -0.05em !important; text-wrap: balance; color: var(--foreground) !important; }
+@media (min-width: 48rem) { html:is([data-remembered-in], [data-guest-dash]):not([data-page-kind="home"], [data-page-kind="plain"]) [data-shadcn-top] [data-page-top-title] { font-size: 3rem !important; } }
+html:is([data-remembered-in], [data-guest-dash]):not([data-page-kind="home"], [data-page-kind="plain"]) [data-shadcn-top] [data-page-top-intro] { color: var(--muted-foreground) !important; font-size: 1rem !important; line-height: 1.5rem !important; max-width: 42rem; text-wrap: balance; }
+@media (min-width: 48rem) { html:is([data-remembered-in], [data-guest-dash]):not([data-page-kind="home"], [data-page-kind="plain"]) [data-shadcn-top] [data-page-top-intro] { font-size: 1.125rem !important; line-height: 1.75rem !important; } }
+html:is([data-remembered-in], [data-guest-dash]):not([data-page-kind="home"], [data-page-kind="plain"]) [data-shadcn-top] > div:last-child:not(:only-of-type) { display: flex; justify-content: center; }
+html:is([data-remembered-in], [data-guest-dash]):not([data-page-kind="home"], [data-page-kind="plain"]) [data-shadcn-top] > a { align-self: center !important; }
 /* Settings pages in the dashboard: their top runs edge to edge like the others, with the way
    back ("All settings / group") in its top corner and no second line under it. */
-html[data-remembered-in]:not([data-page-kind="home"], [data-page-kind="plain"]) [data-settings-head] { padding-block: 0 !important; }
-@media (max-width: 47.98rem) { html[data-remembered-in]:not([data-page-kind="home"], [data-page-kind="plain"]) [data-settings-head] { padding-inline: 0 !important; } }
-html[data-remembered-in]:not([data-page-kind="home"], [data-page-kind="plain"]) [data-settings-head] > div { max-width: none !important; position: relative; }
-html[data-remembered-in]:not([data-page-kind="home"], [data-page-kind="plain"]) [data-settings-divider] { display: none !important; }
-html[data-remembered-in]:not([data-page-kind="home"], [data-page-kind="plain"]) [data-settings-back] { position: absolute; top: 0.75rem; inset-inline-start: 1rem; z-index: 2; border-radius: var(--radius); background: color-mix(in oklab, var(--background) 85%, transparent); padding: 0.125rem 0.5rem; backdrop-filter: blur(4px); }
-@media (min-width: 48rem) { html[data-remembered-in]:not([data-page-kind="home"], [data-page-kind="plain"]) [data-settings-back] { inset-inline-start: 1.5rem; } }
-html[data-remembered-in]:not([data-page-kind="home"], [data-page-kind="plain"]) [data-settings-body] { padding-top: 0 !important; }
-@media (min-width: 48rem) { html[data-remembered-in]:not([data-page-kind="home"], [data-page-kind="plain"]) [data-settings-head] { padding-top: 1.5rem !important; } }
+html:is([data-remembered-in], [data-guest-dash]):not([data-page-kind="home"], [data-page-kind="plain"]) [data-settings-head] { padding-block: 0 !important; }
+@media (max-width: 47.98rem) { html:is([data-remembered-in], [data-guest-dash]):not([data-page-kind="home"], [data-page-kind="plain"]) [data-settings-head] { padding-inline: 0 !important; } }
+html:is([data-remembered-in], [data-guest-dash]):not([data-page-kind="home"], [data-page-kind="plain"]) [data-settings-head] > div { max-width: none !important; position: relative; }
+html:is([data-remembered-in], [data-guest-dash]):not([data-page-kind="home"], [data-page-kind="plain"]) [data-settings-divider] { display: none !important; }
+html:is([data-remembered-in], [data-guest-dash]):not([data-page-kind="home"], [data-page-kind="plain"]) [data-settings-back] { position: absolute; top: 0.75rem; inset-inline-start: 1rem; z-index: 2; border-radius: var(--radius); background: color-mix(in oklab, var(--background) 85%, transparent); padding: 0.125rem 0.5rem; backdrop-filter: blur(4px); }
+@media (min-width: 48rem) { html:is([data-remembered-in], [data-guest-dash]):not([data-page-kind="home"], [data-page-kind="plain"]) [data-settings-back] { inset-inline-start: 1.5rem; } }
+html:is([data-remembered-in], [data-guest-dash]):not([data-page-kind="home"], [data-page-kind="plain"]) [data-settings-body] { padding-top: 0 !important; }
+@media (min-width: 48rem) { html:is([data-remembered-in], [data-guest-dash]):not([data-page-kind="home"], [data-page-kind="plain"]) [data-settings-head] { padding-top: 1.5rem !important; } }
 /* Every signed-in page is one card, on phones as well as larger screens: one border round
    the page, its hero across the top with a line under it, the rest padded inside, and lists
    running edge to edge across the card rather than boxed inside it (no doubled borders). */
-  html[data-remembered-in]:not([data-page-kind="home"], [data-page-kind="plain"]) [data-slot="docs-page"] { border: 1px solid var(--border); border-radius: var(--radius); overflow: clip; padding: 0 1.5rem 1.5rem !important; background: var(--background); }
-  html[data-remembered-in]:not([data-page-kind="home"], [data-page-kind="plain"]) [data-slot="docs-page"] [data-shadcn-top] { margin: 0 -1.5rem 1.5rem !important; width: auto !important; max-width: none; border: 0 !important; border-bottom: 1px solid var(--border) !important; border-radius: 0 !important; }
+  html:is([data-remembered-in], [data-guest-dash]):not([data-page-kind="home"], [data-page-kind="plain"]) [data-slot="docs-page"] { border: 1px solid var(--border); border-radius: var(--radius); overflow: clip; padding: 0 1.5rem 1.5rem !important; background: var(--background); }
+  html:is([data-remembered-in], [data-guest-dash]):not([data-page-kind="home"], [data-page-kind="plain"]) [data-slot="docs-page"] [data-shadcn-top] { margin: 0 -1.5rem 1.5rem !important; width: auto !important; max-width: none; border: 0 !important; border-bottom: 1px solid var(--border) !important; border-radius: 0 !important; }
   /* The list is not a card inside the card. A set width made it stick out and
      get clipped, so the rows never met both edges (Progress uses the margin
      only, and the band grows to fill it). Rows keep their hairlines. */
-  html[data-remembered-in]:not([data-page-kind="home"], [data-page-kind="plain"]) [data-slot="docs-page"] :is([data-walk-table], [data-reveal-list], [data-edge-list]) { margin-inline: -1.5rem !important; width: auto !important; max-width: none; border: 0 !important; border-radius: 0 !important; box-shadow: none !important; overflow: visible; background: transparent; align-self: stretch; }
-  html[data-remembered-in]:not([data-page-kind="home"], [data-page-kind="plain"]) [data-slot="docs-page"] [data-page-card] { gap: 1.25rem !important; }
+  html:is([data-remembered-in], [data-guest-dash]):not([data-page-kind="home"], [data-page-kind="plain"]) [data-slot="docs-page"] :is([data-walk-table], [data-reveal-list], [data-edge-list]) { margin-inline: -1.5rem !important; width: auto !important; max-width: none; border: 0 !important; border-radius: 0 !important; box-shadow: none !important; overflow: visible; background: transparent; align-self: stretch; }
+  html:is([data-remembered-in], [data-guest-dash]):not([data-page-kind="home"], [data-page-kind="plain"]) [data-slot="docs-page"] [data-page-card] { gap: 1.25rem !important; }
   /* The Overview is already one card (its grid): no page card round it. */
-  html[data-page-kind="bare"] [data-slot="docs-page"] { border: 0 !important; padding: 0 !important; border-radius: 0 !important; overflow: visible !important; }
+  /* (As specific as the dashboard's page-card rules, plus one, or their padding won and the
+     Overview sat 24px inside every other page's card.) */
+  html[data-page-kind="bare"]:is([data-remembered-in], [data-guest-dash]):not([data-page-kind="home"]):not([data-page-kind="plain"]) [data-slot="docs-page"] { border: 0 !important; padding: 0 !important; border-radius: 0 !important; overflow: visible !important; }
 /* A list right under its tabs (Notices): no gap above it in the page card. */
-html[data-remembered-in]:not([data-page-kind="home"], [data-page-kind="plain"]) [data-slot="docs-page"] [data-edge-wrap] { padding-block: 0 !important; }
+html:is([data-remembered-in], [data-guest-dash]):not([data-page-kind="home"], [data-page-kind="plain"]) [data-slot="docs-page"] [data-edge-wrap] { padding-block: 0 !important; }
 
 /* ---- The sidebar shows at once (efferd-sidebar.tsx): links only some see follow
    html[data-sb-role] (owner, organiser or member; member until known), and the person's
@@ -871,144 +873,154 @@ html:is([data-sb-role="owner"], [data-sb-role="organiser"]) [data-sb-only="membe
    full-width strips (data-edge-bar) with one line under them; lists butt onto them;
    the page-number row (data-edge-foot) is a strip too; empty states lose their box.
    Labels over the filters stay for screen readers but are hidden, so a row is one line. ---- */
-  html[data-remembered-in]:not([data-page-kind="home"], [data-page-kind="plain"]) [data-slot="docs-page"] [data-shadcn-top] { margin-bottom: 0 !important; }
-  html[data-remembered-in]:not([data-page-kind="home"], [data-page-kind="plain"]) [data-slot="docs-page"] :has(> [data-shadcn-top]) { row-gap: 0 !important; }
-  html[data-remembered-in]:not([data-page-kind="home"], [data-page-kind="plain"]) [data-slot="docs-page"] :has(> [data-shadcn-top]) > [data-shadcn-top] ~ * { margin-top: 1.5rem; }
-  html[data-remembered-in]:not([data-page-kind="home"], [data-page-kind="plain"]) [data-slot="docs-page"] :has(> [data-shadcn-top]) > [data-shadcn-top] + :is([data-edge-top], :has([data-edge-top])) { margin-top: 0; }
-  html[data-remembered-in]:not([data-page-kind="home"], [data-page-kind="plain"]) [data-slot="docs-page"] [data-edge-bar] { margin-inline: -1.5rem !important; width: auto !important; max-width: none; padding: 0.75rem 1.5rem; border-bottom: 1px solid var(--border); border-top: 0; align-self: stretch; align-items: center !important; }
-  html[data-remembered-in]:not([data-page-kind="home"], [data-page-kind="plain"]) [data-slot="docs-page"] [data-edge-bar] label { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
-  html[data-remembered-in]:not([data-page-kind="home"], [data-page-kind="plain"]) [data-slot="docs-page"] [data-edge-bar] [data-slot="tabs-list"] { margin-block: -0.125rem; }
-  html[data-remembered-in]:not([data-page-kind="home"], [data-page-kind="plain"]) [data-slot="docs-page"] :has(> [data-edge-bar]) { row-gap: 0 !important; }
-  html[data-remembered-in]:not([data-page-kind="home"], [data-page-kind="plain"]) [data-slot="docs-page"] [data-edge-bar] ~ [data-slot="tabs-content"] { margin-top: 0 !important; }
+  html:is([data-remembered-in], [data-guest-dash]):not([data-page-kind="home"], [data-page-kind="plain"]) [data-slot="docs-page"] [data-shadcn-top] { margin-bottom: 0 !important; }
+  html:is([data-remembered-in], [data-guest-dash]):not([data-page-kind="home"], [data-page-kind="plain"]) [data-slot="docs-page"] :has(> [data-shadcn-top]) { row-gap: 0 !important; }
+  html:is([data-remembered-in], [data-guest-dash]):not([data-page-kind="home"], [data-page-kind="plain"]) [data-slot="docs-page"] :has(> [data-shadcn-top]) > [data-shadcn-top] ~ * { margin-top: 1.5rem; }
+  html:is([data-remembered-in], [data-guest-dash]):not([data-page-kind="home"], [data-page-kind="plain"]) [data-slot="docs-page"] :has(> [data-shadcn-top]) > [data-shadcn-top] + :is([data-edge-top], :has([data-edge-top])) { margin-top: 0; }
+  html:is([data-remembered-in], [data-guest-dash]):not([data-page-kind="home"], [data-page-kind="plain"]) [data-slot="docs-page"] [data-edge-bar] { margin-inline: -1.5rem !important; width: auto !important; max-width: none; padding: 0.75rem 1.5rem; border-bottom: 1px solid var(--border); border-top: 0; align-self: stretch; align-items: center !important; }
+  html:is([data-remembered-in], [data-guest-dash]):not([data-page-kind="home"], [data-page-kind="plain"]) [data-slot="docs-page"] [data-edge-bar] label { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+  html:is([data-remembered-in], [data-guest-dash]):not([data-page-kind="home"], [data-page-kind="plain"]) [data-slot="docs-page"] [data-edge-bar] [data-slot="tabs-list"] { margin-block: -0.125rem; }
+  html:is([data-remembered-in], [data-guest-dash]):not([data-page-kind="home"], [data-page-kind="plain"]) [data-slot="docs-page"] :has(> [data-edge-bar]) { row-gap: 0 !important; }
+  html:is([data-remembered-in], [data-guest-dash]):not([data-page-kind="home"], [data-page-kind="plain"]) [data-slot="docs-page"] [data-edge-bar] ~ [data-slot="tabs-content"] { margin-top: 0 !important; }
   /* A list right under a search/filter strip butts onto its line (Messages left an empty
      strip between them, the page top's space). */
-  html[data-remembered-in]:not([data-page-kind="home"], [data-page-kind="plain"]) [data-slot="docs-page"] [data-edge-bar] + :is([data-reveal-list], [data-edge-list], [data-walk-table]) { margin-top: 0 !important; }
-  html[data-remembered-in]:not([data-page-kind="home"], [data-page-kind="plain"]) [data-slot="docs-page"] [data-edge-bar] ~ :is([data-walk-table], [data-reveal-list], [data-edge-list]), html[data-remembered-in]:not([data-page-kind="home"], [data-page-kind="plain"]) [data-slot="docs-page"] [data-edge-bar] ~ [data-slot="tabs-content"] > :is([data-walk-table], [data-reveal-list], [data-edge-list]), html[data-remembered-in]:not([data-page-kind="home"], [data-page-kind="plain"]) [data-slot="docs-page"] [data-edge-bar] ~ [data-slot="tabs-content"] > * > :is([data-walk-table], [data-reveal-list], [data-edge-list]) { border-top: 0 !important; }
-  html[data-remembered-in]:not([data-page-kind="home"], [data-page-kind="plain"]) [data-slot="docs-page"] [data-edge-foot] { margin-inline: -1.5rem; padding: 0.75rem 0.75rem 0; }
-  html[data-remembered-in]:not([data-page-kind="home"], [data-page-kind="plain"]) [data-slot="docs-page"] [data-slot="empty"] { border: 0 !important; background: transparent !important; border-radius: 0 !important; }
-  html[data-remembered-in]:not([data-page-kind="home"], [data-page-kind="plain"]) [data-slot="docs-page"] :has(> [data-edge-bar]:last-child) { padding-bottom: 0 !important; }
-  html[data-remembered-in]:not([data-page-kind="home"], [data-page-kind="plain"]) [data-slot="docs-page"] [data-notice-cats] { margin-inline: -1.5rem !important; width: auto !important; max-width: none; border-top: 0 !important; padding-inline: 1.5rem !important; align-self: stretch; }
-  html[data-remembered-in]:not([data-page-kind="home"], [data-page-kind="plain"]) [data-slot="docs-page"] [data-notice-cats] + [data-edge-wrap] > [data-edge-list]:first-child { border-top: 0 !important; }
+  html:is([data-remembered-in], [data-guest-dash]):not([data-page-kind="home"], [data-page-kind="plain"]) [data-slot="docs-page"] [data-edge-bar] + :is([data-reveal-list], [data-edge-list], [data-walk-table]) { margin-top: 0 !important; }
+  html:is([data-remembered-in], [data-guest-dash]):not([data-page-kind="home"], [data-page-kind="plain"]) [data-slot="docs-page"] [data-edge-bar] ~ :is([data-walk-table], [data-reveal-list], [data-edge-list]), html:is([data-remembered-in], [data-guest-dash]):not([data-page-kind="home"], [data-page-kind="plain"]) [data-slot="docs-page"] [data-edge-bar] ~ [data-slot="tabs-content"] > :is([data-walk-table], [data-reveal-list], [data-edge-list]), html:is([data-remembered-in], [data-guest-dash]):not([data-page-kind="home"], [data-page-kind="plain"]) [data-slot="docs-page"] [data-edge-bar] ~ [data-slot="tabs-content"] > * > :is([data-walk-table], [data-reveal-list], [data-edge-list]) { border-top: 0 !important; }
+  html:is([data-remembered-in], [data-guest-dash]):not([data-page-kind="home"], [data-page-kind="plain"]) [data-slot="docs-page"] [data-edge-foot] { margin-inline: -1.5rem; padding: 0.75rem 0.75rem 0; }
+  html:is([data-remembered-in], [data-guest-dash]):not([data-page-kind="home"], [data-page-kind="plain"]) [data-slot="docs-page"] [data-slot="empty"] { border: 0 !important; background: transparent !important; border-radius: 0 !important; }
+  html:is([data-remembered-in], [data-guest-dash]):not([data-page-kind="home"], [data-page-kind="plain"]) [data-slot="docs-page"] :has(> [data-edge-bar]:last-child) { padding-bottom: 0 !important; }
+  html:is([data-remembered-in], [data-guest-dash]):not([data-page-kind="home"], [data-page-kind="plain"]) [data-slot="docs-page"] [data-notice-cats] { margin-inline: -1.5rem !important; width: auto !important; max-width: none; border-top: 0 !important; padding-inline: 1.5rem !important; align-self: stretch; }
+  html:is([data-remembered-in], [data-guest-dash]):not([data-page-kind="home"], [data-page-kind="plain"]) [data-slot="docs-page"] [data-notice-cats] + [data-edge-wrap] > [data-edge-list]:first-child { border-top: 0 !important; }
 /* A page of separate boxes (Progress): each becomes a full-width band split by lines. */
-  html[data-remembered-in]:not([data-page-kind="home"], [data-page-kind="plain"]) [data-slot="docs-page"] [data-edge-sections] > :not([data-shadcn-top], .contents), html[data-remembered-in]:not([data-page-kind="home"], [data-page-kind="plain"]) [data-slot="docs-page"] [data-edge-sections] > .contents:not([data-shadcn-top]) > * { margin: 0 -1.5rem !important; padding: 1.5rem !important; border: 0 !important; border-bottom: 1px solid var(--border) !important; border-radius: 0 !important; }
-  html[data-remembered-in]:not([data-page-kind="home"], [data-page-kind="plain"]) [data-slot="docs-page"] [data-edge-sections] > :has(> .grid), html[data-remembered-in]:not([data-page-kind="home"], [data-page-kind="plain"]) [data-slot="docs-page"] [data-edge-sections] > .contents:not([data-shadcn-top]) > :has(> .grid) { padding: 0 !important; }
-  html[data-remembered-in]:not([data-page-kind="home"], [data-page-kind="plain"]) [data-slot="docs-page"] [data-edge-sections] :has(> .grid) > .grid > * { padding: 1.5rem; }
-  html[data-remembered-in]:not([data-page-kind="home"], [data-page-kind="plain"]) [data-slot="docs-page"] [data-edge-sections] > :last-child, html[data-remembered-in]:not([data-page-kind="home"], [data-page-kind="plain"]) [data-slot="docs-page"] [data-edge-sections] > .contents:not([data-shadcn-top]):last-child > :last-child { border-bottom: 0 !important; }
-  html[data-remembered-in]:not([data-page-kind="home"], [data-page-kind="plain"]) [data-slot="docs-page"] :is([data-edge-list], [data-reveal-list], [data-walk-table])[data-edge-top] { border-top: 0 !important; }
-  html[data-remembered-in]:not([data-page-kind="home"], [data-page-kind="plain"]) [data-slot="docs-page"] [data-edge-band] { margin-inline: -1.5rem; width: auto; border-radius: 0 !important; border-inline: 0 !important; border-top: 0 !important; padding-inline: 1.5rem; }
+  html:is([data-remembered-in], [data-guest-dash]):not([data-page-kind="home"], [data-page-kind="plain"]) [data-slot="docs-page"] [data-edge-sections] > :not([data-shadcn-top], .contents), html:is([data-remembered-in], [data-guest-dash]):not([data-page-kind="home"], [data-page-kind="plain"]) [data-slot="docs-page"] [data-edge-sections] > .contents:not([data-shadcn-top]) > * { margin: 0 -1.5rem !important; padding: 1.5rem !important; border: 0 !important; border-bottom: 1px solid var(--border) !important; border-radius: 0 !important; }
+  html:is([data-remembered-in], [data-guest-dash]):not([data-page-kind="home"], [data-page-kind="plain"]) [data-slot="docs-page"] [data-edge-sections] > :has(> .grid), html:is([data-remembered-in], [data-guest-dash]):not([data-page-kind="home"], [data-page-kind="plain"]) [data-slot="docs-page"] [data-edge-sections] > .contents:not([data-shadcn-top]) > :has(> .grid) { padding: 0 !important; }
+  html:is([data-remembered-in], [data-guest-dash]):not([data-page-kind="home"], [data-page-kind="plain"]) [data-slot="docs-page"] [data-edge-sections] :has(> .grid) > .grid > * { padding: 1.5rem; }
+  html:is([data-remembered-in], [data-guest-dash]):not([data-page-kind="home"], [data-page-kind="plain"]) [data-slot="docs-page"] [data-edge-sections] > :last-child, html:is([data-remembered-in], [data-guest-dash]):not([data-page-kind="home"], [data-page-kind="plain"]) [data-slot="docs-page"] [data-edge-sections] > .contents:not([data-shadcn-top]):last-child > :last-child { border-bottom: 0 !important; }
+  html:is([data-remembered-in], [data-guest-dash]):not([data-page-kind="home"], [data-page-kind="plain"]) [data-slot="docs-page"] :is([data-edge-list], [data-reveal-list], [data-walk-table])[data-edge-top] { border-top: 0 !important; }
+  html:is([data-remembered-in], [data-guest-dash]):not([data-page-kind="home"], [data-page-kind="plain"]) [data-slot="docs-page"] [data-edge-band] { margin-inline: -1.5rem; width: auto; border-radius: 0 !important; border-inline: 0 !important; border-top: 0 !important; padding-inline: 1.5rem; }
 /* The card ends where its content ends: no empty band at the foot (a list's last line is
    the card's own), the page-number row keeps its own space, an empty filter row disappears,
    and a page with no page top (a single notice, say) keeps the card's space all round. */
-  html[data-remembered-in]:not([data-page-kind="home"], [data-page-kind="plain"]) [data-slot="docs-page"]:has([data-shadcn-top]) { padding-bottom: 0 !important; }
-  html[data-remembered-in]:not([data-page-kind="home"], [data-page-kind="plain"]) [data-slot="docs-page"] :is([data-walk-table], [data-reveal-list], [data-edge-list]):last-child { border-bottom: 0 !important; }
-  html[data-remembered-in]:not([data-page-kind="home"], [data-page-kind="plain"]) [data-slot="docs-page"] [data-edge-foot]:last-child { padding-bottom: 0.75rem; }
-  html[data-remembered-in]:not([data-page-kind="home"], [data-page-kind="plain"]) [data-slot="docs-page"] [data-edge-bar]:not(:has(*)) { display: none !important; }
-  html[data-remembered-in]:not([data-page-kind="home"], [data-page-kind="plain"]) [data-slot="docs-page"]:not(:has([data-shadcn-top])) { padding: 1.5rem !important; }
+  html:is([data-remembered-in], [data-guest-dash]):not([data-page-kind="home"], [data-page-kind="plain"]) [data-slot="docs-page"]:has([data-shadcn-top]) { padding-bottom: 0 !important; }
+  html:is([data-remembered-in], [data-guest-dash]):not([data-page-kind="home"], [data-page-kind="plain"]) [data-slot="docs-page"] :is([data-walk-table], [data-reveal-list], [data-edge-list]):last-child { border-bottom: 0 !important; }
+  html:is([data-remembered-in], [data-guest-dash]):not([data-page-kind="home"], [data-page-kind="plain"]) [data-slot="docs-page"] [data-edge-foot]:last-child { padding-bottom: 0.75rem; }
+  html:is([data-remembered-in], [data-guest-dash]):not([data-page-kind="home"], [data-page-kind="plain"]) [data-slot="docs-page"] [data-edge-bar]:not(:has(*)) { display: none !important; }
+  html:is([data-remembered-in], [data-guest-dash]):not([data-page-kind="home"], [data-page-kind="plain"]) [data-slot="docs-page"]:not(:has([data-shadcn-top])) { padding: 1.5rem !important; }
 /* A line about the filters (Members' "Needs attention") is its own strip under the filter row. */
-html[data-remembered-in]:not([data-page-kind="home"], [data-page-kind="plain"]) [data-slot="docs-page"] [data-edge-note] { margin: 0 -1.5rem !important; padding: 0.625rem 0.75rem; border-bottom: 1px solid var(--border); }
+html:is([data-remembered-in], [data-guest-dash]):not([data-page-kind="home"], [data-page-kind="plain"]) [data-slot="docs-page"] [data-edge-note] { margin: 0 -1.5rem !important; padding: 0.625rem 0.75rem; border-bottom: 1px solid var(--border); }
 /* Settings boxes (settings-page.tsx) become full-width bands split by lines — no card in the card. */
-  html[data-remembered-in]:not([data-page-kind="home"], [data-page-kind="plain"]) [data-slot="docs-page"] [data-edge-panel] { margin-inline: -1.5rem; padding: 1.5rem !important; border: 0 !important; border-bottom: 1px solid var(--border) !important; border-radius: 0 !important; background: transparent !important; box-shadow: none !important; }
-  html[data-remembered-in]:not([data-page-kind="home"], [data-page-kind="plain"]) [data-slot="docs-page"] :has(> [data-edge-panel]) { row-gap: 0 !important; }
-  html[data-remembered-in]:not([data-page-kind="home"], [data-page-kind="plain"]) [data-slot="docs-page"] :has(> [data-edge-panel]) > :not([data-edge-panel], [data-edge-list], [data-reveal-list], [data-edge-bar], [data-edge-foot], [data-edge-head], [data-edge-group], [hidden]):not(:has(> [data-edge-head]:first-child)) { padding-block: 1.5rem; }
-  html[data-remembered-in]:not([data-page-kind="home"], [data-page-kind="plain"]) [data-slot="docs-page"] [data-edge-panel]:last-child { border-bottom: 0 !important; }
+  html:is([data-remembered-in], [data-guest-dash]):not([data-page-kind="home"], [data-page-kind="plain"]) [data-slot="docs-page"] [data-edge-panel] { margin-inline: -1.5rem; padding: 1.5rem !important; border: 0 !important; border-bottom: 1px solid var(--border) !important; border-radius: 0 !important; background: transparent !important; box-shadow: none !important; }
+  html:is([data-remembered-in], [data-guest-dash]):not([data-page-kind="home"], [data-page-kind="plain"]) [data-slot="docs-page"] :has(> [data-edge-panel]) { row-gap: 0 !important; }
+  html:is([data-remembered-in], [data-guest-dash]):not([data-page-kind="home"], [data-page-kind="plain"]) [data-slot="docs-page"] :has(> [data-edge-panel]) > :not([data-edge-panel], [data-edge-list], [data-reveal-list], [data-edge-bar], [data-edge-foot], [data-edge-head], [data-edge-group], [hidden]):not(:has(> [data-edge-head]:first-child)) { padding-block: 1.5rem; }
+  html:is([data-remembered-in], [data-guest-dash]):not([data-page-kind="home"], [data-page-kind="plain"]) [data-slot="docs-page"] [data-edge-panel]:last-child { border-bottom: 0 !important; }
 /* A list's heading row on a settings page (title left, its button right) is a strip too. */
-  html[data-remembered-in]:not([data-page-kind="home"], [data-page-kind="plain"]) [data-slot="docs-page"] [data-edge-head] { margin-inline: -1.5rem; padding: 0.75rem 1.5rem; border-bottom: 1px solid var(--border); align-items: center !important; }
-  html[data-remembered-in]:not([data-page-kind="home"], [data-page-kind="plain"]) [data-slot="docs-page"] [data-edge-head] ~ :is([data-edge-list], [data-reveal-list], [data-walk-table]), html[data-remembered-in]:not([data-page-kind="home"], [data-page-kind="plain"]) [data-slot="docs-page"] :has(> [data-edge-head]) { border-top: 0 !important; row-gap: 0 !important; }
+  html:is([data-remembered-in], [data-guest-dash]):not([data-page-kind="home"], [data-page-kind="plain"]) [data-slot="docs-page"] [data-edge-head] { margin-inline: -1.5rem; padding: 0.75rem 1.5rem; border-bottom: 1px solid var(--border); align-items: center !important; }
+  html:is([data-remembered-in], [data-guest-dash]):not([data-page-kind="home"], [data-page-kind="plain"]) [data-slot="docs-page"] [data-edge-head] ~ :is([data-edge-list], [data-reveal-list], [data-walk-table]), html:is([data-remembered-in], [data-guest-dash]):not([data-page-kind="home"], [data-page-kind="plain"]) [data-slot="docs-page"] :has(> [data-edge-head]) { border-top: 0 !important; row-gap: 0 !important; }
 /* Settings sub-pages, as the main Settings table: a group is a grey header strip (its
    small uppercase title and line of explanation) over its settings, each a full-width row
    split by one line. No box, no grey showing between rows, nothing shifted. */
-  html[data-remembered-in]:not([data-page-kind="home"], [data-page-kind="plain"]) [data-slot="docs-page"] [data-edge-group] { margin-inline: -1.5rem; row-gap: 0 !important; padding-block: 0 !important; border-bottom: 1px solid var(--border); }
-  html[data-remembered-in]:not([data-page-kind="home"], [data-page-kind="plain"]) [data-slot="docs-page"] [data-edge-group]:last-child { border-bottom: 0; }
-  html[data-remembered-in]:not([data-page-kind="home"], [data-page-kind="plain"]) [data-slot="docs-page"] [data-edge-group-head] { padding: 0.625rem 1.5rem; background: color-mix(in oklab, var(--muted) 50%, transparent); border-bottom: 1px solid var(--border); }
-  html[data-remembered-in]:not([data-page-kind="home"], [data-page-kind="plain"]) [data-slot="docs-page"] [data-edge-group-body] { row-gap: 0 !important; border: 0 !important; border-radius: 0 !important; background: transparent !important; }
-  html[data-remembered-in]:not([data-page-kind="home"], [data-page-kind="plain"]) [data-slot="docs-page"] [data-edge-group-body] > [data-edge-panel] { margin-inline: 0 !important; }
-  html[data-remembered-in]:not([data-page-kind="home"], [data-page-kind="plain"]) [data-slot="docs-page"] [data-edge-group-body] > [data-edge-panel]:last-child { border-bottom: 0 !important; }
-  html[data-remembered-in]:not([data-page-kind="home"], [data-page-kind="plain"]) [data-slot="docs-page"] [data-edge-group] > :is([data-walk-table], [data-reveal-list], [data-edge-list]) { margin-inline: 0 !important; width: auto; border: 0 !important; border-radius: 0 !important; }
-  html[data-remembered-in]:not([data-page-kind="home"], [data-page-kind="plain"]) [data-slot="docs-page"] [data-edge-group] > :not([data-edge-group-head], [data-edge-group-body], [data-edge-panel], [data-edge-head], [hidden]):not(:is([data-walk-table], [data-reveal-list], [data-edge-list])) { padding: 1.5rem; }
-  html[data-remembered-in]:not([data-page-kind="home"], [data-page-kind="plain"]) [data-slot="docs-page"] [data-edge-group] > [data-edge-head] { margin-inline: 0; }
+  html:is([data-remembered-in], [data-guest-dash]):not([data-page-kind="home"], [data-page-kind="plain"]) [data-slot="docs-page"] [data-edge-group] { margin-inline: -1.5rem; row-gap: 0 !important; padding-block: 0 !important; border-bottom: 1px solid var(--border); }
+  html:is([data-remembered-in], [data-guest-dash]):not([data-page-kind="home"], [data-page-kind="plain"]) [data-slot="docs-page"] [data-edge-group]:last-child { border-bottom: 0; }
+  html:is([data-remembered-in], [data-guest-dash]):not([data-page-kind="home"], [data-page-kind="plain"]) [data-slot="docs-page"] [data-edge-group-head] { padding: 0.625rem 1.5rem; background: color-mix(in oklab, var(--muted) 50%, transparent); border-bottom: 1px solid var(--border); }
+  html:is([data-remembered-in], [data-guest-dash]):not([data-page-kind="home"], [data-page-kind="plain"]) [data-slot="docs-page"] [data-edge-group-body] { row-gap: 0 !important; border: 0 !important; border-radius: 0 !important; background: transparent !important; }
+  html:is([data-remembered-in], [data-guest-dash]):not([data-page-kind="home"], [data-page-kind="plain"]) [data-slot="docs-page"] [data-edge-group-body] > [data-edge-panel] { margin-inline: 0 !important; }
+  html:is([data-remembered-in], [data-guest-dash]):not([data-page-kind="home"], [data-page-kind="plain"]) [data-slot="docs-page"] [data-edge-group-body] > [data-edge-panel]:last-child { border-bottom: 0 !important; }
+  html:is([data-remembered-in], [data-guest-dash]):not([data-page-kind="home"], [data-page-kind="plain"]) [data-slot="docs-page"] [data-edge-group] > :is([data-walk-table], [data-reveal-list], [data-edge-list]) { margin-inline: 0 !important; width: auto; border: 0 !important; border-radius: 0 !important; }
+  html:is([data-remembered-in], [data-guest-dash]):not([data-page-kind="home"], [data-page-kind="plain"]) [data-slot="docs-page"] [data-edge-group] > :not([data-edge-group-head], [data-edge-group-body], [data-edge-panel], [data-edge-head], [hidden]):not(:is([data-walk-table], [data-reveal-list], [data-edge-list])) { padding: 1.5rem; }
+  html:is([data-remembered-in], [data-guest-dash]):not([data-page-kind="home"], [data-page-kind="plain"]) [data-slot="docs-page"] [data-edge-group] > [data-edge-head] { margin-inline: 0; }
 /* List headings and group headings share the main Settings table's grey header strip. */
-  html[data-remembered-in]:not([data-page-kind="home"], [data-page-kind="plain"]) [data-slot="docs-page"] [data-edge-head] { padding: 0.625rem 1.5rem !important; background: color-mix(in oklab, var(--muted) 50%, transparent); }
-  html[data-remembered-in]:not([data-page-kind="home"], [data-page-kind="plain"]) [data-slot="docs-page"] :has(> [data-edge-head]:first-child) { row-gap: 0 !important; }
-  html[data-remembered-in]:not([data-page-kind="home"], [data-page-kind="plain"]) [data-slot="docs-page"] [data-edge-head] + [data-edge-note], html[data-remembered-in]:not([data-page-kind="home"], [data-page-kind="plain"]) [data-slot="docs-page"] [data-edge-note] { padding-inline: 1.5rem; }
-html[data-remembered-in]:not([data-page-kind="home"], [data-page-kind="plain"]) [data-slot="docs-page"] [data-edge-head] ~ :is([data-reveal-list], [data-edge-list]) > * { padding-inline: 1.5rem; }
+  html:is([data-remembered-in], [data-guest-dash]):not([data-page-kind="home"], [data-page-kind="plain"]) [data-slot="docs-page"] [data-edge-head] { padding: 0.625rem 1.5rem !important; background: color-mix(in oklab, var(--muted) 50%, transparent); }
+  html:is([data-remembered-in], [data-guest-dash]):not([data-page-kind="home"], [data-page-kind="plain"]) [data-slot="docs-page"] :has(> [data-edge-head]:first-child) { row-gap: 0 !important; }
+  html:is([data-remembered-in], [data-guest-dash]):not([data-page-kind="home"], [data-page-kind="plain"]) [data-slot="docs-page"] [data-edge-head] + [data-edge-note], html:is([data-remembered-in], [data-guest-dash]):not([data-page-kind="home"], [data-page-kind="plain"]) [data-slot="docs-page"] [data-edge-note] { padding-inline: 1.5rem; }
+html:is([data-remembered-in], [data-guest-dash]):not([data-page-kind="home"], [data-page-kind="plain"]) [data-slot="docs-page"] [data-edge-head] ~ :is([data-reveal-list], [data-edge-list]) > * { padding-inline: 1.5rem; }
 
 /* The card's 1.5rem inset is the only gutter. Page shells also add px-4 py-6
    (and -mt-6 / -mx-6 to cancel it). Together they leave a white band under the
    card's top border, stop strips short of the sides, and clip the last line of
    a list. Edge pieces still pull themselves out by exactly 1.5rem. */
-  html[data-remembered-in]:not([data-page-kind="home"], [data-page-kind="plain"]) [data-slot="docs-page"] > * { margin: 0 !important; padding-top: 0 !important; padding-bottom: 0 !important; padding-inline: 0 !important; }
+  html:is([data-remembered-in], [data-guest-dash]):not([data-page-kind="home"], [data-page-kind="plain"]) [data-slot="docs-page"] > * { margin: 0 !important; padding-top: 0 !important; padding-bottom: 0 !important; padding-inline: 0 !important; }
   /* Progress is one shell, so its bands meet the card. Admin pages add a
      second px-4 / py-6 shell inside the layout. Leaving that on keeps Walks
      a step in from the edges, which is why it never matched Progress. */
-  html[data-remembered-in]:not([data-page-kind="home"], [data-page-kind="plain"]) [data-slot="docs-page"] > * > .px-4 { padding: 0 !important; }
+  html:is([data-remembered-in], [data-guest-dash]):not([data-page-kind="home"], [data-page-kind="plain"]) [data-slot="docs-page"] > * > .px-4 { padding: 0 !important; }
   /* Notices (and any page whose shell is nested past that) still pads
      px-4 py-6 under a section, so the bands stop short of the card. The
      hero and the designer's own preview keep their padding. */
-  html[data-remembered-in]:not([data-page-kind="home"], [data-page-kind="plain"]) [data-slot="docs-page"] div.px-4.py-6:not([data-preview-audience], [data-shadcn-top]) { padding: 0 !important; }
-  html[data-remembered-in]:not([data-page-kind="home"], [data-page-kind="plain"]) [data-slot="docs-page"] :is([data-settings-head], [data-settings-body]) { padding: 0 !important; }
-  html[data-remembered-in]:not([data-page-kind="home"], [data-page-kind="plain"]) [data-slot="docs-page"] [data-shadcn-top] { overflow: hidden !important; contain: paint; flex: 0 0 auto !important; }
-  html[data-remembered-in]:not([data-page-kind="home"], [data-page-kind="plain"]) [data-slot="docs-page"] [data-shadcn-top] > canvas { position: absolute !important; inset: 0 !important; z-index: 0 !important; width: 100% !important; height: 100% !important; pointer-events: none; }
-  html[data-remembered-in]:not([data-page-kind="home"], [data-page-kind="plain"]) [data-slot="docs-page"] [data-shadcn-top] > :not(canvas) { position: relative; z-index: 1; }
+  html:is([data-remembered-in], [data-guest-dash]):not([data-page-kind="home"], [data-page-kind="plain"]) [data-slot="docs-page"] div.px-4.py-6:not([data-preview-audience], [data-shadcn-top]) { padding: 0 !important; }
+  html:is([data-remembered-in], [data-guest-dash]):not([data-page-kind="home"], [data-page-kind="plain"]) [data-slot="docs-page"] :is([data-settings-head], [data-settings-body]) { padding: 0 !important; }
+  html:is([data-remembered-in], [data-guest-dash]):not([data-page-kind="home"], [data-page-kind="plain"]) [data-slot="docs-page"] [data-shadcn-top] { overflow: hidden !important; contain: paint; flex: 0 0 auto !important; }
+  html:is([data-remembered-in], [data-guest-dash]):not([data-page-kind="home"], [data-page-kind="plain"]) [data-slot="docs-page"] [data-shadcn-top] > canvas { position: absolute !important; inset: 0 !important; z-index: 0 !important; width: 100% !important; height: 100% !important; pointer-events: none; }
+  html:is([data-remembered-in], [data-guest-dash]):not([data-page-kind="home"], [data-page-kind="plain"]) [data-slot="docs-page"] [data-shadcn-top] > :not(canvas) { position: relative; z-index: 1; }
   /* Stacks of edge pieces sit on each other. A form keeps the space between its fields. */
-  html[data-remembered-in]:not([data-page-kind="home"], [data-page-kind="plain"]) [data-slot="docs-page"] :is(.gap-8, .gap-6, .gap-4, .gap-3):not(form):has(> :is([data-edge-group], [data-edge-panel], [data-edge-head], [data-edge-list], [data-reveal-list], [data-edge-bar], [data-walk-table], [data-edge-stats], [data-edge-stories])) { row-gap: 0 !important; }
-  html[data-remembered-in]:not([data-page-kind="home"], [data-page-kind="plain"]) [data-slot="docs-page"] [data-settings-body] :is(.gap-8, .gap-6):not(form):has([data-edge-group], [data-edge-panel], [data-edge-head]) { row-gap: 0 !important; }
-  html[data-remembered-in]:not([data-page-kind="home"], [data-page-kind="plain"]) [data-slot="docs-page"] :has(> [data-shadcn-top]) > [data-shadcn-top] ~ :is([data-edge-stories], [data-edge-bar], :has([data-edge-stories]), :has([data-edge-bar]), :has([data-edge-top])) { margin-top: 0 !important; }
-  html[data-remembered-in]:not([data-page-kind="home"], [data-page-kind="plain"]) [data-slot="docs-page"] [data-edge-stories] { margin-inline: -1.5rem !important; width: auto !important; max-width: none; padding: 0.75rem 1.5rem; border-bottom: 1px solid var(--border); border-top: 0; align-self: stretch; }
-  html[data-remembered-in]:not([data-page-kind="home"], [data-page-kind="plain"]) [data-slot="docs-page"] [data-edge-sections] { row-gap: 0 !important; gap: 0 !important; }
-  html[data-remembered-in]:not([data-page-kind="home"], [data-page-kind="plain"]) [data-slot="docs-page"] [data-edge-sections] > :is([data-slot="separator"], hr) { display: none !important; }
+  html:is([data-remembered-in], [data-guest-dash]):not([data-page-kind="home"], [data-page-kind="plain"]) [data-slot="docs-page"] :is(.gap-8, .gap-6, .gap-4, .gap-3):not(form):has(> :is([data-edge-group], [data-edge-panel], [data-edge-head], [data-edge-list], [data-reveal-list], [data-edge-bar], [data-walk-table], [data-edge-stats], [data-edge-stories])) { row-gap: 0 !important; }
+  html:is([data-remembered-in], [data-guest-dash]):not([data-page-kind="home"], [data-page-kind="plain"]) [data-slot="docs-page"] [data-settings-body] :is(.gap-8, .gap-6):not(form):has([data-edge-group], [data-edge-panel], [data-edge-head]) { row-gap: 0 !important; }
+  html:is([data-remembered-in], [data-guest-dash]):not([data-page-kind="home"], [data-page-kind="plain"]) [data-slot="docs-page"] :has(> [data-shadcn-top]) > [data-shadcn-top] ~ :is([data-edge-stories], [data-edge-bar], :has([data-edge-stories]), :has([data-edge-bar]), :has([data-edge-top])) { margin-top: 0 !important; }
+  html:is([data-remembered-in], [data-guest-dash]):not([data-page-kind="home"], [data-page-kind="plain"]) [data-slot="docs-page"] [data-edge-stories] { margin-inline: -1.5rem !important; width: auto !important; max-width: none; padding: 0.75rem 1.5rem; border-bottom: 1px solid var(--border); border-top: 0; align-self: stretch; }
+  html:is([data-remembered-in], [data-guest-dash]):not([data-page-kind="home"], [data-page-kind="plain"]) [data-slot="docs-page"] [data-edge-sections] { row-gap: 0 !important; gap: 0 !important; }
+  html:is([data-remembered-in], [data-guest-dash]):not([data-page-kind="home"], [data-page-kind="plain"]) [data-slot="docs-page"] [data-edge-sections] > :is([data-slot="separator"], hr) { display: none !important; }
   /* One line between bands: the band above keeps its bottom border. A head does
      not also draw a line on top, or two rules sit on each other. */
-  html[data-remembered-in]:not([data-page-kind="home"], [data-page-kind="plain"]) [data-slot="docs-page"] [data-edge-group-head] { border-top: 0 !important; }
+  html:is([data-remembered-in], [data-guest-dash]):not([data-page-kind="home"], [data-page-kind="plain"]) [data-slot="docs-page"] [data-edge-group-head] { border-top: 0 !important; }
   /* Progress's list sits under its own heading in the same band, with no band line above it:
      its first strip draws that line, and the list runs to the band's foot (no blank strip). */
-  html[data-remembered-in]:not([data-page-kind="home"], [data-page-kind="plain"]) [data-slot="docs-page"] [data-edge-board] > div > [data-edge-group]:first-child > [data-edge-group-head] { border-top: 1px solid var(--border) !important; }
-  html[data-remembered-in]:not([data-page-kind="home"], [data-page-kind="plain"]) [data-slot="docs-page"] [data-edge-board]:last-child { margin-bottom: -1.5rem; }
+  html:is([data-remembered-in], [data-guest-dash]):not([data-page-kind="home"], [data-page-kind="plain"]) [data-slot="docs-page"] [data-edge-board] > div > [data-edge-group]:first-child > [data-edge-group-head] { border-top: 1px solid var(--border) !important; }
+  html:is([data-remembered-in], [data-guest-dash]):not([data-page-kind="home"], [data-page-kind="plain"]) [data-slot="docs-page"] [data-edge-board]:last-child { margin-bottom: -1.5rem; }
   /* A setting's own title is the grey strip, full width, with the fields under it. */
-  html[data-remembered-in]:not([data-page-kind="home"], [data-page-kind="plain"]) [data-slot="docs-page"] [data-edge-panel]:has(> [data-edge-group-head]) { padding-top: 0 !important; gap: 1.5rem !important; }
-  html[data-remembered-in]:not([data-page-kind="home"], [data-page-kind="plain"]) [data-slot="docs-page"] [data-edge-panel] > [data-edge-group-head] { margin-inline: -1.5rem; }
-  html[data-remembered-in]:not([data-page-kind="home"], [data-page-kind="plain"]) [data-slot="docs-page"] [data-edge-stats] { margin-inline: -1.5rem; gap: 0 !important; border-bottom: 1px solid var(--border); border-radius: 0 !important; }
-  html[data-remembered-in]:not([data-page-kind="home"], [data-page-kind="plain"]) [data-slot="docs-page"] [data-edge-stats] > * { border: 0 !important; border-radius: 0 !important; border-inline-end: 1px solid var(--border) !important; box-shadow: none !important; background: transparent !important; }
-  html[data-remembered-in]:not([data-page-kind="home"], [data-page-kind="plain"]) [data-slot="docs-page"] [data-edge-stats] > *:last-child { border-inline-end: 0 !important; }
+  html:is([data-remembered-in], [data-guest-dash]):not([data-page-kind="home"], [data-page-kind="plain"]) [data-slot="docs-page"] [data-edge-panel]:has(> [data-edge-group-head]) { padding-top: 0 !important; gap: 1.5rem !important; }
+  html:is([data-remembered-in], [data-guest-dash]):not([data-page-kind="home"], [data-page-kind="plain"]) [data-slot="docs-page"] [data-edge-panel] > [data-edge-group-head] { margin-inline: -1.5rem; }
+  html:is([data-remembered-in], [data-guest-dash]):not([data-page-kind="home"], [data-page-kind="plain"]) [data-slot="docs-page"] [data-edge-stats] { margin-inline: -1.5rem; gap: 0 !important; border-bottom: 1px solid var(--border); border-radius: 0 !important; }
+  html:is([data-remembered-in], [data-guest-dash]):not([data-page-kind="home"], [data-page-kind="plain"]) [data-slot="docs-page"] [data-edge-stats] > * { border: 0 !important; border-radius: 0 !important; border-inline-end: 1px solid var(--border) !important; box-shadow: none !important; background: transparent !important; }
+  html:is([data-remembered-in], [data-guest-dash]):not([data-page-kind="home"], [data-page-kind="plain"]) [data-slot="docs-page"] [data-edge-stats] > *:last-child { border-inline-end: 0 !important; }
 
 /* A two-column stat row on a phone: the right-hand cell already meets the card edge. */
 @media (max-width: 47.98rem) {
-  html[data-remembered-in]:not([data-page-kind="home"], [data-page-kind="plain"]) [data-slot="docs-page"] [data-edge-stats] > *:nth-child(2n) { border-inline-end: 0 !important; }
+  html:is([data-remembered-in], [data-guest-dash]):not([data-page-kind="home"], [data-page-kind="plain"]) [data-slot="docs-page"] [data-edge-stats] > *:nth-child(2n) { border-inline-end: 0 !important; }
 }
 
 /* A designed walk joins the page card (Page settings → Inside the page card).
    Each block is one band: full width, one line under it. The designer's
    preview is not inside that card, so it does not pull outward. */
-html[data-remembered-in]:not([data-page-kind="home"], [data-page-kind="plain"]) [data-slot="docs-page"] [data-edge-join],
-html[data-remembered-in]:not([data-page-kind="home"], [data-page-kind="plain"]) [data-slot="docs-page"] [data-edge-join] > :last-child { gap: 0 !important; row-gap: 0 !important; }
-html[data-remembered-in]:not([data-page-kind="home"], [data-page-kind="plain"]) [data-slot="docs-page"] [data-edge-join] > :last-child > :not([hidden]),
-html[data-remembered-in]:not([data-page-kind="home"], [data-page-kind="plain"]) [data-slot="docs-page"] [data-edge-join] > [data-edge-join-band] {
+html:is([data-remembered-in], [data-guest-dash]):not([data-page-kind="home"], [data-page-kind="plain"]) [data-slot="docs-page"] [data-edge-join],
+html:is([data-remembered-in], [data-guest-dash]):not([data-page-kind="home"], [data-page-kind="plain"]) [data-slot="docs-page"] [data-edge-join] > :last-child { gap: 0 !important; row-gap: 0 !important; }
+html:is([data-remembered-in], [data-guest-dash]):not([data-page-kind="home"], [data-page-kind="plain"]) [data-slot="docs-page"] [data-edge-join] > :last-child > :not([hidden]),
+html:is([data-remembered-in], [data-guest-dash]):not([data-page-kind="home"], [data-page-kind="plain"]) [data-slot="docs-page"] [data-edge-join] > [data-edge-join-band] {
   width: auto !important; max-width: none; align-self: stretch;
   padding: 1.5rem !important; border: 0 !important; border-bottom: 1px solid var(--border) !important; border-radius: 0 !important; box-shadow: none !important;
 }
-html[data-remembered-in]:not([data-page-kind="home"], [data-page-kind="plain"]) [data-slot="docs-page"] [data-edge-join]:not([data-preview-audience]) > :last-child > :not([hidden]),
-html[data-remembered-in]:not([data-page-kind="home"], [data-page-kind="plain"]) [data-slot="docs-page"] [data-edge-join]:not([data-preview-audience]) > [data-edge-join-band] { margin-inline: -1.5rem !important; }
-html[data-remembered-in]:not([data-page-kind="home"], [data-page-kind="plain"]) [data-slot="docs-page"] [data-edge-join] > :last-child > :not([hidden]):last-child { border-bottom: 0 !important; }
+html:is([data-remembered-in], [data-guest-dash]):not([data-page-kind="home"], [data-page-kind="plain"]) [data-slot="docs-page"] [data-edge-join]:not([data-preview-audience]) > :last-child > :not([hidden]),
+html:is([data-remembered-in], [data-guest-dash]):not([data-page-kind="home"], [data-page-kind="plain"]) [data-slot="docs-page"] [data-edge-join]:not([data-preview-audience]) > [data-edge-join-band] { margin-inline: -1.5rem !important; }
+html:is([data-remembered-in], [data-guest-dash]):not([data-page-kind="home"], [data-page-kind="plain"]) [data-slot="docs-page"] [data-edge-join] > :last-child > :not([hidden]):last-child { border-bottom: 0 !important; }
 /* A block that is itself a card fills the band. Cards in a grid stay put. */
-html[data-remembered-in]:not([data-page-kind="home"], [data-page-kind="plain"]) [data-slot="docs-page"] [data-edge-join] > :last-child > :not([hidden]) > * > :is(.rounded-xl.border, .rounded-2xl.border, [data-slot="card"]) {
+html:is([data-remembered-in], [data-guest-dash]):not([data-page-kind="home"], [data-page-kind="plain"]) [data-slot="docs-page"] [data-edge-join] > :last-child > :not([hidden]) > * > :is(.rounded-xl.border, .rounded-2xl.border, [data-slot="card"]) {
   margin-inline: -1.5rem; width: auto; max-width: none; border-radius: 0 !important; border-inline: 0 !important; box-shadow: none !important;
 }
-html[data-remembered-in]:not([data-page-kind="home"], [data-page-kind="plain"]) [data-slot="docs-page"] [data-edge-join] > :last-child > :not([hidden]) > * > :is(.rounded-xl.border, .rounded-2xl.border, [data-slot="card"]):last-child { border-bottom: 0 !important; }
+html:is([data-remembered-in], [data-guest-dash]):not([data-page-kind="home"], [data-page-kind="plain"]) [data-slot="docs-page"] [data-edge-join] > :last-child > :not([hidden]) > * > :is(.rounded-xl.border, .rounded-2xl.border, [data-slot="card"]):last-child { border-bottom: 0 !important; }
 /* Designed walks with "Join the card, edge to edge" (data-edge-join): the Details card,
    the map and the folding sections (Walk Details, Attended…) lose their own border and
    corners and fill the page card's width, split by single lines — no card in the card.
    The card's own top and bottom space goes too, as each band keeps its own. "Separate
    boxes" (no data-edge-join) keeps the framed look. Phones too: the page card is there at every size. */
-  html[data-remembered-in]:not([data-page-kind="home"], [data-page-kind="plain"]) [data-slot="docs-page"]:has([data-edge-join]) { padding-block: 0 !important; }
-  html[data-remembered-in]:not([data-page-kind="home"], [data-page-kind="plain"]) [data-slot="docs-page"] [data-edge-join] > :last-child > :not([hidden]):has(> * > :is(section.overflow-clip, [data-slot="accordion"])) { padding: 0 !important; }
-  html[data-remembered-in]:not([data-page-kind="home"], [data-page-kind="plain"]) [data-slot="docs-page"] [data-edge-join] > :last-child > :not([hidden]) section.overflow-clip section.rounded-xl.border { border: 0 !important; border-radius: 0 !important; }
-  html[data-remembered-in]:not([data-page-kind="home"], [data-page-kind="plain"]) [data-slot="docs-page"] [data-edge-join] [data-card-map] { padding-top: 0 !important; }
-  html[data-remembered-in]:not([data-page-kind="home"], [data-page-kind="plain"]) [data-slot="docs-page"] [data-edge-join] [data-card-map] > .rounded-2xl.border { border: 0 !important; border-top: 1px solid var(--border) !important; border-radius: 0 !important; }
-  html[data-remembered-in]:not([data-page-kind="home"], [data-page-kind="plain"]) [data-slot="docs-page"] [data-edge-join] [data-slot="accordion"] { row-gap: 0 !important; gap: 0 !important; }
-  html[data-remembered-in]:not([data-page-kind="home"], [data-page-kind="plain"]) [data-slot="docs-page"] [data-edge-join] [data-slot="accordion-item"] { border: 0 !important; border-bottom: 1px solid var(--border) !important; border-radius: 0 !important; }
-  html[data-remembered-in]:not([data-page-kind="home"], [data-page-kind="plain"]) [data-slot="docs-page"] [data-edge-join] [data-slot="accordion-item"]:last-child { border-bottom: 0 !important; }/* A designed walk set to "Separate boxes" (data-edge-inset): each block is its own
+  html:is([data-remembered-in], [data-guest-dash]):not([data-page-kind="home"], [data-page-kind="plain"]) [data-slot="docs-page"]:has([data-edge-join]) { padding-block: 0 !important; }
+  html:is([data-remembered-in], [data-guest-dash]):not([data-page-kind="home"], [data-page-kind="plain"]) [data-slot="docs-page"] [data-edge-join] > :last-child > :not([hidden]):has(> * > :is(section.overflow-clip, [data-slot="accordion"])) { padding: 0 !important; }
+  html:is([data-remembered-in], [data-guest-dash]):not([data-page-kind="home"], [data-page-kind="plain"]) [data-slot="docs-page"] [data-edge-join] > :last-child > :not([hidden]) section.overflow-clip section.rounded-xl.border { border: 0 !important; border-radius: 0 !important; }
+  html:is([data-remembered-in], [data-guest-dash]):not([data-page-kind="home"], [data-page-kind="plain"]) [data-slot="docs-page"] [data-edge-join] [data-card-map] { padding-top: 0 !important; }
+  html:is([data-remembered-in], [data-guest-dash]):not([data-page-kind="home"], [data-page-kind="plain"]) [data-slot="docs-page"] [data-edge-join] [data-card-map] > .rounded-2xl.border { border: 0 !important; border-top: 1px solid var(--border) !important; border-radius: 0 !important; }
+  html:is([data-remembered-in], [data-guest-dash]):not([data-page-kind="home"], [data-page-kind="plain"]) [data-slot="docs-page"] [data-edge-join] [data-slot="accordion"] { row-gap: 0 !important; gap: 0 !important; }
+  html:is([data-remembered-in], [data-guest-dash]):not([data-page-kind="home"], [data-page-kind="plain"]) [data-slot="docs-page"] [data-edge-join] [data-slot="accordion-item"] { border: 0 !important; border-bottom: 1px solid var(--border) !important; border-radius: 0 !important; }
+  html:is([data-remembered-in], [data-guest-dash]):not([data-page-kind="home"], [data-page-kind="plain"]) [data-slot="docs-page"] [data-edge-join] [data-slot="accordion-item"]:last-child { border-bottom: 0 !important; }/* A designed walk set to "Separate boxes" (data-edge-inset): each block is its own
    bordered box, so the page card around them goes — no card round the cards (as Overview). */
-html[data-remembered-in]:not([data-page-kind="home"], [data-page-kind="plain"]) [data-slot="docs-page"]:has([data-edge-inset]) { border: 0 !important; padding: 0 !important; border-radius: 0 !important; overflow: visible !important; background: transparent !important; }
+html:is([data-remembered-in], [data-guest-dash]):not([data-page-kind="home"], [data-page-kind="plain"]) [data-slot="docs-page"]:has([data-edge-inset]) { border: 0 !important; padding: 0 !important; border-radius: 0 !important; overflow: visible !important; background: transparent !important; }
 /* The "All walks" row at the top of a joined walk is one short line: a slim band. */
 /* A page top's line of explanation is one line on a computer: the full width of the
    band, a little smaller (the wording is kept short enough to fit). It still wraps on a phone. */
-@media (min-width: 48rem) { html[data-remembered-in]:not([data-page-kind="home"], [data-page-kind="plain"]) [data-shadcn-top] [data-page-top-intro] { max-width: none !important; font-size: 1rem !important; line-height: 1.5rem !important; } }
+@media (min-width: 48rem) { html:is([data-remembered-in], [data-guest-dash]):not([data-page-kind="home"], [data-page-kind="plain"]) [data-shadcn-top] [data-page-top-intro] { max-width: none !important; font-size: 1rem !important; line-height: 1.5rem !important; } }
+
+/* A visitor on a shared walk page (html[data-guest-dash], sidebar-state.ts): their short menu
+   and Sign in; everyone else, the members' menu and their own row. */
+html:not([data-guest-dash]) [data-sb-for="guest"], html[data-remembered-in] [data-sb-for="guest"], html[data-guest-dash]:not([data-remembered-in]) [data-sb-for="member"] { display: none !important; }
+/* Rows that wrap inside a band (Progress's badges placeholder) are not a full-width list:
+   they keep the band's own inset. */
+html:is([data-remembered-in], [data-guest-dash]):not([data-page-kind="home"], [data-page-kind="plain"]) [data-slot="docs-page"] [data-reveal-card] > [data-reveal-list].flex-wrap { margin-inline: 0 !important; width: auto !important; }
+/* A placeholder's filters sit in a wrapper (data-sk-filters, hidden with an empty list): the
+   list still butts onto their strip, as on the real page. */
+html:is([data-remembered-in], [data-guest-dash]):not([data-page-kind="home"], [data-page-kind="plain"]) [data-slot="docs-page"] :has(> [data-sk-filters] > [data-edge-bar]) { row-gap: 0 !important; }

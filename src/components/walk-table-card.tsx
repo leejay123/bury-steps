@@ -28,6 +28,9 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { formatTime } from "@/lib/dates";
+import { LIST_PAGE_SIZE } from "@/lib/list-page-size";
+import { SkLine } from "@/components/list-skeletons";
+import { RememberedRows } from "@/components/remembered-rows";
 import { cn } from "@/lib/utils";
 
 /** One walk as the table shows it. */
@@ -300,6 +303,73 @@ export function WalkTableCard<S extends string, O extends string>({
           </div>
         </>
       )}
+    </div>
+  );
+}
+
+/**
+ * The table's placeholder, part for part: the same box and toolbar (search,
+ * Filter, Show 10), each row's grey strip and details as grey lines, and the
+ * Previous/Next row, as many rows as the list showed last time, so the
+ * table drops in without anything moving.
+ */
+export function WalkTableCardSkeleton({ remember }: { remember: string }) {
+  return (
+    <div aria-busy="true" className="overflow-hidden rounded-xl border bg-background" data-walk-table="">
+      <div className="flex flex-wrap items-center gap-2 border-b p-3">
+        <InputGroup className="min-w-0 flex-1 basis-60">
+          <InputGroupInput aria-label="Search walks" defaultValue="" placeholder="Search by walk or meeting point…" readOnly />
+          <InputGroupAddon>
+            <Search data-icon="inline-start" />
+          </InputGroupAddon>
+        </InputGroup>
+        <span className={TOOL}>
+          <SlidersHorizontal aria-hidden />
+          Filter
+        </span>
+        <Select value="10">
+          <SelectTrigger aria-label="Walks per page" className="h-9 w-auto gap-2" tabIndex={-1}>
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent align="end">
+            {PAGE_SIZES.map((size) => (
+              <SelectItem key={size} value={String(size)}>
+                Show {size}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      </div>
+      <RememberedRows
+        as="ul"
+        className="divide-y"
+        // The table shows ten a page to start (Show 10).
+        max={PAGE_SIZES[0]}
+        remember={remember}
+        rowAs="li"
+        rows={Array.from({ length: LIST_PAGE_SIZE }, (_, i) => (
+          <div key={i}>
+            <div className="flex items-center justify-between gap-3 border-b bg-muted/50 px-3 py-2.5">
+              <SkLine className="w-24" size="xs" />
+              <SkLine className="w-16" size="xs" />
+            </div>
+            <div className="flex items-center gap-3 px-4 py-3">
+              <div className="flex min-w-0 flex-1 flex-col gap-0.5">
+                <SkLine className={i % 2 ? "w-64" : "w-80"} />
+                <SkLine className={i % 3 ? "w-48" : "w-36"} size="sm" />
+              </div>
+              <ChevronRight aria-hidden className="size-4 shrink-0 text-muted-foreground" />
+            </div>
+          </div>
+        ))}
+      />
+      <div className="flex items-center justify-between gap-3 border-t px-4 py-3 text-muted-foreground text-sm">
+        <SkLine className="w-40" size="sm" />
+        <span className="flex gap-2">
+          <span className={cn(TOOL, "h-8 opacity-50")}>Previous</span>
+          <span className={cn(TOOL, "h-8 opacity-50")}>Next</span>
+        </span>
+      </div>
     </div>
   );
 }

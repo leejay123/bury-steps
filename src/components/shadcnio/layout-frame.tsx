@@ -67,12 +67,12 @@ export async function ShadcnLayoutFrame({
         sidebar={
           <>
             <EfferdSidebarHead logoSrc={logo.src} siteName={theme.siteName} />
-            <EfferdSidebarBody data={data} progressEnabled={progressEnabled} />
+            <EfferdSidebarBody data={data} progressEnabled={progressEnabled} signInHref={signInHref} />
           </>
         }
         search={search}
         siteName={theme.siteName}
-        tools={<EfferdHeaderTools />}
+        tools={<EfferdHeaderTools signInHref={signInHref} />}
       >
         {children}
       </ShadcnSiteShell>

@@ -225,8 +225,9 @@ function AdminWalksSkeleton() {
 function AdminWalksPageFallback() {
   return (
     <div data-page-loading="" className="flex flex-col gap-8 px-4 py-6 md:px-6">
-      <section className="flex flex-col gap-4">
-        <AdminPageIntro description={WALKS_INTRO} title="Walks" />
+      {/* As the page: its card, the top with Create a walk, then the list. */}
+      <section className="flex flex-col gap-4" data-page-card="">
+        <AdminPageIntro action={<CreateWalkDrawer />} description={WALKS_INTRO} title="Walks" />
         <AdminWalksSkeleton />
       </section>
     </div>

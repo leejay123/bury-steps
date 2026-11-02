@@ -1,6 +1,6 @@
 import { Suspense } from "react";
 import { IntentLink as Link } from "@/components/intent-link";
-import { ChevronsUpDown, Mail } from "lucide-react";
+import { ChevronsUpDown, LogIn, Mail } from "lucide-react";
 import { ClerkIsland } from "@/components/clerk-island";
 import { LazySiteUserButton } from "@/components/clerk-lazy";
 import { AvatarPlaceholder, BellPlaceholder } from "@/components/header-placeholders";
@@ -9,6 +9,7 @@ import { SiteNavBell } from "@/components/site-nav";
 import { getOptionalUser } from "@/lib/auth";
 import { getProgressEnabled } from "@/lib/progress-settings";
 import { staticSidebarGroups } from "./dash-sidebar";
+import type { SidebarGroup } from "./sidebar-nav";
 import type { SidebarMe as SidebarMeData } from "./sidebar-state";
 import { EfferdNav } from "./efferd-nav";
 import type { ShadcnHomeData } from "./home-data";
@@ -46,14 +47,39 @@ export function EfferdSidebarHead({ siteName, logoSrc }: { siteName: string; log
  * --me-* values, set before the first paint; sidebar-state.ts). Only SidebarMe waits
  * for the server, to keep that memory up to date; it draws nothing.
  */
-export function EfferdSidebarBody({ data, progressEnabled }: { data: ShadcnHomeData; progressEnabled: boolean }) {
+/** A signed-out visitor's menu, on a shared walk page (html[data-guest-dash]): only what they can open. */
+const GUEST_GROUPS: SidebarGroup[] = [
+  {
+    title: "Walking group",
+    links: [
+      { href: "/", label: "Home", icon: "home" },
+      { href: "/#home-walks-heading", label: "Walks", icon: "walks" },
+    ],
+  },
+];
+
+export function EfferdSidebarBody({
+  data,
+  progressEnabled,
+  signInHref,
+}: {
+  data: ShadcnHomeData;
+  progressEnabled: boolean;
+  signInHref: string;
+}) {
   const next = data.next ? data.upcoming[0] : null;
   return (
     <>
       <Suspense fallback={null}>
         <SidebarMe />
       </Suspense>
-      <EfferdNav groups={staticSidebarGroups(progressEnabled)} />
+      {/* Members' menu, or a visitor's (shadcnio.css shows one, from html[data-guest-dash]). */}
+      <div className="contents" data-sb-for="member">
+        <EfferdNav groups={staticSidebarGroups(progressEnabled)} />
+      </div>
+      <div className="contents" data-sb-for="guest">
+        <EfferdNav groups={GUEST_GROUPS} />
+      </div>
       <div className="flex shrink-0 flex-col" data-efferd-foot="">
         {next ? (
           // Efferd's "latest change" card, here the next walk.
@@ -82,7 +108,19 @@ export function EfferdSidebarBody({ data, progressEnabled }: { data: ShadcnHomeD
         {/* The person, as in Efferd's shell: their photo, name and email (from this browser's
             memory, so at once); the whole row opens their account menu (the photo's button
             covers it). */}
-        <div className="border-t p-2">
+        {/* A visitor: Sign in where a member's own row goes. */}
+        <div className="border-t p-2" data-sb-for="guest">
+          <a
+            className="flex h-12 w-full items-center gap-2 overflow-hidden rounded-md p-2 text-sm font-medium hover:bg-muted [&>svg]:size-4 [&>svg]:shrink-0"
+            data-efferd-button=""
+            href={signInHref}
+            title="Sign in"
+          >
+            <LogIn aria-hidden />
+            <span className="truncate">Sign in</span>
+          </a>
+        </div>
+        <div className="border-t p-2" data-sb-for="member">
           <div
             className="relative flex h-12 w-full items-center gap-2 overflow-hidden rounded-md p-2 text-sm hover:bg-muted [&_button]:after:absolute [&_button]:after:inset-0 [&_button]:after:content-['']"
             data-efferd-button=""
@@ -118,9 +156,18 @@ async function SidebarMe() {
 }
 
 /** The top bar's right end: the notices bell and the avatar menu. */
-async function EfferdTools() {
+async function EfferdTools({ signInHref }: { signInHref: string }) {
   const [user, progressEnabled] = await Promise.all([getOptionalUser(), getProgressEnabled()]);
-  if (!user) return null;
+  // A visitor on a shared walk page (the only signed-out page with this top bar).
+  if (!user)
+    return (
+      <a
+        className="inline-flex h-8 items-center rounded-full bg-primary px-3.5 font-medium text-primary-foreground text-sm hover:bg-primary/90"
+        href={signInHref}
+      >
+        Sign in
+      </a>
+    );
   const initial = (user.firstName || user.email || "?").charAt(0);
   return (
     <>
@@ -139,7 +186,7 @@ async function EfferdTools() {
   );
 }
 
-export function EfferdHeaderTools() {
+export function EfferdHeaderTools({ signInHref }: { signInHref: string }) {
   return (
     <Suspense
       fallback={
@@ -150,7 +197,7 @@ export function EfferdHeaderTools() {
         </>
       }
     >
-      <EfferdTools />
+      <EfferdTools signInHref={signInHref} />
     </Suspense>
   );
 }

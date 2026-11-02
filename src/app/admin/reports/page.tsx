@@ -1,3 +1,4 @@
+import { Button } from "@/components/ui/button";
 import { Suspense } from "react";
 import { PlaceholderPreview } from "@/components/placeholder-preview";
 import { AdminPageFallback } from "@/app/admin/admin-page-fallback";
@@ -164,6 +165,11 @@ export async function ReportsPageFallback() {
   const rows = await reportsListRows();
   return (
     <AdminPageFallback
+      action={
+        <Button className="w-full sm:w-auto" disabled tabIndex={-1}>
+          Add report
+        </Button>
+      }
       description={REPORTS_INTRO}
       filters={<ReportsFilterChrome />}
       list={<ReportRowsSkeleton known={rows} remember="reports" />}

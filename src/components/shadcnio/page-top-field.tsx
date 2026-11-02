@@ -15,7 +15,7 @@ export function PageTopField({ word }: { word: string }) {
   useEffect(() => {
     const root = document.documentElement;
     const kind = root.getAttribute("data-page-kind");
-    if (root.getAttribute("data-design") !== "shadcnio" || !root.hasAttribute("data-remembered-in")) return;
+    if (root.getAttribute("data-design") !== "shadcnio" || !(root.hasAttribute("data-remembered-in") || root.hasAttribute("data-guest-dash"))) return;
     if (kind === "home" || kind === "plain") return;
     const host = marker.current?.closest<HTMLElement>("[data-shadcn-top]");
     const text = host?.querySelector<HTMLElement>("[data-page-top-title]")?.parentElement;

@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect } from "react";
-import { ME_COOKIE, SIGNED_IN_COOKIE, type SidebarMe } from "./sidebar-state";
+import { ME_COOKIE, SIGNED_IN_COOKIE, syncGuestDash, type SidebarMe } from "./sidebar-state";
 
 /** What the pre-paint script does (sidebar-state.ts, APPLY_ME), for the first visit and for changes. */
 function applyMe(me: SidebarMe) {
@@ -36,6 +36,7 @@ export function SignedInMark({ signedIn, me }: { signedIn: boolean; me?: Sidebar
       root.removeAttribute("data-remembered-in");
       root.removeAttribute("data-sb-role");
     }
+    syncGuestDash(window.location.pathname);
   }, [signedIn, meJson]);
   return null;
 }

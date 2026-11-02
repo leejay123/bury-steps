@@ -141,6 +141,7 @@ function NoticesFallback({
       <section className="flex flex-col gap-0">
         <div className="flex flex-col gap-3 px-4 py-6 md:px-6">
           <PageTop
+            action={<CreateNoticeAction categories={[]} />}
             eyebrow="Dashboard"
             intro="Updates from the organisers. Short messages stay in the bell; open a row for the full write-up."
             title="Notices"
