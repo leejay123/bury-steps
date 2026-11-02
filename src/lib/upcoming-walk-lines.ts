@@ -21,7 +21,9 @@ export async function getUpcomingWalkLines(): Promise<UpcomingWalkLine[]> {
   try {
     const walks = await prisma.walk.findMany({
       where: { startsAt: { gte: upcomingListLookbackFrom() }, cancelledAt: null },
-      orderBy: { startsAt: "asc" },
+      // The same order as the Walks pages' own queries, ties included (two walks at the
+      // same time), so each placeholder row sits over the walk that will take its place.
+      orderBy: [{ startsAt: "asc" }, { id: "asc" }],
       take: 30,
       select: { title: true, location: true, startsAt: true, durationMins: true, endedAt: true, cancelledAt: true },
     });

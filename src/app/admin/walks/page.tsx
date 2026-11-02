@@ -106,7 +106,9 @@ async function loadAdminWalks(userId: string) {
   const [recent, older] = await Promise.all([
     prisma.walk.findMany({
       where: { startsAt: { gte: lookback } },
-      orderBy: { startsAt: "asc" },
+      // Ties (two walks at one time) in a fixed order, the same one the list's
+      // placeholder uses (lib/upcoming-walk-lines.ts), so rows don't swap as it loads.
+      orderBy: [{ startsAt: "asc" }, { id: "asc" }],
       take: 200,
       select: {
         ...base,

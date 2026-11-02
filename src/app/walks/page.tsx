@@ -133,7 +133,8 @@ async function getWalksForViewer() {
       // starting soon, or in progress. A cancelled walk shows in All walks
       // instead, alongside completed ones, regardless of its original date.
       where: { startsAt: { gte: upcomingFrom }, cancelledAt: null },
-      orderBy: { startsAt: "asc" },
+      // Ties in a fixed order, the same as the list's placeholder (lib/upcoming-walk-lines.ts).
+      orderBy: [{ startsAt: "asc" }, { id: "asc" }],
       take: 100,
       select: {
         id: true,
