@@ -45,6 +45,8 @@ export type WalkIdeaParts = {
   tools?: ReactNode;
   /** Where "back" goes from this walk page, and what it's called (the designer's Back link block). */
   back?: { href: string; label: string };
+  /** The top bar's breadcrumb leads back instead (organisers' walk page), so the Back link block shows nothing there. */
+  backInHeader?: boolean;
   /** Designed pages: the messages are shown as a strip under the header instead. */
   noticesInStrip?: boolean;
   /** Designed pages: the messages go in the Details card's Status band instead. */

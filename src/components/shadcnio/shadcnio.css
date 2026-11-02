@@ -880,6 +880,9 @@ html:is([data-sb-role="owner"], [data-sb-role="organiser"]) [data-sb-only="membe
   html[data-remembered-in]:not([data-page-kind="home"], [data-page-kind="plain"]) [data-slot="docs-page"] [data-edge-bar] [data-slot="tabs-list"] { margin-block: -0.125rem; }
   html[data-remembered-in]:not([data-page-kind="home"], [data-page-kind="plain"]) [data-slot="docs-page"] :has(> [data-edge-bar]) { row-gap: 0 !important; }
   html[data-remembered-in]:not([data-page-kind="home"], [data-page-kind="plain"]) [data-slot="docs-page"] [data-edge-bar] ~ [data-slot="tabs-content"] { margin-top: 0 !important; }
+  /* A list right under a search/filter strip butts onto its line (Messages left an empty
+     strip between them, the page top's space). */
+  html[data-remembered-in]:not([data-page-kind="home"], [data-page-kind="plain"]) [data-slot="docs-page"] [data-edge-bar] + :is([data-reveal-list], [data-edge-list], [data-walk-table]) { margin-top: 0 !important; }
   html[data-remembered-in]:not([data-page-kind="home"], [data-page-kind="plain"]) [data-slot="docs-page"] [data-edge-bar] ~ :is([data-walk-table], [data-reveal-list], [data-edge-list]), html[data-remembered-in]:not([data-page-kind="home"], [data-page-kind="plain"]) [data-slot="docs-page"] [data-edge-bar] ~ [data-slot="tabs-content"] > :is([data-walk-table], [data-reveal-list], [data-edge-list]), html[data-remembered-in]:not([data-page-kind="home"], [data-page-kind="plain"]) [data-slot="docs-page"] [data-edge-bar] ~ [data-slot="tabs-content"] > * > :is([data-walk-table], [data-reveal-list], [data-edge-list]) { border-top: 0 !important; }
   html[data-remembered-in]:not([data-page-kind="home"], [data-page-kind="plain"]) [data-slot="docs-page"] [data-edge-foot] { margin-inline: -1.5rem; padding: 0.75rem 0.75rem 0; }
   html[data-remembered-in]:not([data-page-kind="home"], [data-page-kind="plain"]) [data-slot="docs-page"] [data-slot="empty"] { border: 0 !important; background: transparent !important; border-radius: 0 !important; }
@@ -956,6 +959,10 @@ html[data-remembered-in]:not([data-page-kind="home"], [data-page-kind="plain"]) 
   /* One line between bands: the band above keeps its bottom border. A head does
      not also draw a line on top, or two rules sit on each other. */
   html[data-remembered-in]:not([data-page-kind="home"], [data-page-kind="plain"]) [data-slot="docs-page"] [data-edge-group-head] { border-top: 0 !important; }
+  /* Progress's list sits under its own heading in the same band, with no band line above it:
+     its first strip draws that line, and the list runs to the band's foot (no blank strip). */
+  html[data-remembered-in]:not([data-page-kind="home"], [data-page-kind="plain"]) [data-slot="docs-page"] [data-edge-board] > div > [data-edge-group]:first-child > [data-edge-group-head] { border-top: 1px solid var(--border) !important; }
+  html[data-remembered-in]:not([data-page-kind="home"], [data-page-kind="plain"]) [data-slot="docs-page"] [data-edge-board]:last-child { margin-bottom: -1.5rem; }
   /* A setting's own title is the grey strip, full width, with the fields under it. */
   html[data-remembered-in]:not([data-page-kind="home"], [data-page-kind="plain"]) [data-slot="docs-page"] [data-edge-panel]:has(> [data-edge-group-head]) { padding-top: 0 !important; gap: 1.5rem !important; }
   html[data-remembered-in]:not([data-page-kind="home"], [data-page-kind="plain"]) [data-slot="docs-page"] [data-edge-panel] > [data-edge-group-head] { margin-inline: -1.5rem; }
@@ -1002,7 +1009,6 @@ html[data-remembered-in]:not([data-page-kind="home"], [data-page-kind="plain"]) 
    bordered box, so the page card around them goes — no card round the cards (as Overview). */
 html[data-remembered-in]:not([data-page-kind="home"], [data-page-kind="plain"]) [data-slot="docs-page"]:has([data-edge-inset]) { border: 0 !important; padding: 0 !important; border-radius: 0 !important; overflow: visible !important; background: transparent !important; }
 /* The "All walks" row at the top of a joined walk is one short line: a slim band. */
-html[data-remembered-in]:not([data-page-kind="home"], [data-page-kind="plain"]) [data-slot="docs-page"] [data-edge-join] > :last-child > :not([hidden]):has([data-walk-back]) { padding-block: 0.875rem !important; }
 /* A page top's line of explanation is one line on a computer: the full width of the
    band, a little smaller (the wording is kept short enough to fit). It still wraps on a phone. */
 @media (min-width: 48rem) { html[data-remembered-in]:not([data-page-kind="home"], [data-page-kind="plain"]) [data-shadcn-top] [data-page-top-intro] { max-width: none !important; font-size: 1rem !important; line-height: 1.5rem !important; } }

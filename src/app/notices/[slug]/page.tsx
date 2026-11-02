@@ -7,7 +7,8 @@ import { FileX } from "lucide-react";
 import { requireUser } from "@/lib/auth";
 import { noticeDateLabel } from "@/lib/notices";
 import { getPageNoticeBySlug, getPageNotices } from "@/lib/site-notices";
-import { Badge } from "@/components/ui/badge";
+import { PageTop } from "@/components/page-top";
+import { HeaderCrumb } from "@/components/shadcnio/page-crumb";
 import { EmptyState } from "@/components/empty-state";
 import { MarkNoticeReadOnView } from "./mark-notice-read-on-view";
 
@@ -82,6 +83,7 @@ async function NoticeContent({ params }: { params: Promise<{ slug: string }> }) 
   if (!notice || !notice.pageBody) {
     return (
       <div className="flex w-full flex-col gap-6">
+        <HeaderCrumb title="Notice removed" />
         <Link className="text-sm text-muted-foreground hover:text-foreground" href="/notices">
           ← All notices
         </Link>
@@ -99,21 +101,16 @@ async function NoticeContent({ params }: { params: Promise<{ slug: string }> }) 
     // this used to sit further in and lower than every other page.
     <article className="flex w-full flex-col gap-6" data-edge-sections="">
       <MarkNoticeReadOnView noticeId={notice.id} />
-      <Link className="text-sm text-muted-foreground hover:text-foreground" href="/notices">
-        ← All notices
-      </Link>
-      <header className="flex flex-col gap-3">
-        <div className="flex flex-wrap items-center gap-2">
-          {notice.categoryLabel ? <Badge variant="secondary">{notice.categoryLabel}</Badge> : null}
-          <time className="text-sm text-muted-foreground" dateTime={notice.updatedAt.toISOString()}>
-            {noticeDateLabel(notice)}
-          </time>
-        </div>
-        <h1 className="text-3xl font-semibold tracking-tight wrap-break-word md:text-4xl">{notice.title}</h1>
-        {notice.body ? (
-          <p className="text-intro text-muted-foreground wrap-break-word">{notice.body}</p>
-        ) : null}
-      </header>
+      {/* The way back: the top bar's breadcrumb (Notices › this notice). */}
+      <HeaderCrumb title={notice.title} />
+      {/* The same animated page top as Notices and the other pages: the
+          category and date above, the notice's title, its short message. */}
+      <PageTop
+        className="flex flex-col gap-3"
+        eyebrow={notice.categoryLabel ? `${notice.categoryLabel} · ${noticeDateLabel(notice)}` : noticeDateLabel(notice)}
+        intro={notice.body || undefined}
+        title={notice.title}
+      />
       {/* The site's own font, like the title above it: the docs preset's
           Geist only started loading once this text appeared, so the
           article reflowed as it swapped in, and mixed two typefaces. */}

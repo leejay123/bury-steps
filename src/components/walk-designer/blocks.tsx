@@ -4293,6 +4293,9 @@ export function BackLinkBlock({
   align?: "start" | "centre" | "end" | "full";
 }) {
   const p = useWalkParts();
+  // The top bar's breadcrumb already leads back: nothing here, so the block
+  // takes no room (BlockFrame hides an empty block).
+  if (p?.backInHeader) return null;
   const back = p?.back ?? { href: "/admin/walks", label: "All walks" };
   const words = label.trim() || back.label;
   const Icon = arrow === "chevron" ? ChevronLeft : ArrowLeft;

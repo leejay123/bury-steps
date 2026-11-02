@@ -4,7 +4,10 @@ import { useEffect, useState, type ReactNode } from "react";
 import { PanelLeft } from "lucide-react";
 import { lockBackgroundScroll } from "@/components/overlay-scroll-lock";
 import { useClientPathname } from "@/components/client-pathname";
+import { IntentLink as Link } from "@/components/intent-link";
+import { Breadcrumb, BreadcrumbItem, BreadcrumbLink, BreadcrumbList, BreadcrumbPage, BreadcrumbSeparator } from "@/components/ui/breadcrumb";
 import { EfferdTopTools } from "./efferd-top-tools";
+import { SetPageCrumb } from "./page-crumb";
 import { Guides } from "./parts";
 import type { SearchItem } from "./search-panel";
 import { SIDEBAR_KEY, SIDEBAR_TOGGLE_EVENT } from "./sidebar-state";
@@ -45,6 +48,9 @@ export function ShadcnSiteShell({
 }) {
   const path = useClientPathname();
   const [drawer, setDrawer] = useState(false);
+  // The breadcrumb's last step, named by the page (page-crumb.tsx).
+  const [crumb, setCrumb] = useState<string | null>(null);
+  const parent = crumbParent(path);
   const [drawerPath, setDrawerPath] = useState(path);
   // A new page shuts the phone sidebar.
   if (drawerPath !== path) {
@@ -186,11 +192,34 @@ export function ShadcnSiteShell({
                 <PanelLeft aria-hidden />
               </button>
               <span aria-hidden="true" className="mr-2 h-4 w-px shrink-0 bg-border" />
-              <nav aria-label="Breadcrumb" className="min-w-0">
-                <p className="truncate font-normal text-foreground text-sm" aria-current="page">
-                  {pageTitle(path)}
-                </p>
-              </nav>
+              {/* shadcn/ui's breadcrumb: the page's name, or on a page inside a list
+                  (one walk, one notice) the list as a link, then the page (Walks › Sunday stroll). */}
+              <Breadcrumb className="min-w-0">
+                <BreadcrumbList className="flex-nowrap">
+                  {parent ? (
+                    <>
+                      <BreadcrumbItem className="shrink-0">
+                        <BreadcrumbLink asChild>
+                          <Link href={parent.href}>{parent.label}</Link>
+                        </BreadcrumbLink>
+                      </BreadcrumbItem>
+                      <BreadcrumbSeparator />
+                      <BreadcrumbItem className="min-w-0">
+                        {crumb ? (
+                          <BreadcrumbPage className="truncate">{crumb}</BreadcrumbPage>
+                        ) : (
+                          // Until the page names itself: a grey shape where its name goes.
+                          <span aria-hidden="true" className="h-4 w-32 rounded bg-muted" />
+                        )}
+                      </BreadcrumbItem>
+                    </>
+                  ) : (
+                    <BreadcrumbItem className="min-w-0">
+                      <BreadcrumbPage className="truncate">{pageTitle(path)}</BreadcrumbPage>
+                    </BreadcrumbItem>
+                  )}
+                </BreadcrumbList>
+              </Breadcrumb>
             </div>
             <div className="flex shrink-0 items-center gap-3">
               <div className="flex items-center gap-2">
@@ -214,7 +243,7 @@ export function ShadcnSiteShell({
                   data-slot="docs-page"
                   id="main-content"
                 >
-                  {children}
+                  <SetPageCrumb value={setCrumb}>{children}</SetPageCrumb>
                 </div>
                 {/* Members' pages (no footer, as their dashboard): the closing line across the
                     window with its + marks right under the page, then their blank space. Shown by
@@ -299,4 +328,11 @@ const PAGE_TITLES: [string, string][] = [
 function pageTitle(path: string | null) {
   if (!path) return "";
   return PAGE_TITLES.find(([href]) => path === href || path.startsWith(href.endsWith("/") ? href : `${href}/`))?.[1] ?? "";
+}
+
+/** On a page inside a list (one walk, one notice), the list it belongs to: the breadcrumb's first step. */
+function crumbParent(path: string | null) {
+  if (path && /^\/admin\/walks\/[^/]+$/.test(path)) return { href: "/admin/walks", label: "Walks" };
+  if (path && /^\/notices\/[^/]+$/.test(path)) return { href: "/notices", label: "Notices" };
+  return null;
 }

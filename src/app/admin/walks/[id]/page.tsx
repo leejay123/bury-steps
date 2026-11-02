@@ -50,6 +50,7 @@ import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import type { WalkAttendanceRow } from "./walk-attendance";
 import { AvatarStack } from "@/components/avatar-stack";
+import { HeaderCrumb } from "@/components/shadcnio/page-crumb";
 
 
 
@@ -624,6 +625,7 @@ async function WalkDetailPageContent({ id }: { id: string }) {
     tips: theme.beforeYouSetOffTips,
     tools,
     back: { href: "/admin/walks", label: "All walks" },
+    backInHeader: true,
     // For the walk page designer's signed-out visitor preview (hidden from
     // anyone signed in, as on the members' walk page).
     howItWorksSteps: theme.howWalksWorkSteps,
@@ -646,17 +648,13 @@ async function WalkDetailPageContent({ id }: { id: string }) {
       shareUrl,
     },
   };
-  const backRow = (
-    <Link href="/admin/walks" className="w-fit text-sm text-muted-foreground hover:text-foreground" data-walk-back="">
-      &larr; All walks
-    </Link>
-  );
   // Every layout: the page, with the walk handed to Design this page (in
   // the Manage list) for anyone allowed to change the site's look.
-  const page = (content: ReactNode, { withBack = true, sections = true }: { withBack?: boolean; sections?: boolean } = {}) => {
+  const page = (content: ReactNode, { sections = true }: { sections?: boolean } = {}) => {
     const body = (
       <div className="flex flex-col gap-6 px-4 py-6 md:px-6" data-edge-sections={sections ? "" : undefined}>
-        {withBack ? backRow : null}
+        {/* The way back to the walks list: the top bar's breadcrumb (Walks › this walk). */}
+        <HeaderCrumb title={walk.title} />
         {content}
       </div>
     );
@@ -674,8 +672,7 @@ async function WalkDetailPageContent({ id }: { id: string }) {
       <>
         <WalkDesignRender audience="organiser" data={designs.organiser} parts={ideaParts} />
       </>,
-      // Designed pages: the back link is the design's Back link block, if it has one.
-      { withBack: false, sections: false },
+      { sections: false },
     );
   }
 

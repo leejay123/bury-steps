@@ -38,7 +38,7 @@ export function ProgressBoard({ board }: { board: WalkGamePerson[] }) {
   const pageGroups = useMemo(() => groupBoard(paging.paged), [paging.paged]);
 
   return (
-    <div className="flex flex-col" ref={listRef}>
+    <div className="flex flex-col" data-edge-board="" ref={listRef}>
       <div className="flex flex-col">
         {pageGroups.map((group) => (
           <section className="flex flex-col" data-edge-group="" key={group.monthCount}>
