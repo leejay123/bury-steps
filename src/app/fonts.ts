@@ -32,7 +32,10 @@ const hankenGrotesk = Hanken_Grotesk({
   subsets: ["latin"],
   // Swap, not optional: the shadcn.io design must always show shadcn.io's own face.
   display: "swap",
-  preload: false,
+  // Preloaded (unlike the other faces): it's every page's text, so the browser fetches it with
+  // the page itself and it's there for the first paint. Without it the page painted in the
+  // stand-in face and the text grew as Hanken swapped in (next/font docs: preload).
+  preload: true,
   variable: "--font-hanken",
 });
 const manrope = Manrope({
