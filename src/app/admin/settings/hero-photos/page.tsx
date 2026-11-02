@@ -18,7 +18,7 @@ export default function HeroPhotosSettingsPage() {
   // themselves (and the access check) fill in just after.
   return (
     <SettingsPage
-      description={`The homepage's pictures: the Photo slider section and every photo hero (Photo slider, Parallax, 3D Marquee, Sideways strip, Tiles, Diagonal rows and Accordion). Keep up to ${MAX_HOMEPAGE_SLIDES}, change each picture, and use the arrows to put them in the order visitors will see. A hero that shows more photos than you have (Parallax 12, 3D Marquee 15) fills the gaps with sample walking photos until you add your own.`}
+      description={`Up to 15 homepage photos for the slider and photo heroes. Use the arrows to set the order visitors see.`}
       previewHref="/"
       title="Hero photos"
     >

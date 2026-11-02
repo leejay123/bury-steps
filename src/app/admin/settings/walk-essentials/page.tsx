@@ -18,7 +18,7 @@ export default function WalkEssentialsSettingsPage() {
   // themselves (and the access check) fill in just after.
   return (
     <SettingsPage
-      description="The tick-box list under Essentials when you create or edit a walk. Rename items, pick their icons, add your own or remove ones you don't use. Changes show on every walk straight away."
+      description="The Essentials tick-boxes on every walk. Rename them, pick icons, and add or remove items."
       title="Walk essentials"
     >
       <Suspense fallback={<SettingsFallback />}>

@@ -36,7 +36,7 @@ export default function MembersPage({
   return (
     <div className="flex flex-col gap-6 px-4 py-6 md:px-6">
       <AdminPageIntro
-        description="Everyone who has signed up. Filter by role, search by name or email, and click a row for walk history. Removing someone deletes their login and clock-in records. Walks they created stay with the group."
+        description="Everyone who has signed up. Filter, search, or open someone for their walk history."
         title="Members"
       />
       {/* The heading shows straight away; only the list waits for data. */}

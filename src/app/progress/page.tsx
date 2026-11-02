@@ -51,7 +51,7 @@ export default function ProgressPage() {
     <div className="flex flex-col gap-8" data-edge-sections="">
       <PageTop
         eyebrow="Dashboard"
-        intro="How we walk together this month — clock-ins, not miles or speed. No winners, no losers. Only signed-in members see this."
+        intro="How we walk together this month: clock-ins, not miles or speed. No winners, no losers."
         title="Progress"
       />
       {/* The heading shows straight away; one placeholder, shaped like last

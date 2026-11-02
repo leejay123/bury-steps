@@ -21,7 +21,7 @@ type SortOrder = "desc" | "asc";
 const REPORTS_FETCH_LIMIT = 500;
 
 const REPORTS_INTRO =
-  "Record what happened, who was involved, and what you did. Filter by linked walk, sort by date, or search. Open a report to read the full write-up, then edit it or print a PDF.";
+  "Record what happened on a walk. Filter, sort or search, then open a report to edit it or print a PDF.";
 
 function parseLinkFilter(raw: string | undefined): LinkFilter {
   if (raw === "linked" || raw === "unlinked") return raw;

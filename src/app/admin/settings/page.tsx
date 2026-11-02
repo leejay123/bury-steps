@@ -51,7 +51,7 @@ export default function AdminSettingsPage() {
   // themselves (and the access check) fill in just after.
   return (
     <SettingsPage
-      description="Everything about how the site looks and works. Each row shows where that setting stands now — open one to change it."
+      description="Everything about how the site looks and works. Each row shows its setting now; open one to change it."
       showBackLink={false}
       title="Settings"
     >

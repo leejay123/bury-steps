@@ -25,7 +25,7 @@ export default function HomepageLayoutSettingsPage() {
   // themselves (and the access check) fill in just after.
   return (
     <SettingsPage
-      description="The site name and tagline always stay at the top. Choose the order of the sections below them, and whether the photos and latest notices show."
+      description="Choose the order of the homepage sections, and whether the photos and latest notices show."
       previewHref="/"
       title="Homepage layout"
     >

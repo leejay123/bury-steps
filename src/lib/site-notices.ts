@@ -148,7 +148,10 @@ export async function getSiteNotices(): Promise<NoticeView[]> {
     const pageIds = notices.filter((notice) => notice.kind === "PAGE").map((notice) => notice.id);
     if (pageIds.length === 0) return notices;
 
-    const bodies = await getCachedPageBodies(pageIds);
+    // In a fixed order: the saved copy is found by its arguments, and notices that
+    // tie on date could come in either order between Next.js's two passes over the
+    // page ("Unexpected cache miss after cache warming").
+    const bodies = await getCachedPageBodies([...pageIds].sort());
     const byId = new Map(bodies.map((row) => [row.id, row.pageBody]));
     return notices.map((notice) =>
       notice.kind === "PAGE" ? { ...notice, pageBody: byId.get(notice.id) ?? null } : notice,

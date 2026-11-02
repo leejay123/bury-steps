@@ -647,7 +647,7 @@ async function WalkDetailPageContent({ id }: { id: string }) {
     },
   };
   const backRow = (
-    <Link href="/admin/walks" className="w-fit text-sm text-muted-foreground hover:text-foreground">
+    <Link href="/admin/walks" className="w-fit text-sm text-muted-foreground hover:text-foreground" data-walk-back="">
       &larr; All walks
     </Link>
   );

@@ -43,21 +43,46 @@ function AccordionItem({
       // back into every *other* item's internals on each frame — only
       // reposition them, which is the one part of the cost that can't be
       // avoided without changing the visual behaviour.
-      className={cn("contain-content border-b", className)}
+      className={cn("contain-content scroll-mt-[calc(var(--header-height,3.5rem)+0.75rem)] border-b", className)}
       {...props}
     />
   )
 }
 
+/**
+ * Once an item has opened (and any item above it has shut), bring it into view if it
+ * isn't: its heading just below the top bar (the item's scroll-margin), so what was
+ * opened is what's on screen. An item already fully in view is left where it is.
+ */
+function revealOpenedItem(trigger: HTMLElement) {
+  const item = trigger.closest<HTMLElement>('[data-slot="accordion-item"]')
+  if (!item) return
+  // After the slide (150ms) has finished, so the item's final size is known.
+  window.setTimeout(() => {
+    if (item.getAttribute("data-state") !== "open") return
+    const box = item.getBoundingClientRect()
+    const top = Number.parseFloat(getComputedStyle(item).scrollMarginTop) || 0
+    if (box.top >= top && box.bottom <= window.innerHeight) return
+    const still = window.matchMedia("(prefers-reduced-motion: reduce)").matches
+    item.scrollIntoView({ behavior: still ? "auto" : "smooth", block: "start" })
+  }, 200)
+}
+
 function AccordionTrigger({
   className,
   children,
+  onClick,
   ...props
 }: React.ComponentProps<typeof AccordionPrimitive.Trigger>) {
   return (
     <AccordionPrimitive.Header className="flex">
       <AccordionPrimitive.Trigger
         data-slot="accordion-trigger"
+        onClick={(event) => {
+          onClick?.(event)
+          if (!event.defaultPrevented && event.currentTarget.getAttribute("data-state") === "closed")
+            revealOpenedItem(event.currentTarget)
+        }}
         className={cn(
           // `transition-colors` rather than `transition-all`: this only
           // ever visually changes a focus ring and opacity, so animating

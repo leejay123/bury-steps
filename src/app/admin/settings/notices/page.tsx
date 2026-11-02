@@ -19,7 +19,7 @@ export default function NoticesSettingsPage() {
   // themselves (and the access check) fill in just after.
   return (
     <SettingsPage
-      description={`Messages for signed-in members — short ones in the bell, longer ones as their own page on Notices, filed under up to ${MAX_NOTICE_CATEGORIES} categories.`}
+      description={`Messages for members: short ones in the bell, longer ones as their own page, in up to ${MAX_NOTICE_CATEGORIES} categories.`}
       title="Notices"
     >
       <Suspense fallback={<SettingsFallback />}>

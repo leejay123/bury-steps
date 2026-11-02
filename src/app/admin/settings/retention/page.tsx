@@ -21,7 +21,7 @@ export default function RetentionSettingsPage() {
   // themselves (and the access check) fill in just after.
   return (
     <SettingsPage
-      description="How long cancelled walks and accident reports are kept before they're deleted automatically. To keep a particular walk or report for good, flag it on that walk or report itself."
+      description="How long cancelled walks and accident reports are kept. Flag a walk or report to keep it for good."
       title="Data retention"
     >
       <Suspense fallback={<SettingsFallback />}>

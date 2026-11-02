@@ -31,7 +31,7 @@ export default function SiteBehaviourSettingsPage() {
   // themselves (and the access check) fill in just after.
   return (
     <SettingsPage
-      description="Sitewide behaviour that isn't part of the homepage story — announcement bar, the phone menu, tabs, cookie notice, back to top, the footer name, Progress, clock-in, organiser invites, and the contact form."
+      description="Announcement bar, menus, tabs, cookie notice, footer, Progress, clock-in, invites and the contact form."
       title="Site behaviour"
     >
       <Suspense fallback={<SettingsFallback />}>

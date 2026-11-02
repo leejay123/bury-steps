@@ -31,7 +31,7 @@ export default function AdminEmailsSettingsPage() {
   // themselves (and the access check) fill in just after.
   return (
     <SettingsPage
-      description="Every email the site sends. Tap one to edit its subject line and intro wording (the logo, layout, buttons and walk or message details stay fixed) or send yourself a test."
+      description="Every email the site sends. Open one to change its subject and intro, or send yourself a test."
       title="Emails"
     >
       <Suspense fallback={<SettingsFallback />}>

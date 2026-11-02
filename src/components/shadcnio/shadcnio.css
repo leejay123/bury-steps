@@ -771,7 +771,9 @@ html[data-remembered-in]:not([data-page-kind="home"], [data-page-kind="plain"]) 
 html[data-remembered-in]:not([data-page-kind="home"], [data-page-kind="plain"]) [data-slot="efferd-header"] { display: flex; }
 html[data-remembered-in]:not([data-page-kind="home"], [data-page-kind="plain"]) :is([data-slot="docs-end"], [data-slot="docs-marks"], [data-slot="guides"], [data-slot="docs-sidebar-edge"]) { display: none !important; }
 html[data-remembered-in]:not([data-page-kind="home"], [data-page-kind="plain"]) [data-slot="docs-sidebar-drawer"] aside { background: var(--background); }
-html[data-remembered-in]:not([data-page-kind="home"], [data-page-kind="plain"]) [data-slot="docs-container"] { max-width: 80rem; padding: 1rem; min-height: 0; }
+/* The dashboard page fills the room beside the sidebar, open or folded (a cap left wide
+   empty gutters once the sidebar folded away). */
+html[data-remembered-in]:not([data-page-kind="home"], [data-page-kind="plain"]) [data-slot="docs-container"] { max-width: none; padding: 1rem; min-height: 0; }
 @media (min-width: 48rem) { html[data-remembered-in]:not([data-page-kind="home"], [data-page-kind="plain"]) [data-slot="docs-container"] { padding: 1.5rem; } }
 html[data-remembered-in]:not([data-page-kind="home"], [data-page-kind="plain"]) [data-slot="docs-column"] { border-inline: 0 !important; }
 html[data-remembered-in]:not([data-page-kind="home"], [data-page-kind="plain"]) [data-slot="docs-page"] { padding: 0 !important; }
@@ -999,3 +1001,8 @@ html[data-remembered-in]:not([data-page-kind="home"], [data-page-kind="plain"]) 
   html[data-remembered-in]:not([data-page-kind="home"], [data-page-kind="plain"]) [data-slot="docs-page"] [data-edge-join] [data-slot="accordion-item"]:last-child { border-bottom: 0 !important; }/* A designed walk set to "Separate boxes" (data-edge-inset): each block is its own
    bordered box, so the page card around them goes — no card round the cards (as Overview). */
 html[data-remembered-in]:not([data-page-kind="home"], [data-page-kind="plain"]) [data-slot="docs-page"]:has([data-edge-inset]) { border: 0 !important; padding: 0 !important; border-radius: 0 !important; overflow: visible !important; background: transparent !important; }
+/* The "All walks" row at the top of a joined walk is one short line: a slim band. */
+html[data-remembered-in]:not([data-page-kind="home"], [data-page-kind="plain"]) [data-slot="docs-page"] [data-edge-join] > :last-child > :not([hidden]):has([data-walk-back]) { padding-block: 0.875rem !important; }
+/* A page top's line of explanation is one line on a computer: the full width of the
+   band, a little smaller (the wording is kept short enough to fit). It still wraps on a phone. */
+@media (min-width: 48rem) { html[data-remembered-in]:not([data-page-kind="home"], [data-page-kind="plain"]) [data-shadcn-top] [data-page-top-intro] { max-width: none !important; font-size: 1rem !important; line-height: 1.5rem !important; } }

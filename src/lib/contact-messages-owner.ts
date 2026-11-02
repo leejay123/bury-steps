@@ -25,10 +25,10 @@ export async function getContactMessagesDescription(): Promise<{ text: string; h
   return owner
     ? {
         hasOwner: true,
-        text: `Submissions from the public Contact us form. ${displayName(owner)} gets an email alert for each new one and can reply straight from it — nothing else happens automatically.`,
+        text: `Messages from the Contact us form. ${displayName(owner)} gets an email alert for each and can reply from it.`,
       }
     : {
         hasOwner: false,
-        text: "Submissions from the public Contact us form. No one is set to be alerted by email yet — set that in Settings → Site behaviour → Contact messages.",
+        text: "Messages from the Contact us form. No one gets email alerts yet: set that in Site behaviour.",
       };
 }

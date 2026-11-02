@@ -18,7 +18,7 @@ export default function ProgressSettingsPage() {
   // themselves (and the access check) fill in just after.
   return (
     <SettingsPage
-      description="Set an optional group clock-in goal for the month. Members see it on Progress. Leave it blank if you do not want a together target."
+      description="An optional monthly clock-in goal for the group, shown on Progress. Leave it blank for no target."
       title="Progress"
     >
       <Suspense fallback={<ProgressSettingsFallback />}>

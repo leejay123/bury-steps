@@ -4302,6 +4302,7 @@ export function BackLinkBlock({
     look === "text" ? (
       <Link
         className="flex w-fit items-center gap-1 text-sm text-muted-foreground hover:text-foreground"
+        data-walk-back=""
         href={back.href}
       >
         {icon}
@@ -4315,7 +4316,7 @@ export function BackLinkBlock({
         size="icon"
         variant="outline"
       >
-        <Link href={back.href}>
+        <Link data-walk-back="" href={back.href}>
           <Icon aria-hidden />
         </Link>
       </Button>
@@ -4337,7 +4338,7 @@ export function BackLinkBlock({
                 : "outline"
         }
       >
-        <Link href={back.href}>
+        <Link data-walk-back="" href={back.href}>
           {icon}
           {words}
         </Link>

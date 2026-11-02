@@ -18,7 +18,7 @@ export default function FaqsSettingsPage() {
   // themselves (and the access check) fill in just after.
   return (
     <SettingsPage
-      description={`Up to ${MAX_HOMEPAGE_FAQS} questions on the public homepage, in up to ${MAX_FAQ_CATEGORIES} categories. Change the heading above them under Site wording → FAQ heading.`}
+      description={`Up to ${MAX_HOMEPAGE_FAQS} questions on the public homepage, in up to ${MAX_FAQ_CATEGORIES} categories. The heading is under Site wording.`}
       previewHref="/"
       title="FAQs"
     >

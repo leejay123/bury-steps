@@ -128,7 +128,7 @@ function NoticesBlogSectionInner({
         <PageTop
           action={action}
           eyebrow="Dashboard"
-          intro="Updates from the organisers for signed-in members. Short messages stay in the bell; open a row here for the full write-up."
+          intro="Updates from the organisers. Short messages stay in the bell; open a row for the full write-up."
           title="Notices"
         />
         <div data-edge-bar="" data-edge-top="">

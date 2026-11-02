@@ -36,7 +36,7 @@ export default function AdminSubscribersSettingsPage() {
   // themselves (and the access check) fill in just after.
   return (
     <SettingsPage
-      description="Who's opted into which emails. Send a newsletter to everyone on the list straight from this page, or download the list."
+      description="Who's opted into which emails. Send a newsletter to the list from here, or download it."
       title="Subscribers"
     >
       <Suspense fallback={<SubscribersFallback />}>
