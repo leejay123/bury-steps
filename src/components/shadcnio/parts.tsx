@@ -343,17 +343,34 @@ export function Tile({
     </>
   ) : (
     <>
-      {picture}
-      <span className="absolute inset-x-5 top-5 flex flex-col gap-0.5" data-slot="sketch-label">
-        {/* One line each, as theirs, so the cards below never cover them. */}
-        <span className="truncate font-medium text-[0.9375rem] text-foreground leading-5 tracking-tight">{title}</span>
+      {/* On phones the fanned cards (two to a row) are too cramped, and some Android
+          browsers draw them flat and cut off, so a fan tile shows its words alone there. */}
+      {visual.kind === "fan" ? <span className="max-sm:hidden">{picture}</span> : picture}
+      <span
+        className={cn(
+          "absolute inset-x-5 top-5 flex flex-col gap-0.5",
+          visual.kind === "fan" && "max-sm:static max-sm:p-4",
+        )}
+        data-slot="sketch-label"
+      >
+        {/* One line each, as theirs, so the cards below never cover them (two lines on a phone, where there are none). */}
+        <span
+          className={cn(
+            "truncate font-medium text-[0.9375rem] text-foreground leading-5 tracking-tight",
+            visual.kind === "fan" && "max-sm:line-clamp-2 max-sm:whitespace-normal",
+          )}
+        >
+          {title}
+        </span>
         <span className="truncate text-muted-foreground text-xs tabular-nums leading-4">{sub}</span>
       </span>
     </>
   );
   const tile = phoneShort
     ? TILE.replace("h-40", "h-12 items-center justify-center aria-[current=page]:bg-muted/40 sm:h-40 sm:items-stretch sm:justify-start")
-    : TILE;
+    : visual.kind === "fan"
+      ? TILE.replace("h-40", "h-auto sm:h-40")
+      : TILE;
   const here = current ? ("page" as const) : undefined;
   return (
     <li className={className} style={style}>

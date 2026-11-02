@@ -984,3 +984,18 @@ html[data-remembered-in]:not([data-page-kind="home"], [data-page-kind="plain"]) 
   margin-inline: -1.5rem; width: auto; max-width: none; border-radius: 0 !important; border-inline: 0 !important; box-shadow: none !important;
 }
 html[data-remembered-in]:not([data-page-kind="home"], [data-page-kind="plain"]) [data-slot="docs-page"] [data-edge-join] > :last-child > :not([hidden]) > * > :is(.rounded-xl.border, .rounded-2xl.border, [data-slot="card"]):last-child { border-bottom: 0 !important; }
+/* Designed walks with "Join the card, edge to edge" (data-edge-join): the Details card,
+   the map and the folding sections (Walk Details, Attended…) lose their own border and
+   corners and fill the page card's width, split by single lines — no card in the card.
+   The card's own top and bottom space goes too, as each band keeps its own. "Separate
+   boxes" (no data-edge-join) keeps the framed look. */
+@media (min-width: 48rem) {
+  html[data-remembered-in]:not([data-page-kind="home"], [data-page-kind="plain"]) [data-slot="docs-page"]:has([data-edge-join]) { padding-block: 0 !important; }
+  html[data-remembered-in]:not([data-page-kind="home"], [data-page-kind="plain"]) [data-slot="docs-page"] [data-edge-join] > :last-child > :not([hidden]):has(> * > :is(section.overflow-clip, [data-slot="accordion"])) { padding: 0 !important; }
+  html[data-remembered-in]:not([data-page-kind="home"], [data-page-kind="plain"]) [data-slot="docs-page"] [data-edge-join] > :last-child > :not([hidden]) section.overflow-clip section.rounded-xl.border { border: 0 !important; border-radius: 0 !important; }
+  html[data-remembered-in]:not([data-page-kind="home"], [data-page-kind="plain"]) [data-slot="docs-page"] [data-edge-join] [data-card-map] { padding-top: 0 !important; }
+  html[data-remembered-in]:not([data-page-kind="home"], [data-page-kind="plain"]) [data-slot="docs-page"] [data-edge-join] [data-card-map] > .rounded-2xl.border { border: 0 !important; border-top: 1px solid var(--border) !important; border-radius: 0 !important; }
+  html[data-remembered-in]:not([data-page-kind="home"], [data-page-kind="plain"]) [data-slot="docs-page"] [data-edge-join] [data-slot="accordion"] { row-gap: 0 !important; gap: 0 !important; }
+  html[data-remembered-in]:not([data-page-kind="home"], [data-page-kind="plain"]) [data-slot="docs-page"] [data-edge-join] [data-slot="accordion-item"] { border: 0 !important; border-bottom: 1px solid var(--border) !important; border-radius: 0 !important; }
+  html[data-remembered-in]:not([data-page-kind="home"], [data-page-kind="plain"]) [data-slot="docs-page"] [data-edge-join] [data-slot="accordion-item"]:last-child { border-bottom: 0 !important; }
+}
