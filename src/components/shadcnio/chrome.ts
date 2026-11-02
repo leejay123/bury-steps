@@ -23,6 +23,7 @@ export function siteChrome(theme: SiteTheme) {
   ];
   const search: SearchItem[] = [
     { href: "/walks", label: "Walks", caption: "Coming up", scope: "pages" },
+    { href: "/about", label: "About the group", scope: "pages" },
     { href: "/notices", label: "Notices", scope: "pages" },
     { href: "/progress", label: "Group progress", scope: "pages" },
     { href: "/history", label: "Your walk history", scope: "pages" },
@@ -50,6 +51,7 @@ export function siteChrome(theme: SiteTheme) {
         id: "group",
         title: "The group",
         links: [
+          { href: "/about", label: "About the group" },
           { href: "/contact", label: "Contact us" },
           { href: "/apps", label: "Walking apps" },
           ...(facebookUrl ? [{ href: facebookUrl, label: "Facebook group" }] : []),
@@ -63,7 +65,7 @@ export function siteChrome(theme: SiteTheme) {
         links: [
           { href: "/#faq", label: "Questions people ask" },
           { href: "/#home-how-heading", label: "How it works" },
-          { href: "/#home-rules-heading", label: "Group rules" },
+          { href: "/about#rules", label: "Group rules" },
         ],
       },
     ],

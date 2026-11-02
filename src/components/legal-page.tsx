@@ -3,7 +3,7 @@ import Link from "next/link";
 import { FullWidthDivider } from "@/components/full-width-divider";
 import { PAGE_X_BLEED } from "@/lib/page-x";
 import { typesetFont } from "@/app/typeset-font";
-import { ShadcnLegal } from "@/components/shadcnio/legal";
+import { ShadcnLegal, type ShadcnLegalIcon } from "@/components/shadcnio/legal";
 import { getSiteTheme } from "@/lib/site-theme";
 
 export const LEGAL_LAST_UPDATED = "28 August 2026";
@@ -12,6 +12,15 @@ export type LegalSection = {
   id: string;
   title: string;
   content: ReactNode;
+};
+
+export type LegalShadcnProps = {
+  current: string;
+  icon: ShadcnLegalIcon;
+  lead: string;
+  rest: string;
+  updated?: string;
+  closing?: string;
 };
 
 function LegalBody({ children }: { children: ReactNode }) {
@@ -26,28 +35,35 @@ export async function LegalPage({
   title,
   description,
   sections,
+  shadcn,
 }: {
   title: string;
   description: string;
   sections: LegalSection[];
+  /** When set, used as-is for the shadcn.io layout (About, or overrides). */
+  shadcn?: LegalShadcnProps;
 }) {
   const theme = await getSiteTheme();
   if (theme.siteDesign === "shadcnio") {
-    // The shadcn.io design: their Terms page layout.
     const terms = title.toLowerCase().includes("terms");
+    const props: LegalShadcnProps = shadcn ?? {
+      current: terms ? "/terms-of-service" : "/privacy-policy",
+      icon: terms ? "terms" : "privacy",
+      lead: terms ? "The rules for using Bury Steps:" : "How Bury Steps uses your information:",
+      rest: terms
+        ? "your account, walks and your safety, acceptable use, and our responsibilities."
+        : "what we collect, why we need it, who can see it, and your rights.",
+    };
     return (
       <ShadcnLegal
-        current={terms ? "/terms-of-service" : "/privacy-policy"}
-        icon={terms ? "terms" : "privacy"}
-        lead={terms ? "The rules for using Bury Steps:" : "How Bury Steps uses your information:"}
-        rest={
-          terms
-            ? "your account, walks and your safety, acceptable use, and our responsibilities."
-            : "what we collect, why we need it, who can see it, and your rights."
-        }
+        closing={props.closing}
+        current={props.current}
+        icon={props.icon}
+        lead={props.lead}
+        rest={props.rest}
         sections={sections}
         title={title}
-        updated={LEGAL_LAST_UPDATED}
+        updated={props.updated ?? LEGAL_LAST_UPDATED}
       />
     );
   }
@@ -82,6 +98,10 @@ export async function LegalPage({
       </div>
       <p className="mt-auto px-4 py-4 md:px-6 text-xs text-muted-foreground">
         This page is a practical notice for Bury Steps members. It is not legal advice.{" "}
+        <Link className="font-medium text-foreground underline-offset-4 hover:underline" href="/about">
+          About
+        </Link>
+        {" · "}
         <Link className="font-medium text-foreground underline-offset-4 hover:underline" href="/privacy-policy">
           Privacy Policy
         </Link>

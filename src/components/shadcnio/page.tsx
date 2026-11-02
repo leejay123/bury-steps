@@ -12,7 +12,6 @@ import { getShadcnHomeData } from "./home-data";
 import { PromoBar } from "./promo-bar";
 import { ShadcnAccountTools } from "./account-tools";
 import { siteChrome } from "./chrome";
-import { AboutReadMore } from "./about-read-more";
 import { ShadcnNewsletter } from "./newsletter";
 import { getOptionalUser } from "@/lib/auth";
 import { getProgressEnabled } from "@/lib/progress-settings";
@@ -89,24 +88,8 @@ export async function ShadcnHomePage({ theme }: { theme: SiteTheme }) {
               about={{
                 title: theme.howThisStartedTitle,
                 teaser: theme.howThisStartedTeaser,
-                readMore: (
-                  <AboutReadMore
-                    aboutExpect={theme.aboutExpect}
-                    aboutExpectHeading={theme.aboutExpectHeading}
-                    aboutGoals={theme.aboutGoals}
-                    aboutGoalsHeading={theme.aboutGoalsHeading}
-                    aboutPlaces={theme.aboutPlaces}
-                    aboutPlacesHeading={theme.aboutPlacesHeading}
-                    aboutRules={theme.aboutRules}
-                    aboutRulesHeading={theme.aboutRulesHeading}
-                    facebookGroupUrl={theme.facebookGroupUrl}
-                    howThisStartedBody={theme.howThisStartedBody}
-                    howThisStartedTitle={theme.howThisStartedTitle}
-                  />
-                ),
               }}
               data={data}
-              essentials={theme.walkEssentials}
               expect={theme.aboutExpect}
               facebookUrl={facebookUrl}
               faqCategories={faqData.categories}
@@ -114,7 +97,6 @@ export async function ShadcnHomePage({ theme }: { theme: SiteTheme }) {
               goals={theme.aboutGoals}
               joinHref={joinHref}
               logo={logo}
-              rules={theme.aboutRules}
               signInHref={signInHref}
               siteName={theme.siteName}
               tagline={theme.siteTagline}

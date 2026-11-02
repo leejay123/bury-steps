@@ -1,38 +1,30 @@
-import { Fragment, createElement, type ReactNode } from "react";
+import { Fragment, createElement } from "react";
 import { IntentLink as Link } from "@/components/intent-link";
 import {
   ArrowRight,
   BarChart3,
   Bell,
   CalendarDays,
-  Clock,
-  Compass,
   Footprints,
   Handshake,
   Heart,
   History,
   LogIn,
   LogOut,
-  Mail,
   MapPin,
   Mountain,
-  Phone,
   ShieldCheck,
   Smile,
   Star,
   Sun,
-  TreePine,
   UserPlus,
   Users,
 } from "lucide-react";
-import type { AboutRule } from "@/lib/homepage-copy";
 import type { FaqCategoryView, FaqView } from "@/lib/faqs";
 import type { TestimonialView } from "@/lib/testimonials";
-import type { EssentialItem } from "@/lib/walk-essentials";
-import { essentialIcon } from "@/lib/walk-essentials";
-import { CARD_GRID_3, GALLERY_GRID_3, PHONE_LIST } from "./grids";
+import { GALLERY_GRID_3, PHONE_LIST } from "./grids";
 import { SectionTitle } from "@/components/section-title";
-import { BUTTON_OUTLINE, BUTTON_PRIMARY, WALKS_GRID, MiniNote, MiniWalk, Section, SectionHead, Tile } from "./parts";
+import { BUTTON_OUTLINE, BUTTON_PRIMARY, PillLink, WALKS_GRID, MiniNote, MiniWalk, Section, SectionHead, Tile } from "./parts";
 import type { ShadcnHomeData } from "./home-data";
 import { ShadcnFaq } from "./faq";
 import { ShadcnReviews } from "./reviews";
@@ -49,13 +41,11 @@ export type ShadcnHomeProps = {
   faqCategories: FaqCategoryView[];
   goals: string[];
   expect: string[];
-  rules: AboutRule[];
-  essentials: EssentialItem[];
   facebookUrl: string;
   joinHref: string;
   signInHref: string;
-  /** The original homepage's "How this started" part, with its Read more drawer. */
-  about: { title: string; teaser: string; readMore: ReactNode };
+  /** Homepage teaser; full story is on /about. */
+  about: { title: string; teaser: string };
 };
 
 const number = new Intl.NumberFormat("en-GB");
@@ -70,8 +60,6 @@ export function ShadcnHome(props: ShadcnHomeProps) {
       <ExpectSection expect={props.expect} />
       <HowItWorksSection />
       <GoalsSection goals={props.goals} />
-      <RulesSection rules={props.rules} />
-      <EssentialsSection essentials={props.essentials} />
       <ReviewsSection testimonials={props.testimonials} />
       <ShadcnFaq categories={props.faqCategories} faqs={props.faqs} facebookUrl={props.facebookUrl} />
       <CallToAction {...props} />
@@ -178,7 +166,7 @@ function Hero({ data, logo, joinHref }: ShadcnHomeProps) {
   );
 }
 
-/** The group's story, as on the original homepage: a short teaser and Read more for the whole of it. */
+/** The group's story teaser; Read more opens the full About page. */
 function AboutSection({ about }: { about: ShadcnHomeProps["about"] }) {
   const [lead, ...rest] = about.teaser.split(/(?<=[.!?])\s+/);
   return (
@@ -194,7 +182,11 @@ function AboutSection({ about }: { about: ShadcnHomeProps["about"] }) {
             <span className="font-medium text-foreground">{lead}</span> {rest.join(" ")}
           </p>
         </div>
-        <div className="flex shrink-0 justify-center gap-2">{about.readMore}</div>
+        <div className="flex shrink-0 justify-center gap-2">
+          <PillLink arrow href="/about">
+            Read more
+          </PillLink>
+        </div>
       </div>
     </Section>
   );
@@ -271,28 +263,31 @@ const STEPS = [
   { title: "Look back", sub: "Every walk you've been on", icon: <History /> },
 ];
 
+/** Visitors only — signed-in members already know the flow (data-guest-home). */
 function HowItWorksSection() {
   return (
-    <Section id="home-how-heading">
-      <SectionHead
-        action={{ href: "/walks", label: "See the walks" }}
-        id="home-how-heading"
-        lead="Join, see the walks, clock in:"
-        rest="that's all there is to it. The leader knows who's out walking, and you can look back on every walk you've done."
-        title="How it works"
-      />
-      <MoreRows className={WALKS_GRID} columns={3} first={3} label="How it works">
-        {STEPS.slice(0, 6).map((step) => (
-          <Tile
-            key={step.title}
-            phoneRow
-            sub={step.sub}
-            title={step.title}
-            visual={{ kind: "square", icon: step.icon }}
-          />
-        ))}
-      </MoreRows>
-    </Section>
+    <div data-guest-home="">
+      <Section id="home-how-heading">
+        <SectionHead
+          action={{ href: "/walks", label: "See the walks" }}
+          id="home-how-heading"
+          lead="Join, see the walks, clock in:"
+          rest="that's all there is to it. The leader knows who's out walking, and you can look back on every walk you've done."
+          title="How it works"
+        />
+        <MoreRows className={WALKS_GRID} columns={3} first={3} label="How it works">
+          {STEPS.slice(0, 6).map((step) => (
+            <Tile
+              key={step.title}
+              phoneRow
+              sub={step.sub}
+              title={step.title}
+              visual={{ kind: "square", icon: step.icon }}
+            />
+          ))}
+        </MoreRows>
+      </Section>
+    </div>
   );
 }
 
@@ -310,66 +305,6 @@ function GoalsSection({ goals }: { goals: string[] }) {
       <MoreRows className={WALKS_GRID} columns={3} first={3} label="Group goals">
         {goals.slice(0, 6).map((goal, i) => (
           <Tile key={goal} phoneRow sub="A reason to walk" title={goal} visual={{ kind: "circle", icon: GOAL_ICONS[i % 4] }} />
-        ))}
-      </MoreRows>
-    </Section>
-  );
-}
-
-const RULE_ICONS = [
-  [<ShieldCheck key="a" />, <Users key="b" />, <Heart key="c" />],
-  [<Clock key="a" />, <Footprints key="b" />, <Sun key="c" />],
-  [<Phone key="a" />, <Bell key="b" />, <Mail key="c" />],
-  [<TreePine key="a" />, <Compass key="b" />, <MapPin key="c" />],
-];
-
-function RulesSection({ rules }: { rules: AboutRule[] }) {
-  return (
-    <Section id="home-rules-heading">
-      <SectionHead
-        id="home-rules-heading"
-        lead={`${rules.length} simple rules`}
-        rest="that keep every walk safe, kind and enjoyable for everyone in the group."
-        title="Group rules"
-      />
-      <MoreRows className={WALKS_GRID} columns={3} first={3} label="Group rules">
-        {rules.slice(0, 6).map((rule, i) => (
-          <Tile
-            key={rule.title}
-            phoneRow
-            sub={rule.body}
-            title={rule.title}
-            visual={{ kind: "stack", icons: RULE_ICONS[i % RULE_ICONS.length]! }}
-          />
-        ))}
-      </MoreRows>
-    </Section>
-  );
-}
-
-function EssentialsSection({ essentials }: { essentials: EssentialItem[] }) {
-  return (
-    <Section id="home-essentials-heading">
-      <SectionHead
-        id="home-essentials-heading"
-        lead="Toilets, parking, cafés and more:"
-        rest="each walk shows what's at the meeting point, so you know before you set off."
-        title="Know before you go"
-      />
-      <MoreRows className={`${CARD_GRID_3} ${PHONE_LIST}`} columns={3} first={3} label="Walk essentials">
-        {essentials.slice(0, 6).map((item) => (
-          <li key={item.key}>
-            <Link href="/walks">
-              <strong>{item.label}</strong>
-              <small>On the walk page</small>
-              <i />
-              <span>
-                <span className="flex size-full items-center justify-center text-foreground/80 [&_svg]:size-10 [&_svg]:stroke-[1.25]">
-                  {createElement(essentialIcon(item.icon), { "aria-hidden": true })}
-                </span>
-              </span>
-            </Link>
-          </li>
         ))}
       </MoreRows>
     </Section>

@@ -1,24 +1,36 @@
 import type { ReactNode } from "react";
 import Link from "next/link";
-import { ArrowRight, ChevronRight, Mail, Scale, ShieldCheck } from "lucide-react";
+import { ArrowRight, ChevronRight, Footprints, Mail, Scale, ShieldCheck } from "lucide-react";
 import { BUTTON_OUTLINE, Guides, Section, Tile } from "./parts";
 import { HeroField } from "./ascii-field";
 import { PageKindMark } from "./page-kind";
 
 export type ShadcnLegalSection = { id: string; title: string; content: ReactNode };
 
-const DOCS = [
+export type ShadcnLegalIcon = "terms" | "privacy" | "about";
+
+const DOCS: { href: string; title: string; sub: string; icon: ReactNode }[] = [
+  { href: "/about", title: "About", sub: "How the group started", icon: <Footprints /> },
   { href: "/terms-of-service", title: "Terms", sub: "Your account and the rules", icon: <Scale /> },
   { href: "/privacy-policy", title: "Privacy", sub: "What we collect, and why", icon: <ShieldCheck /> },
   { href: "/contact", title: "Contact", sub: "Questions about either", icon: <Mail /> },
 ];
 
+const ICON = {
+  terms: Scale,
+  privacy: ShieldCheck,
+  about: Footprints,
+} as const;
+
+const HERO_WORD = {
+  terms: "TERMS",
+  privacy: "PRIVACY",
+  about: "ABOUT",
+} as const;
+
 /**
- * A legal page laid out as shadcn.io's Terms page (their classes, used with
- * permission): a centred hero with the breadcrumb, the title and its icon,
- * a line and "Last updated · Ask a question", their moving letters behind it; the legal documents as tiles;
- * then each section numbered, its title on the left and the text on the right;
- * then their closing line with Ask a question.
+ * A legal / about page laid out as shadcn.io's Terms page (their classes, used
+ * with permission): centred hero, document tiles, then numbered sections.
  */
 export function ShadcnLegal({
   title,
@@ -28,17 +40,20 @@ export function ShadcnLegal({
   sections,
   icon,
   current,
+  closing = `By using Bury Steps, you agree to this ${title}.`,
 }: {
   title: string;
   lead: string;
   rest: string;
   updated: string;
   sections: ShadcnLegalSection[];
-  icon: "terms" | "privacy";
+  icon: ShadcnLegalIcon;
   current: string;
+  /** Line above the Ask a question button. */
+  closing?: string;
 }) {
   const [first, ...others] = title.split(" ");
-  const Icon = icon === "terms" ? Scale : ShieldCheck;
+  const Icon = ICON[icon];
   return (
     <div className="flex flex-1 flex-col" data-shadcn-page="" data-shadcn-plain="">
       <PageKindMark kind="plain" />
@@ -47,7 +62,7 @@ export function ShadcnLegal({
           className="px-5 md:px-12 flex flex-col items-center relative isolate justify-center min-h-[29rem] sm:min-h-[30rem] md:min-h-[36rem] lg:min-h-[35rem] xl:min-h-[34rem] gap-8 pt-6 pb-8 sm:pt-8 sm:pb-12 md:pt-10 md:pb-14"
           data-slot="hero"
         >
-          <HeroField heading="legal-title" word={icon === "terms" ? "TERMS" : "PRIVACY"} />
+          <HeroField heading="legal-title" word={HERO_WORD[icon]} />
           <div className="flex flex-col max-w-4xl gap-4 md:gap-5 mx-auto min-w-0 items-center text-center">
             <div className="flex justify-center">
               <nav aria-label="breadcrumb" className="cn-breadcrumb" data-slot="breadcrumb">
@@ -108,8 +123,8 @@ export function ShadcnLegal({
           phones short tiles with the title alone. */}
       <div className="relative">
         <Guides />
-        <nav aria-label="Legal documents">
-          <ul className="grid grid-cols-3 [clip-path:inset(0_0_0_1px)] *:border-l">
+        <nav aria-label="Related pages">
+          <ul className="grid grid-cols-2 sm:grid-cols-4 [clip-path:inset(0_0_0_1px)] *:border-l">
             {DOCS.map((doc) => (
               <Tile
                 current={doc.href === current}
@@ -152,7 +167,7 @@ export function ShadcnLegal({
         <div className="px-5 md:px-12 flex flex-col items-center gap-6 py-14 text-center md:py-20">
           <div className="max-w-2xl text-pretty [&_.typeset-docs>*]:mx-auto [&_.typeset-docs>:first-child]:mt-0 [&_.typeset-docs_p]:text-muted-foreground md:[&_.typeset-docs_p]:text-lg">
             <div className="typeset typeset-docs w-full flex-1">
-              <p>By using Bury Steps, you agree to this {title}.</p>
+              <p>{closing}</p>
             </div>
           </div>
           <Link className={BUTTON_OUTLINE} href="/contact">
