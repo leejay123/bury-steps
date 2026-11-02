@@ -1,6 +1,5 @@
 "use client";
 
-import { useLayoutEffect, useRef, useState } from "react";
 import { motion, useReducedMotion } from "motion/react";
 
 import { cn } from "@/lib/utils";
@@ -17,15 +16,6 @@ interface TextRevealProps {
   once?: boolean;
 }
 
-/** Nearest ancestor that actually scrolls (e.g. the signed-in docs column). */
-function scrollRootOf(el: HTMLElement | null): Element | null {
-  for (let node = el?.parentElement ?? null; node && node !== document.documentElement; node = node.parentElement) {
-    const { overflowY } = getComputedStyle(node);
-    if (overflowY === "scroll" || overflowY === "auto") return node;
-  }
-  return null;
-}
-
 export function TextReveal({
   text,
   className,
@@ -37,67 +27,42 @@ export function TextReveal({
 }: TextRevealProps) {
   const reducedMotion = useReducedMotion();
   const words = text.split(" ");
-  const hostRef = useRef<HTMLElement | null>(null);
-  const scrollRootRef = useRef<Element | null>(null);
-  // Remount the motion tree once we know the scroll root, so whileInView
-  // observes the nested column (not only the window).
-  const [rootReady, setRootReady] = useState(false);
-
-  useLayoutEffect(() => {
-    scrollRootRef.current = scrollRootOf(hostRef.current);
-    setRootReady(true);
-  }, []);
 
   // Same markup on server and client. Under reduced motion the CSS
   // overrides keep every word visible (even before hydration) and the
   // JS transition is instant.
   return (
-    <Tag ref={hostRef as never} className={cn(className)} data-slot="text-reveal" id={id}>
+    <Tag className={cn(className)} data-slot="text-reveal" id={id}>
       <span className="sr-only">{text}</span>
-      {rootReady ? (
-        <motion.span
-          aria-hidden
-          className="inline"
-          initial="hidden"
-          transition={{ staggerChildren: stagger, delayChildren: delay }}
-          viewport={{
-            once,
-            margin: "0px 0px -10% 0px",
-            ...(scrollRootRef.current ? { root: scrollRootRef } : {}),
-          }}
-          whileInView="visible"
-        >
-          {words.map((word, i) => (
-            <motion.span
-              key={`${word}-${i}`}
-              className="inline-block will-change-transform motion-reduce:transform-none! motion-reduce:opacity-100! motion-reduce:[filter:none]!"
-              variants={{
-                hidden: { opacity: 0, y: 12, filter: "blur(8px)" },
-                visible: {
-                  opacity: 1,
-                  y: 0,
-                  filter: "blur(0px)",
-                  transition: reducedMotion
-                    ? { duration: 0 }
-                    : { duration: 0.45, ease: [0.21, 0.47, 0.32, 0.98] },
-                },
-              }}
-            >
-              {word}
-              {i < words.length - 1 && " "}
-            </motion.span>
-          ))}
-        </motion.span>
-      ) : (
-        <span aria-hidden className="inline">
-          {words.map((word, i) => (
-            <span key={`${word}-${i}`} className="inline-block">
-              {word}
-              {i < words.length - 1 && " "}
-            </span>
-          ))}
-        </span>
-      )}
+      <motion.span
+        aria-hidden
+        className="inline"
+        initial="hidden"
+        transition={{ staggerChildren: stagger, delayChildren: delay }}
+        viewport={{ once, margin: "0px 0px -10% 0px" }}
+        whileInView="visible"
+      >
+        {words.map((word, i) => (
+          <motion.span
+            key={`${word}-${i}`}
+            className="inline-block will-change-transform motion-reduce:transform-none! motion-reduce:opacity-100! motion-reduce:[filter:none]!"
+            variants={{
+              hidden: { opacity: 0, y: 12, filter: "blur(8px)" },
+              visible: {
+                opacity: 1,
+                y: 0,
+                filter: "blur(0px)",
+                transition: reducedMotion
+                  ? { duration: 0 }
+                  : { duration: 0.45, ease: [0.21, 0.47, 0.32, 0.98] },
+              },
+            }}
+          >
+            {word}
+            {i < words.length - 1 && " "}
+          </motion.span>
+        ))}
+      </motion.span>
     </Tag>
   );
 }
