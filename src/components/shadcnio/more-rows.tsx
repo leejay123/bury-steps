@@ -5,19 +5,32 @@ import { BUTTON_SMALL_OUTLINE } from "./parts";
 
 /** shadcn.io's striped filler cell (as beside their FAQ topics), so a row is never left with a hole. */
 export const FILLER = "border-border bg-[repeating-linear-gradient(-45deg,var(--border)_0_1px,transparent_1px_6px)]";
-const FIRST = 4;
 
 /**
- * A grid that shows one full row (four) and a compact Read more that opens the
+ * A grid that shows the first full row, then a compact Read more that opens the
  * rest in place. Rows are always full: a short last row is finished with
- * striped filler cells (four across on computers, two on tablets).
+ * striped filler cells (large screens use `columns`; tablets stay two across).
  */
-export function MoreRows({ label, className, children }: { label: string; className: string; children: ReactNode }) {
+export function MoreRows({
+  label,
+  className,
+  children,
+  first = 4,
+  columns = 4,
+}: {
+  label: string;
+  className: string;
+  children: ReactNode;
+  /** How many tiles show before Read more. Default one full row of four. */
+  first?: number;
+  /** Column count on large screens, for filler cells. Default four. */
+  columns?: number;
+}) {
   const [open, setOpen] = useState(false);
   const items = Children.toArray(children);
-  const more = items.length > FIRST;
-  const shown = open || !more ? items : items.slice(0, FIRST);
-  const fillLarge = (4 - (shown.length % 4)) % 4;
+  const more = items.length > first;
+  const shown = open || !more ? items : items.slice(0, first);
+  const fillLarge = (columns - (shown.length % columns)) % columns;
   const fillTablet = shown.length % 2;
   return (
     <>

@@ -207,8 +207,8 @@ function WalksSection({ data }: { data: ShadcnHomeData }) {
         rest="each one led by a volunteer walk leader, with the meeting point, distance and grade. Members see every detail and clock in on the day."
         title="Walks coming up, every week"
       />
-      <ul aria-label="Walks coming up" className={WALKS_GRID}>
-        {data.upcoming.slice(0, 4).map((walk, i, shownWalks) => (
+      <MoreRows className={WALKS_GRID} columns={3} first={3} label="Walks coming up">
+        {data.upcoming.slice(0, 6).map((walk, i, shownWalks) => (
           <Tile
             href={walk.href}
             key={walk.id}
@@ -223,7 +223,7 @@ function WalksSection({ data }: { data: ShadcnHomeData }) {
             }}
           />
         ))}
-      </ul>
+      </MoreRows>
     </Section>
   );
 }
