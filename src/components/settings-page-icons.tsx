@@ -8,7 +8,6 @@ import {
   ListChecks,
   Mail,
   Quote,
-  RefreshCw,
   Settings2,
   SlidersHorizontal,
   Text,
@@ -33,7 +32,6 @@ const SETTINGS_PAGE_ICONS: Record<string, LucideIcon> = {
   "/admin/settings/walk-essentials": ListChecks,
   "/admin/settings/behaviour": Settings2,
   "/admin/settings/retention": Archive,
-  "/admin/settings/cache": RefreshCw,
   "/admin/settings/reset": AlertTriangle,
 };
 

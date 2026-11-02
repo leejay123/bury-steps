@@ -59,8 +59,8 @@ export const SITE_WORDING_PAGES: SettingsPageLink[] = [
   {
     href: "/admin/settings/site-wording/walk-page-cards",
     title: "Walk page cards",
-    description: "Choose one or two columns for each walk's page, and edit or hide its Before you set off and How this group works cards.",
-    keywords: "tips steps before you set off how walks work layout two columns tabs sticky walk page design",
+    description: "Edit the shared wording on walk pages. Layout and which blocks show are set in the walk page designer.",
+    keywords: "tips steps before you set off how walks work walk page design wording",
   },
 ];
 
@@ -71,8 +71,8 @@ export const SETTINGS_PAGE_GROUPS: SettingsPageGroup[] = [
       {
         href: "/admin/settings/branding",
         title: "Branding",
-        description: "The site's name, tagline, font, logo, browser-tab icon and Facebook link.",
-        keywords: "logo favicon icon name tagline font typeface facebook report banner text size sizes bigger larger smaller headings",
+        description: "The site's name, tagline, logo, browser-tab icon and Facebook link.",
+        keywords: "logo favicon icon name tagline facebook report banner",
         permission: "permDisplay",
       },
       {
@@ -106,7 +106,7 @@ export const SETTINGS_PAGE_GROUPS: SettingsPageGroup[] = [
       {
         href: SITE_WORDING_PAGES[0].href,
         title: "Site wording",
-        description: "Change the wording of the homepage sections and walk pages.",
+        description: "Change the wording of the homepage sections and shared walk-page copy.",
         keywords: "text copy words",
         permission: "permDisplay",
         children: SITE_WORDING_PAGES,
@@ -159,8 +159,8 @@ export const SETTINGS_PAGE_GROUPS: SettingsPageGroup[] = [
       {
         href: "/admin/settings/behaviour",
         title: "Site behaviour",
-        description: "Announcement bar, phone menu, tab style, cookie notice, back-to-top button, footer name, the Progress page, clock-in, organiser invites and who gets contact messages.",
-        keywords: "cookie consent back to top contact form invite organiser progress page emergency contact clock-in announcement bar banner phone menu tabs underline tab style mobile bottom bar navigation footer big name wordmark",
+        description: "Announcement bar, cookie notice, back-to-top button, footer name, the Progress page, clock-in, organiser invites and who gets contact messages.",
+        keywords: "cookie consent back to top contact form invite organiser progress page emergency contact clock-in announcement bar banner footer big name wordmark",
         permission: "permDisplay",
       },
       {
@@ -168,13 +168,6 @@ export const SETTINGS_PAGE_GROUPS: SettingsPageGroup[] = [
         title: "Data retention",
         description: "How long cancelled walks and accident reports are kept before they're deleted automatically.",
         keywords: "delete auto-delete privacy gdpr keep",
-        permission: "permCacheReset",
-      },
-      {
-        href: "/admin/settings/cache",
-        title: "Refresh the homepage",
-        description: "Use this if the homepage still shows old photos, quotes or questions after you've saved changes.",
-        keywords: "cache clear old stale",
         permission: "permCacheReset",
       },
     ],

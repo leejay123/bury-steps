@@ -12,10 +12,7 @@ import { SiteLogoSettings } from "./site-logo-settings";
 import { SiteFaviconSettings } from "./site-favicon-settings";
 import { ReportBannerSettings } from "./report-banner-settings";
 import { FacebookGroupSettings } from "./facebook-group-settings";
-import { SiteFontSettings } from "./site-font-settings";
 import { SiteDesignSettings } from "./site-design-settings";
-import { PageTopSettings } from "./page-top-settings";
-import { TextSizeSettings } from "./text-size-settings";
 
 
 
@@ -27,7 +24,7 @@ export default function BrandingSettingsPage() {
   // themselves (and the access check) fill in just after.
   return (
     <SettingsPage
-      description="How the site introduces itself — name, tagline, font, logo, favicon, and the Facebook link."
+      description="How the site introduces itself — name, tagline, logo, favicon, and the Facebook link."
       previewHref="/"
       title="Branding"
     >
@@ -56,14 +53,11 @@ function SettingsView({ theme }: { theme: SiteTheme }) {
   return (
     <>
       <SettingsSectionGroup
-        description="How the site introduces itself in the hero, tabs, and share previews."
+        description="How the site introduces itself in the hero and share previews."
         title="Identity"
       >
         <SiteBrandingSettings siteName={theme.siteName} siteTagline={theme.siteTagline} />
         <SiteDesignSettings design={theme.siteDesign} />
-        <PageTopSettings style={theme.pageTopStyle} />
-        <SiteFontSettings font={theme.siteFont} />
-        <TextSizeSettings sizes={theme.textSizes} />
         <SiteLogoSettings hasCustomLogo={theme.hasCustomLogo} logoSrc={theme.logoSrc} />
         <SiteFaviconSettings
           faviconSrc={theme.faviconSrc}

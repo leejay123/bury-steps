@@ -16,7 +16,7 @@ export function AdminPageIntro({
   // The page's own title (h1) is a band edge to edge across the page, out
   // over the page's side and top space (every page here pads px-4 py-6,
   // md:px-6); its words keep the same inset as the content below. Its look
-  // is Settings → Branding → Page tops (globals.css: [data-page-top-band]).
+  // is the signed-in page hero band (globals.css: [data-page-top-band]).
   const band = Heading === "h1";
   return (
     <div

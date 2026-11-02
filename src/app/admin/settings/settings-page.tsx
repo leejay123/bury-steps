@@ -14,8 +14,8 @@ const SETTINGS_WIDTH = "w-full";
 
 /**
  * Shared shell for every Settings page, the card-table home included —
- * "← All settings" and the page's group, then the title and a short
- * intro, any sibling tabs (Site wording), then the page's sections.
+ * breadcrumbs (All settings › group › this page), then the title and a
+ * short intro, any sibling tabs (Site wording), then the page's sections.
  */
 export function SettingsPage({
   title,

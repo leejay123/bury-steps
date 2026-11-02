@@ -4176,7 +4176,7 @@ export const walkDesignConfig: Config = {
           type: "select",
           label: "Style",
           options: options([
-            ["site", "The site's tab style (Settings)"],
+            ["site", "Grey pill (site default)"],
             ["standard", "Grey pill"],
             ["underline", "Sliding underline"],
             ["transition", "Pills that drop in"],

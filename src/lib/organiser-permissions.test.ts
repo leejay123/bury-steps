@@ -92,7 +92,7 @@ describe("describeOrganiserPermissions", () => {
         "You'll be able to see the walks admin pages — schedule, roster counts, journey log, and cancelled walks",
       ),
     ).toBe(true);
-    expect(result).toContain("; and clear the site cache, or reset the whole site back to its defaults.");
+    expect(result).toContain("; and reset the whole site back to its defaults.");
   });
 
   it("explains nothing was granted when every permission is false", () => {

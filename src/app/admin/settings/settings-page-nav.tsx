@@ -3,40 +3,66 @@
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { ArrowLeft } from "lucide-react";
 import { LayoutGroup, motion } from "motion/react";
 import { cn } from "@/lib/utils";
 import { unlockIdleDocument } from "@/components/overlay-root";
 import { findSettingsPage } from "@/lib/settings-pages";
+import {
+  Breadcrumb,
+  BreadcrumbItem,
+  BreadcrumbLink,
+  BreadcrumbList,
+  BreadcrumbPage,
+  BreadcrumbSeparator,
+} from "@/components/ui/breadcrumb";
 
-/** "← All settings · Homepage" above a settings page's title — the way
- * back to the card table, plus which of its groups this page sits in.
- * Worked out from the URL, so no page has to pass its own group in. */
+/**
+ * Trail above a settings page's title — All settings › group › this page —
+ * like the Walks › walk name trail in the top bar. Worked out from the URL.
+ */
 export function SettingsBackLink() {
   const pathname = usePathname();
   const found = findSettingsPage(pathname);
+  if (!found) {
+    return (
+      <Breadcrumb>
+        <BreadcrumbList>
+          <BreadcrumbItem>
+            <BreadcrumbPage>All settings</BreadcrumbPage>
+          </BreadcrumbItem>
+        </BreadcrumbList>
+      </Breadcrumb>
+    );
+  }
+
+  const { group, page } = found;
+  const child = page.children?.find((item) => item.href === pathname);
+  const currentTitle = child?.title ?? page.title;
 
   return (
-    <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-sm">
-      <Link
-        className="inline-flex items-center gap-1.5 text-muted-foreground hover:text-foreground"
-        href="/admin/settings"
-        onClick={() => unlockIdleDocument()}
-      >
-        <ArrowLeft aria-hidden className="size-4" />
-        All settings
-      </Link>
-      {found ? (
-        <>
-          <span aria-hidden className="text-muted-foreground/50">
-            /
+    <Breadcrumb>
+      <BreadcrumbList>
+        <BreadcrumbItem>
+          <BreadcrumbLink asChild>
+            <Link href="/admin/settings" onClick={() => unlockIdleDocument()}>
+              All settings
+            </Link>
+          </BreadcrumbLink>
+        </BreadcrumbItem>
+        <BreadcrumbSeparator />
+        <BreadcrumbItem>
+          <span className={cn("text-muted-foreground", page.danger && "text-destructive")}>
+            {group.label}
           </span>
-          <span className={cn("text-muted-foreground", found.page.danger && "text-destructive")}>
-            {found.group.label}
-          </span>
-        </>
-      ) : null}
-    </div>
+        </BreadcrumbItem>
+        <BreadcrumbSeparator />
+        <BreadcrumbItem>
+          <BreadcrumbPage className={cn("truncate", page.danger && "text-destructive")}>
+            {currentTitle}
+          </BreadcrumbPage>
+        </BreadcrumbItem>
+      </BreadcrumbList>
+    </Breadcrumb>
   );
 }
 

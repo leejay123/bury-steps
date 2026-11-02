@@ -219,8 +219,8 @@ export const ORGANISER_PERMISSION_OPTIONS: {
   },
   {
     name: "permCacheReset",
-    label: "Site cache & reset",
-    hint: "Clear the site cache, or reset the whole site back to its defaults.",
+    label: "Site reset",
+    hint: "Reset the whole site back to its defaults.",
     group: "Settings & homepage",
   },
 ];

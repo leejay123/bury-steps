@@ -3,18 +3,11 @@ import { cacheLife } from "next/cache";
 import { PRIVATE_SAVED_COPY } from "@/lib/private-saved-copy";
 import { requirePermission } from "@/lib/auth";
 import { defaultTheme, getSiteTheme, type SiteTheme } from "@/lib/site-theme";
-import { getWalkPageChoice } from "@/lib/walk-page-choice";
-import type { WalkHeaderStyle, WalkPageLayout } from "@/lib/walk-page-sections";
-import { SettingsPage, SettingsSectionGroup } from "../../settings-page";
+import { SettingsPage } from "../../settings-page";
 import { SettingsMask } from "../../settings-mask";
 import { PlaceholderPreview } from "@/components/placeholder-preview";
-import { BeforeYouSetOffToggle, HowWalksWorkToggle } from "../walk-page-card-toggles";
 import { WalkPageCopySettings } from "../walk-page-copy-settings";
-import { WalkPageLayoutSettings } from "../walk-page-layout-settings";
-import { WalkPageSectionsSettings } from "../walk-page-sections-settings";
 import { WalkWordingSettings } from "../walk-wording-settings";
-
-
 
 /** Fetched ahead (from the menu, the Settings table, or its tabs), so it opens with its settings there. */
 export const prefetch = "partial";
@@ -24,7 +17,7 @@ export default function WalkPageCardsWordingPage() {
   // themselves (and the access check) fill in just after.
   return (
     <SettingsPage
-      description="The layout of a walk's own page, its cards, and the order of its sections. Edit the wording, turn a card off, or move a section up or down."
+      description="Wording used on walk pages. Layout and which blocks show are set in the walk page designer (Design this page on any organiser walk)."
       title="Walk page cards"
     >
       <Suspense fallback={<SettingsFallback />}>
@@ -42,35 +35,15 @@ async function WalkPageCardsWordingPageContent() {
   "use cache: private";
   cacheLife(PRIVATE_SAVED_COPY);
   await requirePermission("permDisplay");
-  const [theme, choice] = await Promise.all([getSiteTheme(), getWalkPageChoice()]);
+  const theme = await getSiteTheme();
 
-  return <SettingsView choice={choice} theme={theme} />;
+  return <SettingsView theme={theme} />;
 }
 
 /** The page drawn from the site's settings (also its placeholder, with the defaults). */
-function SettingsView({
-  choice,
-  theme,
-}: {
-  choice: { layout: WalkPageLayout; header: WalkHeaderStyle };
-  theme: SiteTheme;
-}) {
+function SettingsView({ theme }: { theme: SiteTheme }) {
   return (
     <>
-      <SettingsSectionGroup description="The same for members and organisers." title="Layout">
-        <WalkPageLayoutSettings header={choice.header} layout={choice.layout} />
-      </SettingsSectionGroup>
-      <SettingsSectionGroup
-        description="Off hides that card on every walk. The wording below is kept, so turning it back on restores what you wrote."
-        title="Show or hide"
-      >
-        <HowWalksWorkToggle enabled={theme.howWalksWorkEnabled} />
-        <BeforeYouSetOffToggle enabled={theme.beforeYouSetOffEnabled} />
-      </SettingsSectionGroup>
-      <WalkPageSectionsSettings
-        beforeYouSetOffEnabled={theme.beforeYouSetOffEnabled}
-        sections={theme.walkPageSections}
-      />
       <WalkPageCopySettings
         beforeYouSetOffTipsText={theme.beforeYouSetOffTipsText}
         howWalksWorkStepsText={theme.howWalksWorkStepsText}
@@ -84,7 +57,7 @@ function SettingsView({
 function SettingsFallback() {
   return (
     <SettingsMask>
-      <SettingsView choice={{ layout: "classic", header: "standard" }} theme={defaultTheme()} />
+      <SettingsView theme={defaultTheme()} />
     </SettingsMask>
   );
 }
