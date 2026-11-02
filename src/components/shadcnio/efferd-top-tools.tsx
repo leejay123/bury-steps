@@ -21,6 +21,9 @@ const ICON_BUTTON =
 export function EfferdTopTools({ search, siteName }: { search: SearchItem[]; siteName: string }) {
   const [searchOpen, setSearchOpen] = useState(false);
   const [sheetOpen, setSheetOpen] = useState(false);
+  // The phone sheet's panel is drawn from its first opening (not on every page load).
+  const [sheetUsed, setSheetUsed] = useState(false);
+  if (sheetOpen && !sheetUsed) setSheetUsed(true);
   const hydrated = useHydrated();
   const searchRef = useRef<SearchPanelHandle>(null);
   const sheetRef = useRef<SearchPanelHandle>(null);
@@ -90,12 +93,14 @@ export function EfferdTopTools({ search, siteName }: { search: SearchItem[]; sit
           </button>
         </div>
         <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-5 py-5">
-          <SearchPanel
-            items={search}
-            onGo={() => setSheetOpen(false)}
-            ref={sheetRef}
-            siteName={siteName.split(" ").slice(0, 2).join(" ")}
-          />
+          {sheetUsed ? (
+            <SearchPanel
+              items={search}
+              onGo={() => setSheetOpen(false)}
+              ref={sheetRef}
+              siteName={siteName.split(" ").slice(0, 2).join(" ")}
+            />
+          ) : null}
         </div>
       </div>,
         document.body,

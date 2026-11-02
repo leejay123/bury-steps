@@ -48,6 +48,10 @@ export function ShadcnSiteShell({
 }) {
   const path = useClientPathname();
   const [drawer, setDrawer] = useState(false);
+  // The phone drawer's copy of the sidebar is drawn from its first opening, so
+  // every page's HTML doesn't carry the sidebar twice.
+  const [drawerUsed, setDrawerUsed] = useState(false);
+  if (drawer && !drawerUsed) setDrawerUsed(true);
   // The breadcrumb's last step, named by the page (page-crumb.tsx).
   const [crumb, setCrumb] = useState<string | null>(null);
   const parent = crumbParent(path);
@@ -293,7 +297,7 @@ export function ShadcnSiteShell({
           data-overlay-panel=""
           className="relative flex h-full w-[min(18rem,85vw)] -translate-x-full flex-col overflow-hidden overscroll-contain border-e bg-chrome shadow-xl transition-transform duration-300 ease-[cubic-bezier(0.32,0.72,0,1)] group-data-[state=open]/drawer:translate-x-0 rtl:translate-x-full motion-reduce:transition-none"
         >
-          {sidebar}
+          {drawerUsed ? sidebar : null}
         </aside>
       </div>
     </div>

@@ -38,10 +38,11 @@ const nextConfig: NextConfig = {
     ],
   },
   experimental: {
-    // The site's styles (about 30 KB) go inside each page instead of a
-    // separate file the phone has to fetch before it can draw anything —
-    // PageSpeed's "render-blocking requests", ~0.75 s on a slow phone.
-    inlineCss: true,
+    // The stylesheet stays a separate file (inlineCss off). It grew to ~480 KB,
+    // and inlining put it in every page three times over (the <style> tag plus
+    // two copies in the React payload) — 1.4 MB of a 2.2 MB homepage, sent
+    // again on every page. As a file it's fetched once, then served from the
+    // browser's cache on every other page and visit, as shadcn.io does.
     serverActions: {
       bodySizeLimit: "4mb",
     },

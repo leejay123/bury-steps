@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, type ReactNode } from "react";
+import { useEffect, useRef, useState, type ReactNode } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useClientPathname } from "@/components/client-pathname";
@@ -60,6 +60,13 @@ export function GlobalNav({
   const router = useRouter();
   const pathname = useClientPathname();
   const controller = useRef<GlobalnavController | null>(null);
+  // The Search and Customize panels are drawn only once their button is first
+  // pointed at, focused or opened (the controller's "wake", which comes before
+  // the click), so every page's HTML carries neither until it's wanted. The
+  // flyout measures its content as it opens and again when the panel appears
+  // (the controller's ResizeObserver), so it still opens to the right height.
+  const [searchAwake, setSearchAwake] = useState(false);
+  const [customizeAwake, setCustomizeAwake] = useState(false);
 
   // Their controller runs the whole header.
   useEffect(() => {
@@ -71,13 +78,25 @@ export function GlobalNav({
     });
     controller.current = control;
     const search = nav.querySelector<HTMLElement>('[data-gn-id="search"]');
-    const focus = () => window.setTimeout(() => searchRef.current?.focus(), 60);
+    const customize = nav.querySelector<HTMLElement>('[data-gn-id="customize"]');
+    const wakeSearch = () => setSearchAwake(true);
+    const wakeCustomize = () => setCustomizeAwake(true);
+    const focus = () => {
+      setSearchAwake(true);
+      window.setTimeout(() => searchRef.current?.focus(), 60);
+    };
     const reset = () => searchRef.current?.reset();
+    search?.addEventListener("globalnav:wake", wakeSearch);
     search?.addEventListener("globalnav:willopen", focus);
     search?.addEventListener("globalnav:close", reset);
+    customize?.addEventListener("globalnav:wake", wakeCustomize);
+    customize?.addEventListener("globalnav:willopen", wakeCustomize);
     return () => {
+      search?.removeEventListener("globalnav:wake", wakeSearch);
       search?.removeEventListener("globalnav:willopen", focus);
       search?.removeEventListener("globalnav:close", reset);
+      customize?.removeEventListener("globalnav:wake", wakeCustomize);
+      customize?.removeEventListener("globalnav:willopen", wakeCustomize);
       control.destroy();
       controller.current = null;
     };
@@ -274,7 +293,9 @@ export function GlobalNav({
                     <div className="globalnav-flyout-scroll">
                       <div className="globalnav-flyout-content">
                         <div>
-                          <SearchPanel items={search} onGo={dismiss} ref={searchRef} siteName={siteName.split(" ").slice(0, 2).join(" ")} />
+                          {searchAwake ? (
+                            <SearchPanel items={search} onGo={dismiss} ref={searchRef} siteName={siteName.split(" ").slice(0, 2).join(" ")} />
+                          ) : null}
                         </div>
                       </div>
                     </div>
@@ -320,9 +341,7 @@ export function GlobalNav({
                   <div className="globalnav-flyout" id="globalnav-flyout-customize">
                     <div className="globalnav-flyout-scroll">
                       <div className="globalnav-flyout-content" style={{ "--gn-items": "14" } as React.CSSProperties}>
-                        <div>
-                          <CustomizePanel />
-                        </div>
+                        <div>{customizeAwake ? <CustomizePanel /> : null}</div>
                       </div>
                     </div>
                   </div>
