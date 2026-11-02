@@ -1953,6 +1953,7 @@ function PageRoot({
         editing && !joinCard && "px-4 py-6 md:px-6",
       )}
       data-edge-join={joinCard ? "" : undefined}
+      data-edge-inset={joinCard ? undefined : ""}
       data-preview-audience={audience ?? undefined}
     >
       {/* Phones' way to the tabs (the Tabs block's Jump to tabs on phones). */}
