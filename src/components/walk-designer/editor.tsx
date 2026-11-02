@@ -38,7 +38,13 @@ function withJoinDefault(data: Data): Data {
   const root = data.root ?? { props: {} };
   const props = { ...(root.props ?? {}) } as { join?: string };
   if (props.join === "join" || props.join === "inset") return data;
-  return { ...data, root: { ...root, props: { ...props, join: "join" } } };
+  // Root props are typed as { title } only. The page settings (join, and the
+  // messages options) are stored beside that, so this has to be asserted.
+  const nextProps = { ...props, join: "join" };
+  return {
+    ...data,
+    root: { ...root, props: nextProps as unknown as Data["root"]["props"] },
+  };
 }
 
 const AUDIENCES: { id: WalkDesignAudience; label: string }[] = [
