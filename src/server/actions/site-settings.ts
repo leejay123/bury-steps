@@ -17,7 +17,6 @@ import {
 } from "@/lib/walk-page-sections";
 import { guardArgs, guardForm } from "@/lib/safe-action";
 
-import { serializeAnnouncementPages } from "@/lib/announcement-pages";
 import { parseTextSize } from "@/lib/text-sizes";
 import { revalidatePath, revalidateTag } from "@/lib/revalidate";
 import { requireAdmin } from "@/lib/auth";
@@ -567,20 +566,7 @@ async function updateScrollToTopEnabledWork(
   return { ok: true, message: enabled ? "Back to top is on." : "Back to top is off." };
 }
 
-/** Links the announcement bar may point at: a page on this site ("/walks")
- * or a full https:// address. Anything else is refused rather than guessed. */
-function parseAnnouncementLink(raw: string): string | null {
-  const link = raw.trim();
-  if (!link) return "";
-  if (link.startsWith("/") && !link.startsWith("//")) return link;
-  try {
-    const url = new URL(link);
-    return url.protocol === "https:" ? url.toString() : null;
-  } catch {
-    return null;
-  }
-}
-
+/** Homepage join strip ("New here? Come for a walk…") on or off. */
 async function updateAnnouncementBannerWork(
   _prev: ActionResult | null,
   formData: FormData,
@@ -588,20 +574,6 @@ async function updateAnnouncementBannerWork(
   const admin = await requireAdmin();
   if (!admin.permDisplay) return permissionDenied("permDisplay");
   const enabled = String(formData.get("announcementEnabled") ?? "") === "on";
-  const text = String(formData.get("announcementText") ?? "").trim();
-  const link = parseAnnouncementLink(String(formData.get("announcementLink") ?? ""));
-  const pages = serializeAnnouncementPages(
-    String(formData.get("announcementScope") ?? "all"),
-    String(formData.get("announcementPaths") ?? ""),
-  );
-  if (text.length > 160) return { ok: false, error: "Keep the announcement to 160 characters or fewer." };
-  if (enabled && !text) return { ok: false, error: "Write the announcement before turning it on." };
-  if (link === null) {
-    return { ok: false, error: "The link must be a page on this site (like /walks) or start with https://." };
-  }
-  if (pages === null) {
-    return { ok: false, error: "List the pages to show it on, separated by commas — for example /walks, /notices." };
-  }
 
   try {
     await prisma.siteSetting.upsert({
@@ -611,20 +583,17 @@ async function updateAnnouncementBannerWork(
         primaryColor: DEFAULT_PRIMARY_COLOR,
         carouselEnabled: true,
         announcementEnabled: enabled,
-        announcementText: text,
-        announcementLink: link,
-        announcementPages: pages,
       },
-      update: { announcementEnabled: enabled, announcementText: text, announcementLink: link, announcementPages: pages },
+      update: { announcementEnabled: enabled },
     });
   } catch (err) {
-    return logActionError("updateAnnouncementBanner", err, "Could not save the announcement. Try again.");
+    return logActionError("updateAnnouncementBanner", err, "Could not save that setting. Try again.");
   }
 
   revalidateTag(HOMEPAGE_CACHE_TAG, { expire: 0 });
   revalidatePath("/", "layout");
   revalidatePath("/admin/settings/behaviour");
-  return { ok: true, message: enabled ? "Announcement is showing." : "Announcement saved and hidden." };
+  return { ok: true, message: enabled ? "Join bar is showing." : "Join bar is hidden." };
 }
 
 async function updateMobileNavWork(
@@ -1752,54 +1721,6 @@ const accidentRetentionSchema = z
     }
   });
 
-const announcementSchema = z
-  .object({
-    announcementEnabled: z.string(),
-    announcementText: z.string(),
-    announcementLink: z.string(),
-    announcementScope: z.string(),
-    announcementPaths: z.string(),
-  })
-  .superRefine((value, ctx) => {
-    const enabled = value.announcementEnabled === "on";
-    const text = value.announcementText.trim();
-    const link = parseAnnouncementLink(value.announcementLink);
-    const pages = serializeAnnouncementPages(value.announcementScope, value.announcementPaths);
-    if (text.length > 160) {
-      reject(ctx, "announcementText", "Keep the announcement to 160 characters or fewer.");
-      return;
-    }
-    if (enabled && !text) {
-      reject(ctx, "announcementText", "Write the announcement before turning it on.");
-      return;
-    }
-    if (link === null) {
-      reject(
-        ctx,
-        "announcementLink",
-        "The link must be a page on this site (like /walks) or start with https://.",
-      );
-      return;
-    }
-    if (pages === null) {
-      reject(
-        ctx,
-        "announcementPaths",
-        "List the pages to show it on, separated by commas — for example /walks, /notices.",
-      );
-    }
-  });
-
-function readAnnouncement(formData: FormData) {
-  return {
-    announcementEnabled: String(formData.get("announcementEnabled") ?? ""),
-    announcementText: String(formData.get("announcementText") ?? ""),
-    announcementLink: String(formData.get("announcementLink") ?? ""),
-    announcementScope: String(formData.get("announcementScope") ?? "all"),
-    announcementPaths: String(formData.get("announcementPaths") ?? ""),
-  };
-}
-
 const siteFontSchema = z.object({
   siteFont: z.string().refine((value) => parseSiteFont(value) !== null, "Choose a site font."),
 });
@@ -2073,12 +1994,7 @@ export const updateAccidentReportRetentionDays = guardForm(
 );
 export const updateContactMessagesOwner = guardForm("organiser", pass, readPass, updateContactMessagesOwnerWork);
 export const updateScrollToTopEnabled = guardForm("organiser", pass, readPass, updateScrollToTopEnabledWork);
-export const updateAnnouncementBanner = guardForm(
-  "organiser",
-  announcementSchema,
-  readAnnouncement,
-  updateAnnouncementBannerWork,
-);
+export const updateAnnouncementBanner = guardForm("organiser", pass, readPass, updateAnnouncementBannerWork);
 export const updateMobileNav = guardForm("organiser", pass, readPass, updateMobileNavWork);
 export const updateSliderHeroWords = guardForm("organiser", pass, readPass, updateSliderHeroWordsWork);
 export const updateTitleRevealEnabled = guardForm("organiser", pass, readPass, updateTitleRevealEnabledWork);

@@ -135,8 +135,9 @@ export type SiteTheme = {
   titleRevealEnabled: boolean;
   /** Homepage sections in the shadcn.io style: left headings, button on the right, + marks. */
   homeFramed: boolean;
-  /** Announcement bar above the header (see updateAnnouncementBanner). */
+  /** Homepage join strip ("New here? Come for a walk…") — see updateAnnouncementBanner. */
   announcementEnabled: boolean;
+  /** Unused: kept so older database rows still load. */
   announcementText: string;
   announcementLink: string;
   announcementPages: string;
@@ -228,7 +229,7 @@ export function defaultTheme(): SiteTheme {
     mobileNav: "bottom",
     titleRevealEnabled: true,
     homeFramed: false,
-    announcementEnabled: false,
+    announcementEnabled: true,
     announcementText: "",
     announcementLink: "",
     announcementPages: "all",
@@ -397,7 +398,7 @@ async function loadSiteTheme(): Promise<SiteTheme> {
     mobileNav: row?.mobileNav === "menu" ? "menu" : "bottom",
     titleRevealEnabled: row?.titleRevealEnabled ?? true,
     homeFramed: row?.homeFramed ?? false,
-    announcementEnabled: row?.announcementEnabled ?? false,
+    announcementEnabled: row?.announcementEnabled ?? true,
     announcementText: row?.announcementText ?? "",
     announcementLink: row?.announcementLink ?? "",
     announcementPages: row?.announcementPages ?? "all",

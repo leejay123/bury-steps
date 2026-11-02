@@ -31,6 +31,7 @@ import type { TestimonialView } from "@/lib/testimonials";
 import type { EssentialItem } from "@/lib/walk-essentials";
 import { essentialIcon } from "@/lib/walk-essentials";
 import { CARD_GRID_3, GALLERY_GRID_3, PHONE_LIST } from "./grids";
+import { SectionTitle } from "@/components/section-title";
 import { BUTTON_OUTLINE, BUTTON_PRIMARY, WALKS_GRID, MiniNote, MiniWalk, Section, SectionHead, Tile } from "./parts";
 import type { ShadcnHomeData } from "./home-data";
 import { ShadcnFaq } from "./faq";
@@ -184,9 +185,11 @@ function AboutSection({ about }: { about: ShadcnHomeProps["about"] }) {
     <Section id="home-about-heading">
       <div className="px-5 md:px-12 flex flex-col items-center gap-5 pt-12 pb-12 text-center md:pt-16 md:pb-16">
         <div className="mx-auto flex max-w-2xl min-w-0 flex-col items-center gap-3 lg:gap-4">
-          <h2 className="text-balance font-semibold text-3xl tracking-tighter md:text-4xl" id="home-about-heading">
-            {about.title}
-          </h2>
+          <SectionTitle
+            className="text-balance font-semibold text-3xl tracking-tighter md:text-4xl"
+            id="home-about-heading"
+            text={about.title}
+          />
           <p className="text-pretty text-muted-foreground md:text-lg">
             <span className="font-medium text-foreground">{lead}</span> {rest.join(" ")}
           </p>

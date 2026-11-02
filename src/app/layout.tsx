@@ -12,12 +12,12 @@ import { WalkEssentialsProvider } from "@/components/walk-essentials-context";
 import { WalkWordingProvider } from "@/components/walk-wording-context";
 import { SignedInProvider } from "@/components/signed-in-context";
 import { SiteDesignProvider } from "@/components/site-design-context";
-import { AnnouncementBanner } from "@/components/announcement-banner";
 import { textSizeCssVars } from "@/lib/text-sizes";
 import { FullWidthDivider } from "@/components/full-width-divider";
 import { ButtonRipple } from "@/components/button-ripple";
 import { HeaderScrollShadow } from "@/components/header-scroll-shadow";
 import { FocusRescue } from "@/components/focus-rescue";
+import { PageLoader } from "@/components/page-loader";
 import { PlaceholderPreviewBadge } from "@/components/placeholder-preview-badge";
 import { TabStyleProvider } from "@/components/ui/tabs";
 import { HeaderPartBoundary } from "@/components/header-part-boundary";
@@ -252,15 +252,6 @@ export default async function RootLayout({ children }: { children: React.ReactNo
               className="group/site-header sticky top-0 z-[66] touch-manipulation bg-background transition-shadow duration-200 [transform:translateZ(0)] data-scrolled:shadow-[0_4px_12px_-6px_rgb(0_0_0/0.12)]"
               data-site-header=""
             >
-              <HeaderPartBoundary name="announcement">
-                {theme.announcementEnabled && theme.announcementText ? (
-                  <AnnouncementBanner
-                    link={theme.announcementLink}
-                    pages={theme.announcementPages}
-                    text={theme.announcementText}
-                  />
-                ) : null}
-              </HeaderPartBoundary>
               <div className="relative">
                 {/*
                   auto on the outer (logo, bell/avatar) columns, not 1fr —
@@ -396,6 +387,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
           <HeaderScrollShadow />
           <FocusRescue />
           <PlaceholderPreviewBadge />
+          <PageLoader />
           <HeaderPartBoundary name="cookie-notice">
             <Suspense fallback={null}>
               <SiteCookieConsentGate />

@@ -1,5 +1,6 @@
 "use client";
 
+import { useLayoutEffect, useRef, useState } from "react";
 import { motion, useReducedMotion } from "motion/react";
 
 import { cn } from "@/lib/utils";
@@ -8,6 +9,7 @@ interface TextRevealProps {
   /** Plain text — revealed word by word */
   text: string;
   className?: string;
+  id?: string;
   as?: "h1" | "h2" | "h3" | "p" | "span";
   delay?: number;
   /** Seconds between each word */
@@ -15,9 +17,19 @@ interface TextRevealProps {
   once?: boolean;
 }
 
+/** Nearest ancestor that actually scrolls (e.g. the signed-in docs column). */
+function scrollRootOf(el: HTMLElement | null): Element | null {
+  for (let node = el?.parentElement ?? null; node && node !== document.documentElement; node = node.parentElement) {
+    const { overflowY } = getComputedStyle(node);
+    if (overflowY === "scroll" || overflowY === "auto") return node;
+  }
+  return null;
+}
+
 export function TextReveal({
   text,
   className,
+  id,
   as: Tag = "span",
   delay = 0,
   stagger = 0.045,
@@ -25,20 +37,26 @@ export function TextReveal({
 }: TextRevealProps) {
   const reducedMotion = useReducedMotion();
   const words = text.split(" ");
+  const rootRef = useRef<HTMLElement | null>(null);
+  const [scrollRoot, setScrollRoot] = useState<Element | null>(null);
+
+  useLayoutEffect(() => {
+    setScrollRoot(scrollRootOf(rootRef.current));
+  }, []);
 
   // Same markup on server and client. Under reduced motion the CSS
   // overrides keep every word visible (even before hydration) and the
   // JS transition is instant.
   return (
-    <Tag data-slot="text-reveal" className={cn(className)}>
+    <Tag ref={rootRef as never} className={cn(className)} data-slot="text-reveal" id={id}>
       <span className="sr-only">{text}</span>
       <motion.span
         aria-hidden
-        initial="hidden"
-        whileInView="visible"
-        viewport={{ once, margin: "0px 0px -10% 0px" }}
-        transition={{ staggerChildren: stagger, delayChildren: delay }}
         className="inline"
+        initial="hidden"
+        transition={{ staggerChildren: stagger, delayChildren: delay }}
+        viewport={{ once, margin: "0px 0px -10% 0px", root: scrollRoot }}
+        whileInView="visible"
       >
         {words.map((word, i) => (
           <motion.span

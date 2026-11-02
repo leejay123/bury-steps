@@ -297,8 +297,7 @@ html[data-overlay-open] header {
 
 :root {
   --radius: 0.5rem;
-  /* Velora's brand gradient (announcement bar, footer name glow): the
-     homepage globe's blue. */
+  /* Velora's brand gradient (footer name glow): the homepage globe's blue. */
   --brand: oklch(0.55 0.2 262);
   --brand-from: oklch(0.55 0.2 262);
   --brand-via: oklch(0.62 0.19 259);
@@ -644,12 +643,6 @@ html[data-overlay-open] header {
   }
 }
 
-/* Announcement bar: hidden before first paint when the pre-paint script
-   says this page or visitor shouldn't see it (see announcement-banner.tsx). */
-html[data-announcement-hide] [data-slot="sticky-banner"] {
-  display: none;
-}
-
 /* Returning members: the header script sets this before the homepage is
    parsed, so their cards are the ones in the first paint. */
 html:not([data-remembered-in]) [data-member-home] {
@@ -739,6 +732,23 @@ html:not([data-design="shadcnio"]):has([data-bottom-nav]:not([hidden], [hidden] 
   visibility: hidden;
 }
 
+/* The loading screen: page-loader.tsx blanks the page's area (not the
+   header, footer or phone bar) with loading-ui's Infinity loader while a
+   page loads. The loading placeholders themselves take no room, so a long
+   one doesn't push the footer off the screen — unless an owner is trying the
+   grey skeletons instead in this browser (lib/loading-style.ts). */
+html:not([data-loading-style="skeletons"]) [data-page-loading] {
+  display: none !important;
+}
+/* While the loader shows (page-loader.tsx), the page's area holds only the
+   loader: everything already loaded is hidden too, so the area is the room
+   left between the header and the footer every time, never longer. */
+html[data-page-loader-on] #main-content > :not([data-page-loader]) {
+  display: none !important;
+}
+html[data-page-loader-on] #main-content {
+  min-height: 16rem;
+}
 /* Pills tabs (ui/tabs.tsx, "transition"): the chosen tab's content drops
    in from above, sharpening from a slight blur. */
 @keyframes tab-drop-in {

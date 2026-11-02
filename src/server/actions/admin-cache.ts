@@ -197,7 +197,7 @@ async function resetSiteToDefaultWork(
           pageTransition: "fade",
           mobileNav: "bottom",
           titleRevealEnabled: true,
-          announcementEnabled: false,
+          announcementEnabled: true,
           announcementText: "",
           announcementLink: "",
           announcementPages: "all",

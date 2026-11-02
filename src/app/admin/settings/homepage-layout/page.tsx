@@ -1,5 +1,4 @@
 import { Suspense } from "react";
-import { HomeFramedToggle } from "./home-framed-toggle";
 import { cacheLife } from "next/cache";
 import { PRIVATE_SAVED_COPY } from "@/lib/private-saved-copy";
 import { requirePermission } from "@/lib/auth";
@@ -51,7 +50,6 @@ function SettingsView({ theme }: { theme: SiteTheme }) {
       <SettingsSectionGroup title="Show or hide">
         <CarouselToggle enabled={theme.carouselEnabled} />
         <TitleRevealToggle enabled={theme.titleRevealEnabled} />
-        <HomeFramedToggle enabled={theme.homeFramed} />
         <MemberNoticesToggle enabled={theme.memberNoticesEnabled} />
       </SettingsSectionGroup>
       <SettingsSection

@@ -404,13 +404,11 @@ model SiteSetting {
   titleRevealEnabled          Boolean  @default(true)
   /// Settings → Homepage layout → Framed sections (shadcn.io style).
   homeFramed                  Boolean  @default(false)
-  /// Announcement bar pinned above the header on every page (Site behaviour).
-  announcementEnabled         Boolean  @default(false)
+  /// Homepage join strip ("New here? Come for a walk…") — Settings → Site behaviour.
+  announcementEnabled         Boolean  @default(true)
+  /// Unused (older custom announcement wording). Kept so existing rows still load.
   announcementText            String   @default("")
-  /// Optional: tapping the bar goes here ("/walks" or a full https:// link).
   announcementLink            String   @default("")
-  /// Where the bar shows: "all", "home", "public" (not /admin), or a
-  /// comma-separated list of paths like "/walks,/notices".
   announcementPages           String   @default("all")
   /// Cookie banner layout: default, small, or mini.
   cookieConsentVariant        String   @default("small")

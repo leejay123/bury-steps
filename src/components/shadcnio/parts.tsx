@@ -1,6 +1,7 @@
 import type { CSSProperties, ReactNode } from "react";
 import { IntentLink as Link } from "@/components/intent-link";
 import { ArrowRight } from "lucide-react";
+import { SectionTitle } from "@/components/section-title";
 import { cn } from "@/lib/utils";
 
 /*
@@ -121,7 +122,7 @@ export function SectionHead({
   action,
 }: {
   id: string;
-  title: ReactNode;
+  title: string;
   lead: ReactNode;
   rest: ReactNode;
   action?: { href: string; label: string };
@@ -129,9 +130,11 @@ export function SectionHead({
   return (
     <div className="px-5 md:px-12 flex flex-col items-center gap-5 pt-12 pb-8 text-center md:pt-16 md:pb-10">
       <div className="mx-auto flex max-w-2xl min-w-0 flex-col items-center gap-3 lg:gap-4">
-        <h2 className="text-balance font-semibold text-3xl tracking-tighter md:text-4xl" id={id}>
-          {title}
-        </h2>
+        <SectionTitle
+          className="text-balance font-semibold text-3xl tracking-tighter md:text-4xl"
+          id={id}
+          text={title}
+        />
         <p className="text-pretty text-muted-foreground md:text-lg">
           <span className="font-medium text-foreground">{lead}</span> {rest}
         </p>

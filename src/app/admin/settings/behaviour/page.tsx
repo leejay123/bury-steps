@@ -11,7 +11,7 @@ import { PlaceholderPreview } from "@/components/placeholder-preview";
 
 import { AnnouncementSettings } from "./announcement-settings";
 import { CookieConsentSettings } from "./cookie-consent-settings";
-import { DisplaySettings, FooterWordmarkMobileSettings, FooterWordmarkSettings } from "./display-form";
+import { FooterWordmarkMobileSettings, FooterWordmarkSettings } from "./display-form";
 import { ProgressToggle } from "./progress-toggle";
 import { StoriesToggle } from "./stories-toggle";
 import { OrganiserInviteToggle } from "./organiser-invite-toggle";
@@ -29,7 +29,7 @@ export default function SiteBehaviourSettingsPage() {
   // themselves (and the access check) fill in just after.
   return (
     <SettingsPage
-      description="Sitewide behaviour that isn't part of the homepage story — announcement bar, cookie notice, back to top, the footer name, Progress, clock-in, organiser invites, and the contact form."
+      description="Sitewide behaviour that isn't part of the homepage story — join bar, cookie notice, the footer name, Progress, clock-in, organiser invites, and the contact form."
       title="Site behaviour"
     >
       <Suspense fallback={<SettingsFallback />}>
@@ -89,18 +89,12 @@ function SettingsView({
 }) {
   return (
     <>
-      <SettingsSectionGroup description="A message across the top of every page." title="Announcement">
-        <AnnouncementSettings
-          enabled={theme.announcementEnabled}
-          link={theme.announcementLink}
-          pages={theme.announcementPages}
-          text={theme.announcementText}
-        />
+      <SettingsSectionGroup description="The strip at the top of the homepage." title="Join bar">
+        <AnnouncementSettings enabled={theme.announcementEnabled} />
       </SettingsSectionGroup>
 
       <SettingsSectionGroup description="Behaviour that applies across the whole site." title="Across the site">
         <CookieConsentSettings variant={theme.cookieConsentVariant} />
-        <DisplaySettings scrollToTopEnabled={theme.scrollToTopEnabled} />
         <FooterWordmarkSettings enabled={theme.footerWordmarkEnabled} />
         {theme.footerWordmarkEnabled ? <FooterWordmarkMobileSettings enabled={theme.footerWordmarkMobile} /> : null}
         <ProgressToggle enabled={settings?.progressEnabled ?? true} />

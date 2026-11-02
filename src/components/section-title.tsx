@@ -12,8 +12,20 @@ export function TitleRevealProvider({ enabled, children }: { enabled: boolean; c
 }
 
 /** A section's h2: Velora's Text Reveal when switched on, plain text otherwise. */
-export function SectionTitle({ text, className }: { text: string; className: string }) {
+export function SectionTitle({
+  text,
+  className,
+  id,
+}: {
+  text: string;
+  className: string;
+  id?: string;
+}) {
   const reveal = useContext(TitleRevealContext);
-  if (reveal) return <TextReveal as="h2" className={className} text={text} />;
-  return <h2 className={className}>{text}</h2>;
+  if (reveal) return <TextReveal as="h2" className={className} id={id} text={text} />;
+  return (
+    <h2 className={className} id={id}>
+      {text}
+    </h2>
+  );
 }

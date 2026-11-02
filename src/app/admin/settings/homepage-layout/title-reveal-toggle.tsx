@@ -14,7 +14,7 @@ export function TitleRevealToggle({ enabled }: { enabled: boolean }) {
   return (
     <SettingsSwitchSection
       checked={on}
-      description="Homepage section titles (How this started, From the group, Latest notices, FAQs) fade in word by word as you scroll to them. Off shows them straight away."
+      description="Homepage section titles fade in word by word as you scroll to them. Off shows them straight away."
       id="title-reveal-enabled"
       onCheckedChange={toggle}
       pending={isPending}
