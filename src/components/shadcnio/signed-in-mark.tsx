@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect } from "react";
-import { ME_COOKIE, SIGNED_IN_COOKIE, syncGuestDash, type SidebarMe } from "./sidebar-state";
+import { ME_COOKIE, SIGNED_IN_COOKIE, forgetSignedIn, syncGuestDash, type SidebarMe } from "./sidebar-state";
 
 /** What the pre-paint script does (sidebar-state.ts, APPLY_ME), for the first visit and for changes. */
 function applyMe(me: SidebarMe) {
@@ -30,13 +30,12 @@ export function SignedInMark({ signedIn, me }: { signedIn: boolean; me?: Sidebar
         document.cookie = `${ME_COOKIE}=${encodeURIComponent(meJson)}; Path=/; Max-Age=31536000; SameSite=Lax`;
         applyMe(JSON.parse(meJson) as SidebarMe);
       }
+      syncGuestDash(window.location.pathname);
     } else {
-      document.cookie = `${SIGNED_IN_COOKIE}=; Path=/; Max-Age=0; SameSite=Lax`;
-      document.cookie = `${ME_COOKIE}=; Path=/; Max-Age=0; SameSite=Lax`;
-      root.removeAttribute("data-remembered-in");
-      root.removeAttribute("data-sb-role");
+      // Every remembered piece, not just the mark (forgetSignedIn), or the next visit
+      // paints the signed-in page first.
+      forgetSignedIn();
     }
-    syncGuestDash(window.location.pathname);
   }, [signedIn, meJson]);
   return null;
 }

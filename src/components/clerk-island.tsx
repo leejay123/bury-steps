@@ -1,6 +1,7 @@
 import type { ReactNode } from "react";
 import { shadcn } from "@clerk/themes";
 import { LazyClerkProvider } from "@/components/clerk-lazy";
+import { ForgetOnSignOut } from "@/components/forget-on-sign-out";
 import { AFTER_AUTH_PATH, SIGN_IN_URL, SIGN_UP_URL } from "@/lib/urls";
 
 /**
@@ -44,6 +45,7 @@ export function ClerkIsland({ children }: { children: ReactNode }) {
       signUpFallbackRedirectUrl={AFTER_AUTH_PATH}
       afterSignOutUrl="/"
     >
+      <ForgetOnSignOut />
       {children}
     </LazyClerkProvider>
   );

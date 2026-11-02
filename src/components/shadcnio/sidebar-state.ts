@@ -35,4 +35,22 @@ export function syncGuestDash(path: string) {
   else d.removeAttribute("data-guest-dash");
 }
 
-export const SIDEBAR_SCRIPT = `try{var d=document.documentElement;if(/(?:^|; )(?:${SIGNED_IN_COOKIE}=1|bs-nav=[^;])/.test(document.cookie))d.setAttribute("data-remembered-in","");else if(${GUEST_DASH_PATH}.test(location.pathname))d.setAttribute("data-guest-dash","");if(localStorage.getItem("${SIDEBAR_KEY}")==="collapsed")d.setAttribute("data-docs-sidebar","collapsed");var c=document.cookie.match(/(?:^|; )${ME_COOKIE}=([^;]*)/);if(c)(${APPLY_ME})(JSON.parse(decodeURIComponent(c[1])))}catch(e){}`;
+/**
+ * Everything this browser remembers about someone signed in, so pages paint signed in
+ * before the server answers: the mark itself (bs-in), who it is (bs-me) and the old
+ * header's menu, photo, bar and search (remembered-nav.ts). Signing out must clear them
+ * all, or the next visit paints the signed-in page (Dashboard, members' menu) first.
+ */
+const REMEMBERED_SIGNED_IN = [SIGNED_IN_COOKIE, ME_COOKIE, "bs-nav", "bs-av", "bs-avimg", "bs-bar", "bs-more", "bs-search"];
+
+/** Forget the signed-in person in this browser (signed out): cookies and the page's marks. */
+export function forgetSignedIn() {
+  for (const name of REMEMBERED_SIGNED_IN) document.cookie = `${name}=; Path=/; Max-Age=0; SameSite=Lax`;
+  const root = document.documentElement;
+  root.removeAttribute("data-remembered-in");
+  root.removeAttribute("data-sb-role");
+  for (const name of ["--me-name", "--me-email", "--me-img"]) root.style.removeProperty(name);
+  syncGuestDash(window.location.pathname);
+}
+
+export const SIDEBAR_SCRIPT = `try{var d=document.documentElement;if(/(?:^|; )${SIGNED_IN_COOKIE}=1/.test(document.cookie))d.setAttribute("data-remembered-in","");else if(${GUEST_DASH_PATH}.test(location.pathname))d.setAttribute("data-guest-dash","");if(localStorage.getItem("${SIDEBAR_KEY}")==="collapsed")d.setAttribute("data-docs-sidebar","collapsed");var c=document.cookie.match(/(?:^|; )${ME_COOKIE}=([^;]*)/);if(c)(${APPLY_ME})(JSON.parse(decodeURIComponent(c[1])))}catch(e){}`;

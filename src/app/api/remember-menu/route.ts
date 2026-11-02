@@ -1,4 +1,5 @@
 import { NextResponse, type NextRequest } from "next/server";
+import { SIGNED_IN_COOKIE } from "@/components/shadcnio/sidebar-state";
 import { getOptionalUser } from "@/lib/auth";
 import { getProgressEnabled } from "@/lib/progress-settings";
 import { navItems } from "@/components/site-nav-items";
@@ -50,6 +51,8 @@ export async function GET(req: NextRequest) {
   // (encodeURIComponent'd JSON). Not httpOnly: the header script reads these
   // before the page loads.
   const options = { path: "/", sameSite: "lax" as const, maxAge: MONTH, httpOnly: false };
+  // The signed-in mark too, so the first page after signing in paints signed in (sidebar-state.ts).
+  response.cookies.set(SIGNED_IN_COOKIE, "1", { ...options, maxAge: 60 * 60 * 24 * 365 });
   response.cookies.set(NAV_COOKIE, JSON.stringify(items), options);
   response.cookies.set(BAR_COOKIE, JSON.stringify(items.slice(0, BOTTOM_BAR_TABS)), options);
   response.cookies.set(MORE_COOKIE, JSON.stringify(memberMoreHrefs(items, isAdmin)), options);
