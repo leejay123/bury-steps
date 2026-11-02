@@ -806,9 +806,8 @@ html.dark:is([data-remembered-in], [data-guest-dash]):not([data-page-kind="home"
 [data-efferd-pop] .globalnav-group-header { opacity: 1; transform: none; }
 @media (min-width: 64rem) { html:is([data-remembered-in], [data-guest-dash])[data-docs-sidebar="collapsed"]:not([data-page-kind="home"], [data-page-kind="plain"]) [data-slot="docs-sidebar"] [data-efferd-sub] { display: none; } }
 
-/* ---- Signed-in pages' tops: a short version of the homepage hero (their classes' sizes): the
-   moving letters spelling the page's name behind (page-top-field.tsx), a small grey line, the
-   title, the grey intro and the page's button underneath, centred, edge to edge across the
+/* ---- Signed-in pages' tops: a short version of the homepage hero (their classes' sizes): a
+   small grey line, the title, the grey intro and the page's button underneath, centred, edge to edge across the
    page with a line under it. ---- */
 html:is([data-remembered-in], [data-guest-dash]):not([data-page-kind="home"], [data-page-kind="plain"]) [data-shadcn-top] {
   position: relative !important; isolation: isolate; overflow: hidden;
