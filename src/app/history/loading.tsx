@@ -2,30 +2,44 @@ import { HistoryFilterChrome } from "@/components/list-chrome";
 import { HistoryRowsSkeleton, SkLine } from "@/components/list-skeletons";
 import { PageTop } from "@/components/page-top";
 
-/** The page's real heading, description, search and filters, then rows
- * shaped like the history list. The count line and year heading depend on
- * your walks, so they're grey lines (never an empty gap). The row
- * count (remembered from last time) is read inside the page. */
+const HISTORY_INTRO = "Every walk you clock in to will be kept here, once it's finished.";
+
+/** "You have clocked in to 12 walks." while it loads: a grey line, gone when the list was empty last time. */
+export function HistoryCountFallback() {
+  return (
+    <div className="[[data-history-page]:has([data-reveal-list][hidden])_&]:hidden">
+      <SkLine className="w-56" size="sm" />
+    </div>
+  );
+}
+
+/** The list while it loads: the real search and filters, then rows shaped like the history list, as many as last time. */
+export function HistoryListFallback() {
+  return (
+    // With no rows last time the list hides itself, and the filters with it.
+    <div
+      aria-busy="true"
+      className="flex flex-col gap-6 [&:has([data-reveal-list][hidden])>[data-sk-filters]]:hidden"
+      data-page-loading=""
+    >
+      <div className="contents" data-sk-filters="">
+        <HistoryFilterChrome />
+      </div>
+      <section className="flex flex-col gap-3">
+        <HistoryRowsSkeleton remember="history" />
+      </section>
+    </div>
+  );
+}
+
+/** The whole page while it loads (the route's loading state): the real heading, then the parts above. */
 export function HistoryLoading() {
   return (
-    <div data-page-loading="" className="flex flex-col gap-6">
-      <PageTop eyebrow="Dashboard" intro="Every walk you clock in to will be kept here, once it's finished." title="Your walk history">
-        {/* "You have clocked in to 12 walks." — depends on your walks; not
-            there when the list was empty last time. */}
-        <div className="[[data-page-loading]:has([data-reveal-list][hidden])_&]:hidden">
-          <SkLine className="w-56" size="sm" />
-        </div>
+    <div className="flex flex-col gap-6" data-history-page="">
+      <PageTop eyebrow="Dashboard" intro={HISTORY_INTRO} title="Your walk history">
+        <HistoryCountFallback />
       </PageTop>
-      {/* As many rows as last time, from the first paint; with none last
-          time the list hides itself, and the filters with it. */}
-      <div className="flex flex-col gap-6 [&:has([data-reveal-list][hidden])>[data-sk-filters]]:hidden">
-        <div className="contents" data-sk-filters="">
-          <HistoryFilterChrome />
-        </div>
-        <section className="flex flex-col gap-3">
-          <HistoryRowsSkeleton remember="history" />
-        </section>
-      </div>
+      <HistoryListFallback />
     </div>
   );
 }

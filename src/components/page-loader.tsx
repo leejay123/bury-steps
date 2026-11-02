@@ -23,8 +23,8 @@ const PLACEHOLDER = "[data-page-loading]";
 export function PageLoader() {
   const [loading, setLoading] = useState(false);
   const [gaveUp, setGaveUp] = useState(false);
-  // An owner trying the grey skeletons instead (lib/loading-style.ts).
-  const style = useSyncExternalStore(subscribeLoadingStyle, readLoadingStyle, () => "loader" as const);
+  // Only for a browser that picked the loader over the grey skeletons (lib/loading-style.ts).
+  const style = useSyncExternalStore(subscribeLoadingStyle, readLoadingStyle, () => "skeletons" as const);
 
   useEffect(() => {
     applyLoadingStyle(style);
@@ -55,7 +55,7 @@ export function PageLoader() {
     return () => window.clearTimeout(timer);
   }, [loading]);
 
-  const showing = loading && !gaveUp && style !== "skeletons";
+  const showing = loading && !gaveUp && style === "loader";
 
   // While it shows, the page's area holds nothing else (globals.css), so the
   // loading screen is the same size every time: one screen, the footer at

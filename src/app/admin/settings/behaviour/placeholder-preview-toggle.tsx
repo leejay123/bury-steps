@@ -21,7 +21,7 @@ export function PlaceholderPreviewToggle() {
   const [override, setOverride] = useState<PlaceholderPreviewMode | "off" | null>(null);
   const [, startTransition] = useTransition();
   const value = override ?? saved ?? "off";
-  const loadingStyle = useSyncExternalStore(subscribeLoadingStyle, readLoadingStyle, () => "loader" as const);
+  const loadingStyle = useSyncExternalStore(subscribeLoadingStyle, readLoadingStyle, () => "skeletons" as const);
   return (
     <SettingsSection
       description="Temporary, for checking the loading screen (a blank page with a spinner). In this browser only — nobody else is affected. Hold keeps each page's loading screen up for 5 seconds before its content, so you can click into a notice or a walk and see it too. Always shows only the loading screen. Loading screen swaps the loader for the grey skeleton shapes in this browser, to compare them. To switch quickly, use the small Placeholders button at the bottom left of any page, or press Alt+P (Option+P on a Mac)."
@@ -55,8 +55,8 @@ export function PlaceholderPreviewToggle() {
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="loader">Loader (blank page with the ∞ loader — everyone sees this)</SelectItem>
-            <SelectItem value="skeletons">Skeletons (grey shapes of the page)</SelectItem>
+            <SelectItem value="skeletons">Skeletons (grey shapes of the page — everyone sees this)</SelectItem>
+            <SelectItem value="loader">Loader (blank page with the ∞ loader)</SelectItem>
           </SelectContent>
         </Select>
       </div>

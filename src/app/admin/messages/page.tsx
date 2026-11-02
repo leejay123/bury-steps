@@ -1,6 +1,6 @@
 import { Suspense } from "react";
 import { PlaceholderPreview } from "@/components/placeholder-preview";
-import { AdminPageFallback } from "@/app/admin/admin-page-fallback";
+import { AdminListFallback, AdminPageFallback } from "@/app/admin/admin-page-fallback";
 import { MessagesFilterChrome } from "@/components/list-chrome";
 import { RememberListCount } from "@/components/remember-list-count";
 import { MessageRowsSkeleton } from "@/components/list-skeletons";
@@ -39,14 +39,11 @@ async function getMessagesView() {
   return { messages, description };
 }
 
-async function AdminMessagesPageContent() {
-  const view = await getMessagesView();
-  if (!view) notFound();
-  const { messages, description } = view;
-
+/** The title and description (who gets alerted, from a saved copy): part of the ready-made page. */
+async function MessagesIntro() {
+  const description = await getContactMessagesDescription();
   return (
-    <div className="flex flex-col gap-6 px-4 py-6 md:px-6">
-      <RememberListCount count={Math.min(messages.length, LIST_PAGE_SIZE)} id="messages" />
+    <>
       <AdminPageIntro description={description.text} title="Messages" />
       {!description.hasOwner ? (
         <p className="text-sm text-muted-foreground">
@@ -55,6 +52,18 @@ async function AdminMessagesPageContent() {
           </Link>
         </p>
       ) : null}
+    </>
+  );
+}
+
+/** The part that waits for data: the messages (organisers allowed to see them). */
+async function MessagesList() {
+  const view = await getMessagesView();
+  if (!view) notFound();
+  const { messages } = view;
+  return (
+    <>
+      <RememberListCount count={Math.min(messages.length, LIST_PAGE_SIZE)} id="messages" />
       <ContactMessagesList
         messages={messages.map((message) => ({
           id: message.id,
@@ -66,7 +75,18 @@ async function AdminMessagesPageContent() {
           read: message.readAt !== null,
         }))}
       />
-    </div>
+    </>
+  );
+}
+
+/** The list's placeholder: the real search and date filter, then as many rows as there are (list-counts.ts). */
+async function MessagesListFallback() {
+  const rows = await messagesListRows();
+  return (
+    <AdminListFallback
+      filters={<MessagesFilterChrome />}
+      list={<MessageRowsSkeleton known={rows} remember="messages" />}
+    />
   );
 }
 
@@ -85,18 +105,22 @@ export async function MessagesPageFallback() {
   );
 }
 
-/** Everything here depends on who's asking and on live data, so the page
- * shows a matching placeholder for an instant while it loads. */
-// Access is checked in layout.tsx, before anything streams.
+// Access is checked in proxy.ts, and the list checks the database itself.
 /** Fetched ahead from the menu (navLinkPrefetch), so it opens with the messages there. */
 export const prefetch = "partial";
 
 export default function AdminMessagesPage() {
+  // The title and description draw at once (the ready-made page); only the
+  // list waits for its data, behind its own placeholder (Next.js docs:
+  // optimizing-the-static-shell).
   return (
-    <Suspense fallback={<MessagesPageFallback />}>
-      <PlaceholderPreview fallback={<MessagesPageFallback />}>
-        <AdminMessagesPageContent />
-      </PlaceholderPreview>
-    </Suspense>
+    <div className="flex flex-col gap-6 px-4 py-6 md:px-6">
+      <MessagesIntro />
+      <Suspense fallback={<MessagesListFallback />}>
+        <PlaceholderPreview fallback={<MessagesListFallback />}>
+          <MessagesList />
+        </PlaceholderPreview>
+      </Suspense>
+    </div>
   );
 }

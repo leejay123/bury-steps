@@ -68,42 +68,25 @@ async function getAdminWalksView() {
   return { canView: true as const, canCreate: admin.permWalksCreate, ...(await loadAdminWalks(admin.id)) };
 }
 
-async function AdminPageContent() {
+/** Create a walk, for organisers allowed to (from the same saved copy as the list). */
+async function CreateWalkAction() {
+  const view = await getAdminWalksView();
+  return view?.canCreate ? <CreateWalkDrawer /> : null;
+}
+
+/** The list (the part that waits for data); with Create but not View, a note instead. */
+async function AdminWalksList() {
   const view = await getAdminWalksView();
   if (!view) notFound();
-  const admin = { permWalksView: view.canView, permWalksCreate: view.canCreate };
-  return (
-    <div className="flex flex-col gap-8 px-4 py-6 md:px-6">
-      {admin.permWalksView ? (
-        // One card in the shadcn.io dashboard from tablets up: the top, Stories and the list.
-        <section className="flex flex-col gap-4" data-page-card="">
-          <AdminPageIntro
-            action={admin.permWalksCreate ? <CreateWalkDrawer /> : null}
-            description={WALKS_INTRO}
-            title="Walks"
-          />
-          <StoriesSlot />
-          {/* The heading and Create button show straight away; only the list waits. */}
-          <Suspense fallback={<AdminWalksSkeleton />}>
-            <PlaceholderPreview fallback={<AdminWalksSkeleton />}>
-              <AdminWalksTabs />
-            </PlaceholderPreview>
-          </Suspense>
-        </section>
-      ) : admin.permWalksCreate ? (
-        // Create without View: no list to attach the button to (see the
-        // permission split noted above), so it still gets its own small
-        // section rather than disappearing entirely.
-        <section className="flex flex-col gap-4">
-          <AdminPageIntro
-            action={<CreateWalkDrawer />}
-            description="A share link is generated automatically. People must be signed in to clock in. If they do not have an account yet, they create one first. If they already have one, they sign in. The link brings them back to this walk afterwards."
-            title="Create a walk"
-          />
-        </section>
-      ) : null}
-    </div>
-  );
+  if (!view.canView)
+    return (
+      <p className="text-sm text-muted-foreground">
+        A share link is generated automatically. People must be signed in to clock in. If they do not have an account
+        yet, they create one first. If they already have one, they sign in. The link brings them back to this walk
+        afterwards.
+      </p>
+    );
+  return <AdminWalksTabs />;
 }
 
 /** Upcoming and History rows. Upcoming vs History depends on the time now. */
@@ -222,31 +205,37 @@ function AdminWalksSkeleton() {
   );
 }
 
-function AdminWalksPageFallback() {
-  return (
-    <div data-page-loading="" className="flex flex-col gap-8 px-4 py-6 md:px-6">
-      {/* As the page: its card, the top with Create a walk, then the list. */}
-      <section className="flex flex-col gap-4" data-page-card="">
-        <AdminPageIntro action={<CreateWalkDrawer />} description={WALKS_INTRO} title="Walks" />
-        <AdminWalksSkeleton />
-      </section>
-    </div>
-  );
-}
-
 /**
  * Fetched ahead from the menu (see PARTIAL_PREFETCH_ROUTES), so the page
  * opens with its walks already there.
  */
 export const prefetch = "partial";
 
-/** Everything here depends on who's asking and on live data, so the page
- * shows a matching placeholder for an instant while it loads. */
 export default function AdminWalksPage() {
+  // The page's own frame, title, button and Stories draw at once (the static
+  // shell); only the list waits for its data, behind its own placeholder —
+  // Next.js docs: optimizing-the-static-shell ("keep static UI in the shell").
   return (
-    <Suspense fallback={<AdminWalksPageFallback />}>
-      <AdminPageContent />
-    </Suspense>
+    <div className="flex flex-col gap-8 px-4 py-6 md:px-6">
+      {/* One card in the shadcn.io dashboard from tablets up: the top, Stories and the list. */}
+      <section className="flex flex-col gap-4" data-page-card="">
+        <AdminPageIntro
+          action={
+            // Until the permission is known, the button itself (almost every organiser has it).
+            <Suspense fallback={<CreateWalkDrawer />}>
+              <CreateWalkAction />
+            </Suspense>
+          }
+          description={WALKS_INTRO}
+          title="Walks"
+        />
+        <StoriesSlot />
+        <Suspense fallback={<AdminWalksSkeleton />}>
+          <PlaceholderPreview fallback={<AdminWalksSkeleton />}>
+            <AdminWalksList />
+          </PlaceholderPreview>
+        </Suspense>
+      </section>
+    </div>
   );
 }
-

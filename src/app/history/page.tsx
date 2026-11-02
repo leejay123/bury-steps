@@ -1,7 +1,7 @@
 import { Suspense } from "react";
 import { PlaceholderPreview } from "@/components/placeholder-preview";
 import type { Metadata } from "next";
-import { HistoryLoading } from "./loading";
+import { HistoryCountFallback, HistoryListFallback } from "./loading";
 import { prisma } from "@/lib/db";
 import { getOptionalUser, requireUser } from "@/lib/auth";
 import { cacheLife } from "next/cache";
@@ -25,12 +25,23 @@ export const metadata: Metadata = {
 
 
 export default function WalkHistoryPage() {
+  // The heading draws at once (the ready-made page); your count and your
+  // walks wait for your data, each behind its own placeholder (Next.js docs:
+  // optimizing-the-static-shell). Both read one private saved copy.
   return (
-    <Suspense fallback={<HistoryLoading />}>
-      <PlaceholderPreview fallback={<HistoryLoading />}>
-        <WalkHistoryContent />
-      </PlaceholderPreview>
-    </Suspense>
+    <div className="flex flex-col gap-6" data-history-page="">
+      {/* Fixed wording, so it's part of the ready-made page. */}
+      <PageTop eyebrow="Dashboard" intro="Every walk you clock in to will be kept here, once it's finished." title="Your walk history">
+        <Suspense fallback={<HistoryCountFallback />}>
+          <HistoryCount />
+        </Suspense>
+      </PageTop>
+      <Suspense fallback={<HistoryListFallback />}>
+        <PlaceholderPreview fallback={<HistoryListFallback />}>
+          <HistoryList />
+        </PlaceholderPreview>
+      </Suspense>
+    </div>
   );
 }
 
@@ -99,30 +110,35 @@ async function getHistoryForViewer() {
   };
 }
 
-async function WalkHistoryContent() {
+/** "You have clocked in to 12 walks." (and how many are shown, past 1000). */
+async function HistoryCount() {
+  const history = await getHistoryForViewer();
+  if (!history) return null;
+  const { count, rows } = history;
+  return (
+    <>
+      {count > 0 ? (
+        <p className="text-sm text-muted-foreground">
+          {count === 1 ? "You have clocked in to 1 walk." : `You have clocked in to ${count} walks.`}
+        </p>
+      ) : null}
+      {rows.length < count ? (
+        <p className="text-xs text-muted-foreground">Showing the {rows.length.toLocaleString("en-GB")} most recent.</p>
+      ) : null}
+    </>
+  );
+}
+
+/** Your finished walks. */
+async function HistoryList() {
   const history = await getHistoryForViewer();
   // Not signed in: requireUser sends them to sign in, as before.
   if (!history) await requireUser();
-  const { count, rows } = history ?? { count: 0, rows: [] };
-
+  const rows = history?.rows ?? [];
   return (
-    <div className="flex flex-col gap-6">
+    <>
       <RememberListCount count={Math.min(rows.length, LIST_PAGE_SIZE)} id="history" />
-      {/* Fixed wording, so the loading placeholder shows it for real too. */}
-      <PageTop eyebrow="Dashboard" intro="Every walk you clock in to will be kept here, once it's finished." title="Your walk history">
-        {count > 0 ? (
-          <p className="text-sm text-muted-foreground">
-            {count === 1 ? "You have clocked in to 1 walk." : `You have clocked in to ${count} walks.`}
-          </p>
-        ) : null}
-        {rows.length < count ? (
-          <p className="text-xs text-muted-foreground">
-            Showing the {rows.length.toLocaleString("en-GB")} most recent.
-          </p>
-        ) : null}
-      </PageTop>
-
       <AttendanceHistory rows={rows} />
-    </div>
+    </>
   );
 }

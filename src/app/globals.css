@@ -739,12 +739,12 @@ html:not([data-design="shadcnio"]):has([data-bottom-nav]:not([hidden], [hidden] 
   visibility: hidden;
 }
 
-/* The loading screen: page-loader.tsx blanks the page's area (not the
-   header, footer or phone bar) with loading-ui's Infinity loader while a
-   page loads. The loading placeholders themselves take no room, so a long
-   one doesn't push the footer off the screen — unless an owner is trying the
-   grey skeletons instead in this browser (lib/loading-style.ts). */
-html:not([data-loading-style="skeletons"]) [data-page-loading] {
+/* The loading screen, only in a browser that picked it (lib/loading-style.ts;
+   everyone else sees the grey skeletons, the ready parts of the page staying
+   on show): page-loader.tsx blanks the page's area (not the header, footer or
+   phone bar) with loading-ui's Infinity loader while a page loads, and the
+   placeholders take no room. */
+html[data-loading-style="loader"] [data-page-loading] {
   display: none !important;
 }
 /* While the loader shows (page-loader.tsx), the page's area holds only the

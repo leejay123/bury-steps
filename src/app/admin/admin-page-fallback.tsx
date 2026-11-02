@@ -28,17 +28,37 @@ export function AdminPageFallback({
     <div data-page-loading="" aria-busy="true" className="flex flex-col gap-6 px-4 py-6 md:px-6">
       {/* The same page top as the page (its animated band in the dashboard), so nothing moves when it arrives. */}
       {title ? <AdminPageIntro action={action} description={description ?? ""} title={title} /> : null}
-      {/* When the list was empty last time, its rows hide themselves and the
-          empty box's shape shows instead (RememberedRows); the filters hide
-          too, as on the real empty page. */}
-      <div className="flex flex-col gap-6 [&:has([data-reveal-list][hidden])>[data-sk-filters]]:hidden">
-        {filters ? (
-          <div className="contents" data-sk-filters="">
-            {filters}
-          </div>
-        ) : null}
-        {list}
-      </div>
+      <AdminListBody filters={filters} list={list} />
+    </div>
+  );
+}
+
+/** The filters and rows placeholder alone. */
+function AdminListBody({ filters, list }: { filters?: ReactNode; list?: ReactNode }) {
+  return (
+    // When the list was empty last time, its rows hide themselves and the
+    // empty box's shape shows instead (RememberedRows); the filters hide
+    // too, as on the real empty page.
+    <div className="flex flex-col gap-6 [&:has([data-reveal-list][hidden])>[data-sk-filters]]:hidden">
+      {filters ? (
+        <div className="contents" data-sk-filters="">
+          {filters}
+        </div>
+      ) : null}
+      {list}
+    </div>
+  );
+}
+
+/**
+ * The list's placeholder, for a page whose title and banner draw at once
+ * (outside its Suspense boundary, as the Next.js docs recommend): only the
+ * filters and rows wait for the data.
+ */
+export function AdminListFallback({ filters, list }: { filters?: ReactNode; list?: ReactNode }) {
+  return (
+    <div aria-busy="true" className="contents" data-page-loading="">
+      <AdminListBody filters={filters} list={list} />
     </div>
   );
 }

@@ -43,7 +43,7 @@ export function PlaceholderPreviewBadge() {
   const saved = useSyncExternalStore(noopSubscribe, readPlaceholderPreview, () => null);
   const [override, setOverride] = useState<PlaceholderPreviewMode | "off" | null>(null);
   const mode = override ?? saved ?? "off";
-  const loadingStyle = useSyncExternalStore(subscribeLoadingStyle, readLoadingStyle, () => "loader" as const);
+  const loadingStyle = useSyncExternalStore(subscribeLoadingStyle, readLoadingStyle, () => "skeletons" as const);
   const loadingLabel = LOADING_STYLES.find((option) => option.value === loadingStyle)?.label ?? "Loader";
 
   const cycle = useCallback(() => {
