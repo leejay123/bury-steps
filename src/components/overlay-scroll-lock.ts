@@ -119,7 +119,8 @@ function eventTargetInsideOpenOverlay(target: EventTarget | null) {
   if (!(target instanceof Element)) return false;
   return Boolean(
     target.closest(
-      '[data-slot="drawer-content"], [data-slot="dialog-content"], [data-slot="alert-dialog-content"], [data-slot="popover-content"], [data-overlay-panel]',
+      // Clerk's own windows (ClerkModalScrollLock) scroll inside themselves.
+      '[data-slot="drawer-content"], [data-slot="dialog-content"], [data-slot="alert-dialog-content"], [data-slot="popover-content"], [data-overlay-panel], .cl-modalBackdrop',
     ),
   );
 }
