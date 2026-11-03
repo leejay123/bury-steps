@@ -1,52 +1,66 @@
 "use client";
 
 import { useEffect, useSyncExternalStore } from "react";
-import { useClerk, useUser } from "@clerk/nextjs";
+import { UserButton, useUser } from "@clerk/nextjs";
 import { AvatarPlaceholder } from "@/components/header-placeholders";
 import { AVATAR_IMAGE_COOKIE } from "@/lib/remembered-nav";
 import { writeClientCookie } from "@/lib/remembered-rows-key";
+import { Bell, History, LineChart, Mail } from "lucide-react";
+import { openEmailPreferences } from "@/components/email-preferences-drawer";
 
 /**
- * The avatar: clicking it opens Clerk's own account window (Clerk's
- * openUserProfile()), and nothing else. Drawn by the site with the remembered
- * photo from the first paint, so it isn't swapped for Clerk's button when Clerk
- * loads (no flash).
+ * Shortcuts into the same avatar menu Clerk already renders ("Manage
+ * account", "Sign out") — reachable from any page without hunting through
+ * the mobile nav's scrolling row.
+ *
+ * Must be its own client component, not inline JSX inside SiteNav (a server
+ * component): Clerk's UserButton finds UserButton.MenuItems/.Link by
+ * inspecting its children's component identity at runtime, and that
+ * identity is lost once children are constructed server-side and passed
+ * across the server/client boundary — the menu items silently don't
+ * render (no error, just missing) if this lives in a server component.
  */
 export function SiteUserButton({
   image,
   initial,
+  progressEnabled = true,
 }: {
-  /** Last visit's photo, shown from the first paint. */
+  /** Last visit's photo, shown until Clerk's button loads (same image, so no flash). */
   image?: string | null;
-  /** Shown in the circle when there's no photo. */
+  /** Shown in a circle until Clerk's avatar loads, so the header doesn't jump. */
   initial?: string;
-  /** No longer used (the account menu that linked to Progress is gone). */
   progressEnabled?: boolean;
 }) {
-  const { user } = useUser();
-  const { openUserProfile } = useClerk();
-
   // Remember the photo so the next refresh can show it straight away.
+  const { user } = useUser();
   const imageUrl = user?.imageUrl;
   useEffect(() => {
     if (imageUrl) writeClientCookie(AVATAR_IMAGE_COOKIE, encodeURIComponent(imageUrl));
   }, [imageUrl]);
 
-  // The server draws the remembered photo (Clerk isn't loaded there); keep it until this
-  // part of the page has woken up, so the browser's first draw matches the server's.
+  // The server always draws the initial circle (Clerk isn't loaded there).
+  // If Clerk finishes loading in the browser before this part of the page
+  // wakes up, drawing the real button straight away wouldn't match the
+  // server's HTML (a hydration error). So draw the circle first, then swap.
   const hydrated = useSyncExternalStore(noopSubscribe, () => true, () => false);
-  const photo = (hydrated ? imageUrl : null) ?? image ?? null;
+  const placeholder = <AvatarPlaceholder image={image} initial={initial} />;
+  if (!hydrated) return placeholder;
 
   return (
-    <button
-      aria-label="Manage account"
-      className="relative flex size-7 shrink-0 cursor-pointer rounded-full outline-none focus-visible:ring-[3px] focus-visible:ring-ring/50"
-      data-account-button=""
-      onClick={() => openUserProfile()}
-      type="button"
-    >
-      <AvatarPlaceholder image={photo} initial={initial || user?.firstName?.charAt(0) || "?"} />
-    </button>
+    <UserButton fallback={placeholder}>
+      <UserButton.MenuItems>
+        {progressEnabled ? (
+          <UserButton.Link href="/progress" label="Progress" labelIcon={<LineChart className="size-4" />} />
+        ) : null}
+        <UserButton.Link href="/history" label="History" labelIcon={<History className="size-4" />} />
+        <UserButton.Action
+          label="Email preferences"
+          labelIcon={<Bell className="size-4" />}
+          onClick={openEmailPreferences}
+        />
+        <UserButton.Link href="/contact" label="Contact us" labelIcon={<Mail className="size-4" />} />
+      </UserButton.MenuItems>
+    </UserButton>
   );
 }
 
