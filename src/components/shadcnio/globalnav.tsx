@@ -4,6 +4,7 @@ import { useEffect, useRef, useState, type ReactNode } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useClientPathname } from "@/components/client-pathname";
+import { canFetchAhead, shouldPrefetchNavLink } from "@/components/site-nav-items";
 import { PanelLeft } from "lucide-react";
 import { SIDEBAR_TOGGLE_EVENT } from "./sidebar-state";
 import { CustomizeDot, CustomizePanel } from "./customize-panel";
@@ -74,7 +75,10 @@ export function GlobalNav({
     if (!nav) return;
     const control = new GlobalnavController(nav, {
       navigate: (href) => router.push(href),
-      prefetch: (href) => router.prefetch(href),
+      // Not a sign-in-only page for a visitor (canFetchAhead).
+      prefetch: (href) => {
+        if (canFetchAhead(href)) router.prefetch(href);
+      },
     });
     controller.current = control;
     const search = nav.querySelector<HTMLElement>('[data-gn-id="search"]');
@@ -188,6 +192,10 @@ export function GlobalNav({
                             className="globalnav-link"
                             data-gn-section={section.id}
                             href={section.href}
+                            // A sign-in-only page isn't fetched just for being on screen: for a
+                            // visitor that's a redirect the browser blocks. Pointing at it still
+                            // fetches it for someone signed in (the controller's prefetch).
+                            prefetch={shouldPrefetchNavLink(section.href) ? undefined : false}
                           >
                             <span className="globalnav-link-text">{section.label}</span>
                             {hasFlyout ? (
@@ -245,7 +253,7 @@ export function GlobalNav({
                                               key={link.label}
                                               style={part(item)}
                                             >
-                                              <Link className="globalnav-group-link" href={link.href}>
+                                              <Link className="globalnav-group-link" href={link.href} prefetch={shouldPrefetchNavLink(link.href) ? undefined : false}>
                                                 {link.label}
                                               </Link>
                                             </li>

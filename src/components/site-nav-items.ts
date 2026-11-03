@@ -104,6 +104,16 @@ export function shouldPrefetchNavLink(href: string): boolean {
   return !AUTH_ONLY_HREFS.has(href);
 }
 
+/**
+ * Whether to fetch a page ahead when someone shows they're about to open it (pointer
+ * over, focus): any page for someone signed in (html[data-remembered-in], set before
+ * the first paint), but not a sign-in-only one for a visitor — the server answers that
+ * with a redirect to the sign-in site, which the browser blocks (a CORS error).
+ */
+export function canFetchAhead(href: string): boolean {
+  return shouldPrefetchNavLink(href) || document.documentElement.hasAttribute("data-remembered-in");
+}
+
 export function isNavItemActive(pathname: string, href: string) {
   if (href === "/") return pathname === "/";
   if (href === "/walks") {

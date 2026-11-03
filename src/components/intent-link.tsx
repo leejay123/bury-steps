@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useState, type ComponentProps } from "react";
+import { canFetchAhead } from "@/components/site-nav-items";
 
 /**
  * A link on a list of many (the Settings table, a walk or member list) that
@@ -22,19 +23,23 @@ export function IntentLink({
   ...props
 }: Omit<ComponentProps<typeof Link>, "prefetch"> & { full?: boolean }) {
   const [wanted, setWanted] = useState(false);
+  // Not a sign-in-only page for a visitor (canFetchAhead).
+  const want = () => {
+    if (canFetchAhead(typeof props.href === "string" ? props.href : (props.href.pathname ?? ""))) setWanted(true);
+  };
   return (
     <Link
       {...props}
       onFocus={(event) => {
-        setWanted(true);
+        want();
         onFocus?.(event);
       }}
       onPointerEnter={(event) => {
-        setWanted(true);
+        want();
         onPointerEnter?.(event);
       }}
       onTouchStart={(event) => {
-        setWanted(true);
+        want();
         onTouchStart?.(event);
       }}
       prefetch={wanted ? (full ? true : null) : false}
