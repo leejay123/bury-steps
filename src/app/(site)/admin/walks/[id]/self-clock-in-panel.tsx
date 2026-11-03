@@ -1,6 +1,6 @@
 "use client";
 
-import { ClockInDrawer } from "@/app/w/[token]/clock-in-drawer";
+import { ClockInDrawer } from "@/app/(site)/w/[token]/clock-in-drawer";
 import { ClockOutButton } from "@/components/clock-out-button";
 import { MyClockInLine } from "@/components/my-clock-in-line";
 import { useClockedInPreview, useWalkClock } from "@/hooks/use-walk-clock";

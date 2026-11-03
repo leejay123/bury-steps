@@ -20,11 +20,11 @@ import { SIDEBAR_KEY, SIDEBAR_TOGGLE_EVENT, syncGuestDash } from "./sidebar-stat
  * from html[data-remembered-in], set before the first paint); everyone else,
  * and the legal pages, get the header, the page and the footer.
  *
- * Which page this is isn't read here (that would stop pages with a changing
- * address from being ready-made); the pages mark themselves instead, and
- * shadcnio.css lays the frame out from those marks: the homepage
- * draws its whole own page, the legal pages get no sidebar (PageKindMark sets
- * html[data-page-kind]).
+ * The homepage is a different layout (`src/app/page.tsx`), so this shell is
+ * not on that page at all. Which other page this is isn't read here (that
+ * would stop pages with a changing address from being ready-made); the pages
+ * mark themselves instead, and shadcnio.css lays the frame out from those
+ * marks. Legal pages get no sidebar (PageKindMark sets html[data-page-kind]).
  */
 export function ShadcnSiteShell({
   nav,

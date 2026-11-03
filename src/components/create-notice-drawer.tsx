@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { Plus } from "lucide-react";
-import { AddNoticeForm } from "@/app/admin/settings/notice-manager/notice-form";
+import { AddNoticeForm } from "@/app/(site)/admin/settings/notice-manager/notice-form";
 import type { NoticeCategoryView } from "@/lib/notices";
 import { Button } from "@/components/ui/button";
 import {

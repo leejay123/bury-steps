@@ -666,7 +666,8 @@ html[data-promo-bar] .globalfooter, html[data-promo-bar] [data-slot="docs-main"]
 /* Members' pages have no footer, as on their dashboard (the legal pages keep it). */
 html:is([data-remembered-in], [data-guest-dash]):not([data-page-kind="plain"]) [data-shadcnio-shell] [data-slot="docs-footer"] { display: none; }
 html:is([data-remembered-in], [data-guest-dash]):not([data-page-kind="plain"]) [data-shadcnio-shell] [data-slot="docs-end"] { display: block; }
-/* The homepage draws its whole own page (header, footer and all): the frame steps aside. */
+/* The homepage is a separate layout (src/app/page.tsx), not inside this frame.
+   If a leftover home mark is still on the document, hide the frame's chrome. */
 html[data-page-kind="home"] [data-shadcnio-shell] :is([data-slot="docs-header"], [data-slot="docs-sidebar"], [data-slot="docs-sidebar-edge"], [data-slot="docs-sidebar-drawer"], [data-slot="docs-footer"], [data-slot="docs-end"], [data-slot="docs-marks"]) { display: none !important; }
 /* Pages built from their sections fill the column themselves. */
 html:is([data-page-kind="plain"], [data-page-kind="sections"]) [data-slot="docs-page"] { padding: 0; }

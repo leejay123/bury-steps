@@ -14,7 +14,7 @@ import {
   SignInPrompt,
   SignInWordsContext,
   type SignInLook,
-} from "@/app/w/[token]/walk-share-status";
+} from "@/app/(site)/w/[token]/walk-share-status";
 import Link from "next/link";
 import {
   Copy,

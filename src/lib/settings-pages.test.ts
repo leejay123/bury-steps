@@ -7,11 +7,18 @@ const allLinks = SETTINGS_PAGE_GROUPS.flatMap((group) =>
   group.pages.flatMap((page) => [page, ...(page.children ?? [])]),
 );
 
+function pageExists(href: string) {
+  const rel = href.replace(/^\//, "");
+  return (
+    existsSync(path.join(process.cwd(), "src/app", rel, "page.tsx")) ||
+    existsSync(path.join(process.cwd(), "src/app/(site)", rel, "page.tsx"))
+  );
+}
+
 describe("settings page registry", () => {
   it("points every row at a page that actually exists", () => {
     for (const link of allLinks) {
-      const file = path.join(process.cwd(), "src/app", link.href, "page.tsx");
-      expect(existsSync(file), `${link.href} has no page.tsx`).toBe(true);
+      expect(pageExists(link.href), `${link.href} has no page.tsx`).toBe(true);
     }
   });
 

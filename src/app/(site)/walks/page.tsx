@@ -15,7 +15,7 @@ import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { MemberWelcomeDialog } from "@/components/member-welcome-dialog";
 import { getAllWalksSiteWide, getWalkMemberCountsByWalkIds } from "@/lib/walk-members";
-import { AdminWalkTable } from "@/app/admin/admin-walk-table";
+import { AdminWalkTable } from "@/app/(site)/admin/admin-walk-table";
 import { RecentWalksCarousel } from "./recent-walks-carousel";
 import { LiveUpcomingCount } from "./live-upcoming-count";
 import { StoriesSlot } from "@/components/stories/stories-slot";

@@ -1,5 +1,5 @@
 import { Suspense } from "react";
-import { AdminPageFallback } from "@/app/admin/admin-page-fallback";
+import { AdminPageFallback } from "@/app/(site)/admin/admin-page-fallback";
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { displayName, getOptionalUser, requirePermission } from "@/lib/auth";

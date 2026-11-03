@@ -75,15 +75,26 @@ describe("isUnknownAppPath", () => {
     const appDir = path.join(__dirname, "..", "app");
     const routeFile = /^(page|layout|loading|error|not-found|global-error|template|default)\.(t|j)sx?$/;
     const notRoutes = new Set(["globals.css", "typeset.css", "fonts.ts", "typeset-font.ts"]);
-    const segments = fs
-      .readdirSync(appDir, { withFileTypes: true })
-      .filter((entry) => !routeFile.test(entry.name) && !notRoutes.has(entry.name))
-      // Folders as-is; metadata route files by their URL (icon.tsx -> /icon, robots.ts -> /robots.txt).
-      .map((entry) => {
-        if (entry.isDirectory()) return entry.name;
+    const segments: string[] = [];
+    const walk = (dir: string) => {
+      for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
+        if (routeFile.test(entry.name) || notRoutes.has(entry.name)) continue;
+        // Route groups like (site) are not URLs — look inside them.
+        if (entry.isDirectory() && /^\(.*\)$/.test(entry.name)) {
+          walk(path.join(dir, entry.name));
+          continue;
+        }
+        if (entry.isDirectory()) {
+          segments.push(entry.name);
+          continue;
+        }
         const base = entry.name.replace(/\.(t|j)sx?$/, "");
-        return { robots: "robots.txt", sitemap: "sitemap.xml", manifest: "manifest.webmanifest" }[base] ?? base;
-      });
+        segments.push(
+          { robots: "robots.txt", sitemap: "sitemap.xml", manifest: "manifest.webmanifest" }[base] ?? base,
+        );
+      }
+    };
+    walk(appDir);
     for (const segment of segments) {
       expect(APP_TOP_LEVEL_SEGMENTS, `add "${segment}" to APP_TOP_LEVEL_SEGMENTS`).toContain(segment);
     }

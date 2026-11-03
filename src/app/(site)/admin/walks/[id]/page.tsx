@@ -25,7 +25,7 @@ import { WalkStatusBadge } from "@/components/walk-status-badge";
 import { WalkMapSection } from "@/components/walk-map-section";
 import { HowWalksWork } from "@/components/how-walks-work";
 import { BeforeYouSetOff } from "@/components/before-you-set-off";
-import { WalkShareWhileOpen } from "@/app/w/[token]/walk-share-status";
+import { WalkShareWhileOpen } from "@/app/(site)/w/[token]/walk-share-status";
 import { WalkForecastSection } from "@/components/walk-forecast";
 import { meetingPointLabel } from "@/lib/geocode";
 import { What3wordsLink } from "@/components/what3words-link";

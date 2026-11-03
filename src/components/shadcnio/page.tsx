@@ -22,10 +22,10 @@ import { TitleRevealProvider } from "@/components/section-title";
 /**
  * The whole homepage in the shadcn.io site design — join bar, header, page,
  * footer and bottom bar, laid out exactly as on shadcn.io (used with their
- * permission) with Bury Steps' own words, links and data. The site's usual
- * header and footer step aside on this page (globals.css:
- * html[data-page-kind="home"], set by PageKindMark). The join bar can be
- * turned off under Settings → Site behaviour.
+ * permission) with Bury Steps' own words, links and data. It lives outside
+ * the dashboard layout (`src/app/page.tsx`, not `(site)`), so it doesn't
+ * download a hidden copy of that shell. The join bar can be turned off
+ * under Settings → Site behaviour.
  */
 export async function ShadcnHomePage({ theme }: { theme: SiteTheme }) {
   const [data, testimonials, faqData, logo, year, progressEnabled] = await Promise.all([

@@ -1,7 +1,7 @@
 import { Button } from "@/components/ui/button";
 import { Suspense } from "react";
 import { PlaceholderPreview } from "@/components/placeholder-preview";
-import { AdminPageFallback } from "@/app/admin/admin-page-fallback";
+import { AdminPageFallback } from "@/app/(site)/admin/admin-page-fallback";
 import { ReportsFilterChrome } from "@/components/list-chrome";
 import { RememberListCount } from "@/components/remember-list-count";
 import { ReportRowsSkeleton } from "@/components/list-skeletons";

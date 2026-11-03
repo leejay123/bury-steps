@@ -1,5 +1,5 @@
 import { SerwistProvider } from "@serwist/turbopack/react";
-import { ShadcnLayoutFrame } from "@/components/shadcnio/layout-frame";
+import { TopLoader } from "@/components/shadcnio/top-loader";
 import { SIDEBAR_SCRIPT } from "@/components/shadcnio/sidebar-state";
 import { COLOR_MODE_SCRIPT } from "@/lib/color-mode-script";
 import { CUSTOMIZE_SCRIPT } from "@/lib/shadcnio-customize";
@@ -197,9 +197,10 @@ export default async function RootLayout({ children }: { children: React.ReactNo
             covers content that intentionally bleeds edge-to-edge.
           */}
           {theme.siteDesign === "shadcnio" ? (
-            // The shadcn.io design: their header, sidebar (signed-in members) and footer on every
-            // page; the homepage draws its own page inside this (see ShadcnSiteShell).
-            <ShadcnLayoutFrame theme={theme} year={year}>
+            // Homepage draws its own header and footer. Every other page gets
+            // the dashboard frame from (site)/layout.tsx, so Home doesn't
+            // download a hidden copy of that shell.
+            <TopLoader>
               <UnlockPageOnNavigate />
               <LiveUpdates />
               <ScrollRowArrows />
@@ -208,15 +209,14 @@ export default async function RootLayout({ children }: { children: React.ReactNo
                   <WalkWordingProvider wording={theme.walkWording}>
                     <TabStyleProvider style={theme.tabStyle}>
                       <SignedInProvider signedIn={signedIn}>
-                        {/* No dashboard-view test frame here: the frame itself is Efferd's app
-                            shell for signed-in people (a browser that had the test on drew a
-                            second frame inside it). */}
                         <SiteDesignProvider design="shadcnio">{children}</SiteDesignProvider>
                       </SignedInProvider>
                     </TabStyleProvider>
                   </WalkWordingProvider>
                 </WalkEssentialsProvider>
-            </ShadcnLayoutFrame>
+              {/* First paint waits for this (rel="expect" above). */}
+              <div hidden id="bs-frame-end" />
+            </TopLoader>
           ) : (
           <div
             className="mx-auto flex min-h-dvh w-full max-w-[1200px] flex-col border-x pl-[env(safe-area-inset-left)] pr-[env(safe-area-inset-right)]"

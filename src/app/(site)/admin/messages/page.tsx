@@ -1,6 +1,6 @@
 import { Suspense } from "react";
 import { PlaceholderPreview } from "@/components/placeholder-preview";
-import { AdminListFallback, AdminPageFallback } from "@/app/admin/admin-page-fallback";
+import { AdminListFallback, AdminPageFallback } from "@/app/(site)/admin/admin-page-fallback";
 import { MessagesFilterChrome } from "@/components/list-chrome";
 import { RememberListCount } from "@/components/remember-list-count";
 import { MessageRowsSkeleton } from "@/components/list-skeletons";
