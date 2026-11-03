@@ -18,7 +18,7 @@ export default function ResetSiteSettingsPage() {
   // themselves (and the access check) fill in just after.
   return (
     <SettingsPage
-      description="Wipe walks, members, messages, subscribers and homepage edits, and restore the starter content."
+      description="Wipe walks, members, messages and homepage edits, and restore the starter content."
       title="Reset the site"
     >
       <Suspense fallback={<SettingsFallback />}>

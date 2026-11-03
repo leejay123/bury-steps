@@ -2,8 +2,8 @@ import type { OrganiserPermissions } from "./organiser-permissions";
 
 /**
  * The one list of every Settings page — the hub's card table
- * (src/app/admin/settings/page.tsx) and each page's own header (the
- * group name above its title, via SettingsPage) both read from here, so
+ * (src/app/admin/settings/page.tsx) and the top-bar trail (Settings ›
+ * group › this page) both read from here, so
  * adding or renaming a page is a one-place change.
  *
  * Plain data only (no icon components) so a server component can pass it
@@ -131,13 +131,6 @@ export const SETTINGS_PAGE_GROUPS: SettingsPageGroup[] = [
         permission: "permEmails",
       },
       {
-        href: "/admin/settings/subscribers",
-        title: "Subscribers",
-        description: "Who gets which emails, send a newsletter, and download the list.",
-        keywords: "newsletter mailing list export csv resend campaign unsubscribe",
-        permission: "permSubscribers",
-      },
-      {
         href: "/admin/settings/progress",
         title: "Progress",
         description: "An optional group goal for clock-ins each month.",
@@ -178,8 +171,8 @@ export const SETTINGS_PAGE_GROUPS: SettingsPageGroup[] = [
       {
         href: "/admin/settings/reset",
         title: "Reset the site",
-        description: "Delete every walk, member, message, subscriber and homepage change, and start again from scratch. This can't be undone.",
-        keywords: "wipe delete everything start over messages subscribers",
+        description: "Delete every walk, member, message and homepage change, and start again from scratch. This can't be undone.",
+        keywords: "wipe delete everything start over messages",
         permission: "permCacheReset",
         danger: true,
       },
@@ -200,4 +193,20 @@ export function findSettingsPage(
     }
   }
   return null;
+}
+
+/** Trail for a nested settings page (Settings › group › this page). Null on
+ * the Settings hub itself, and for URLs that aren't a settings page. */
+export function settingsHeaderTrail(
+  pathname: string,
+): { group: string; title: string; danger: boolean } | null {
+  if (pathname === "/admin/settings") return null;
+  const found = findSettingsPage(pathname);
+  if (!found) return null;
+  const child = found.page.children?.find((item) => item.href === pathname);
+  return {
+    group: found.group.label,
+    title: child?.title ?? found.page.title,
+    danger: Boolean(found.page.danger),
+  };
 }

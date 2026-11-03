@@ -27,7 +27,6 @@ import {
   sendAdminDemotedEmail,
   sendOrganiserInviteEmail,
 } from "@/lib/email/mailer";
-import { syncContactUnsubscribed } from "@/lib/email/resend-audience";
 import {
   type ActionResult,
   LimitReachedError,
@@ -229,11 +228,6 @@ async function deleteMemberWork(_prev: ActionResult | null, formData: FormData):
   // the Clerk removal below succeeds.
   await sendAccountDeletedEmail(target).catch((err) => {
     console.error("deleteMember: failed to send deletion confirmation email", err);
-  });
-  // Drop them from the Resend newsletter segment too — campaigns broadcast
-  // to that audience, not only to live User rows.
-  await syncContactUnsubscribed(target.email).catch((err) => {
-    console.error("deleteMember: failed to remove from newsletter audience", err);
   });
 
   const redirectTo = String(formData.get("redirectTo") ?? "").trim();

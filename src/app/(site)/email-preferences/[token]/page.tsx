@@ -29,7 +29,6 @@ async function EmailPreferencesPageContent({
       emailWalkAnnouncements: true,
       emailNotices: true,
       emailProgress: true,
-      emailNewsletter: true,
       emailAccidentAlerts: true,
     },
   });
@@ -59,7 +58,6 @@ async function EmailPreferencesPageContent({
       </div>
       <EmailPreferencesForm
         emailAccidentAlerts={member.emailAccidentAlerts}
-        emailNewsletter={member.emailNewsletter}
         emailNotices={member.emailNotices}
         emailProgress={member.emailProgress}
         emailWalkAnnouncements={member.emailWalkAnnouncements}

@@ -11,6 +11,7 @@ import { SetPageCrumb } from "./page-crumb";
 import { Guides } from "./parts";
 import type { SearchItem } from "./search-panel";
 import { SIDEBAR_KEY, SIDEBAR_TOGGLE_EVENT, syncGuestDash } from "./sidebar-state";
+import { settingsHeaderTrail } from "@/lib/settings-pages";
 
 /**
  * Every page in the shadcn.io design except the homepage, laid out as
@@ -55,6 +56,7 @@ export function ShadcnSiteShell({
   // The breadcrumb's last step, named by the page (page-crumb.tsx).
   const [crumb, setCrumb] = useState<string | null>(null);
   const parent = crumbParent(path);
+  const settingsTrail = path ? settingsHeaderTrail(path) : null;
   const [drawerPath, setDrawerPath] = useState(path);
   // A new page shuts the phone sidebar.
   if (drawerPath !== path) {
@@ -202,10 +204,29 @@ export function ShadcnSiteShell({
               </button>
               <span aria-hidden="true" className="mr-2 h-4 w-px shrink-0 bg-border" />
               {/* shadcn/ui's breadcrumb: the page's name, or on a page inside a list
-                  (one walk, one notice) the list as a link, then the page (Walks › Sunday stroll). */}
+                  (one walk, one notice, one settings page) the list as a link, then
+                  the page (Walks › Sunday stroll; Settings › How the site works › Data retention). */}
               <Breadcrumb className="min-w-0">
                 <BreadcrumbList className="flex-nowrap">
-                  {parent ? (
+                  {settingsTrail ? (
+                    <>
+                      <BreadcrumbItem className="shrink-0">
+                        <BreadcrumbLink asChild>
+                          <Link href="/admin/settings">Settings</Link>
+                        </BreadcrumbLink>
+                      </BreadcrumbItem>
+                      <BreadcrumbSeparator className="shrink-0" />
+                      <BreadcrumbItem className="shrink-0">
+                        <span className="text-muted-foreground">{settingsTrail.group}</span>
+                      </BreadcrumbItem>
+                      <BreadcrumbSeparator className="shrink-0" />
+                      <BreadcrumbItem className="min-w-0">
+                        <BreadcrumbPage className={settingsTrail.danger ? "truncate text-destructive" : "truncate"}>
+                          {settingsTrail.title}
+                        </BreadcrumbPage>
+                      </BreadcrumbItem>
+                    </>
+                  ) : parent ? (
                     <>
                       <BreadcrumbItem className="shrink-0">
                         <BreadcrumbLink asChild>

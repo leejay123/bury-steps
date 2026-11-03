@@ -19,7 +19,6 @@ export type EmailTemplateKey =
   | "organiserInvite"
   | "contactReceived"
   | "contactAdminAlert"
-  | "newsletterSubscribed"
   | "walkAnnounced"
   | "walkCancelled"
   | "walkReopened"
@@ -37,7 +36,7 @@ export type EmailTemplateMeta = {
   /** One line: when this email goes out. */
   trigger: string;
   /** Section heading the admin UI groups this under. */
-  category: "Member lifecycle" | "Walks" | "Notices" | "Progress" | "Contact & newsletter" | "Organiser alerts";
+  category: "Member lifecycle" | "Walks" | "Notices" | "Progress" | "Contact" | "Organiser alerts";
   /** `{token}` names usable in this email's subject/body, with a plain-English description. */
   placeholders: { token: string; description: string }[];
   defaultSubject: string;
@@ -125,7 +124,7 @@ export const EMAIL_TEMPLATES: EmailTemplateMeta[] = [
     key: "contactReceived",
     label: "Contact form — confirmation to sender",
     trigger: "Sent to whoever submits the public contact form.",
-    category: "Contact & newsletter",
+    category: "Contact",
     placeholders: [
       { token: "name", description: "The name they gave" },
       { token: "email", description: "The email address they gave" },
@@ -149,16 +148,6 @@ export const EMAIL_TEMPLATES: EmailTemplateMeta[] = [
     ],
     defaultSubject: "New contact form message from {name}",
     defaultBody: "",
-  },
-  {
-    key: "newsletterSubscribed",
-    label: "Newsletter subscribed",
-    trigger: "Sent when someone subscribes via the footer form.",
-    category: "Contact & newsletter",
-    placeholders: [{ token: "siteName", description: "Your site's name" }],
-    defaultSubject: "You're subscribed — {siteName}",
-    defaultBody:
-      "Thanks for subscribing to the {siteName} newsletter. Expect occasional updates on walks and group news — nothing more often than that.",
   },
   {
     key: "walkAnnounced",

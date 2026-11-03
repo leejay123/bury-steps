@@ -1,7 +1,7 @@
 import { existsSync } from "fs";
 import path from "path";
 import { describe, expect, it } from "vitest";
-import { findSettingsPage, SETTINGS_PAGE_GROUPS, SITE_WORDING_PAGES } from "./settings-pages";
+import { findSettingsPage, SETTINGS_PAGE_GROUPS, SITE_WORDING_PAGES, settingsHeaderTrail } from "./settings-pages";
 
 const allLinks = SETTINGS_PAGE_GROUPS.flatMap((group) =>
   group.pages.flatMap((page) => [page, ...(page.children ?? [])]),
@@ -38,5 +38,20 @@ describe("settings page registry", () => {
     expect(found?.page.title).toBe("Site wording");
     expect(found?.group.label).toBe("Homepage");
     expect(findSettingsPage("/admin/walks")).toBeNull();
+  });
+
+  it("names the top-bar trail from the URL", () => {
+    expect(settingsHeaderTrail("/admin/settings")).toBeNull();
+    expect(settingsHeaderTrail("/admin/settings/retention")).toEqual({
+      group: "How the site works",
+      title: "Data retention",
+      danger: false,
+    });
+    expect(settingsHeaderTrail(SITE_WORDING_PAGES[0].href)).toEqual({
+      group: "Homepage",
+      title: SITE_WORDING_PAGES[0].title,
+      danger: false,
+    });
+    expect(settingsHeaderTrail("/admin/settings/reset")?.danger).toBe(true);
   });
 });

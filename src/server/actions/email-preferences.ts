@@ -6,7 +6,6 @@ import { guardForm } from "@/lib/safe-action";
 import { requireUser } from "@/lib/auth";
 import { prisma } from "@/lib/db";
 import type { EmailPreferences } from "@/lib/email-preferences";
-import { syncNewsletterAudienceToPreference } from "@/lib/email/newsletter-opt-out";
 import { checkRateLimit } from "@/lib/rate-limit";
 import { type ActionResult, isPrismaCode, logActionError } from "./shared";
 
@@ -22,7 +21,6 @@ function readPreferences(
     emailWalkAnnouncements: formData.get("emailWalkAnnouncements") === "on",
     emailNotices: formData.get("emailNotices") === "on",
     emailProgress: formData.get("emailProgress") === "on",
-    emailNewsletter: formData.get("emailNewsletter") === "on",
     ...(isAdmin ? { emailAccidentAlerts: formData.get("emailAccidentAlerts") === "on" } : {}),
   };
 }
@@ -52,15 +50,10 @@ async function updateMemberEmailPreferencesWork(
     if (!before) return { ok: false, error: "This link is invalid or has expired." };
 
     const preferences = readPreferences(formData, before.role === "ADMIN");
-    const updated = await prisma.user.update({
+    await prisma.user.update({
       where: { unsubscribeToken: token },
       data: preferences,
-      select: { email: true, firstName: true },
     });
-    // Re-read + align footer/Resend to the final DB value — concurrent tabs
-    // that both started from "off" must not leave Resend subscribed after a
-    // later save writes "off" without a flip detection.
-    await syncNewsletterAudienceToPreference(updated.email, updated.firstName);
   } catch (err) {
     if (isPrismaCode(err, "P2025")) {
       return { ok: false, error: "This link is invalid or has expired." };
@@ -95,12 +88,10 @@ async function updateMyEmailPreferencesWork(
   }
 
   try {
-    const updated = await prisma.user.update({
+    await prisma.user.update({
       where: { id: user.id },
       data: preferences,
-      select: { email: true, firstName: true },
     });
-    await syncNewsletterAudienceToPreference(updated.email, updated.firstName);
   } catch (err) {
     return logActionError("updateMyEmailPreferences", err, "Could not save your preferences. Try again.");
   }

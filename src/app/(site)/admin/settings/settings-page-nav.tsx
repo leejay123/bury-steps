@@ -6,6 +6,7 @@ import { usePathname } from "next/navigation";
 import { LayoutGroup, motion } from "motion/react";
 import { cn } from "@/lib/utils";
 import { unlockIdleDocument } from "@/components/overlay-root";
+import { useSiteDesign } from "@/components/site-design-context";
 import { findSettingsPage } from "@/lib/settings-pages";
 import {
   Breadcrumb,
@@ -17,11 +18,14 @@ import {
 } from "@/components/ui/breadcrumb";
 
 /**
- * Trail above a settings page's title — All settings › group › this page —
- * like the Walks › walk name trail in the top bar. Worked out from the URL.
+ * Trail above a settings page's title in the Original design — All settings ›
+ * group › this page. The shadcn.io design puts the same trail in the top bar
+ * (site-shell.tsx), so this renders nothing there.
  */
 export function SettingsBackLink() {
+  const design = useSiteDesign();
   const pathname = usePathname();
+  if (design === "shadcnio") return null;
   const found = findSettingsPage(pathname);
   if (!found) {
     return (
@@ -40,29 +44,31 @@ export function SettingsBackLink() {
   const currentTitle = child?.title ?? page.title;
 
   return (
-    <Breadcrumb>
-      <BreadcrumbList>
-        <BreadcrumbItem>
-          <BreadcrumbLink asChild>
-            <Link href="/admin/settings" onClick={() => unlockIdleDocument()}>
-              All settings
-            </Link>
-          </BreadcrumbLink>
-        </BreadcrumbItem>
-        <BreadcrumbSeparator />
-        <BreadcrumbItem>
-          <span className={cn("text-muted-foreground", page.danger && "text-destructive")}>
-            {group.label}
-          </span>
-        </BreadcrumbItem>
-        <BreadcrumbSeparator />
-        <BreadcrumbItem>
-          <BreadcrumbPage className={cn("truncate", page.danger && "text-destructive")}>
-            {currentTitle}
-          </BreadcrumbPage>
-        </BreadcrumbItem>
-      </BreadcrumbList>
-    </Breadcrumb>
+    <div data-settings-back="">
+      <Breadcrumb>
+        <BreadcrumbList>
+          <BreadcrumbItem>
+            <BreadcrumbLink asChild>
+              <Link href="/admin/settings" onClick={() => unlockIdleDocument()}>
+                All settings
+              </Link>
+            </BreadcrumbLink>
+          </BreadcrumbItem>
+          <BreadcrumbSeparator />
+          <BreadcrumbItem>
+            <span className={cn("text-muted-foreground", page.danger && "text-destructive")}>
+              {group.label}
+            </span>
+          </BreadcrumbItem>
+          <BreadcrumbSeparator />
+          <BreadcrumbItem>
+            <BreadcrumbPage className={cn("truncate", page.danger && "text-destructive")}>
+              {currentTitle}
+            </BreadcrumbPage>
+          </BreadcrumbItem>
+        </BreadcrumbList>
+      </Breadcrumb>
+    </div>
   );
 }
 

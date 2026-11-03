@@ -52,7 +52,7 @@ describe("navItems with limited organiser permissions", () => {
     ]);
   });
 
-  it("shows Settings for any one of the seven settings-area permissions", () => {
+  it("shows Settings for any one of the six settings-area permissions", () => {
     expect(
       navItems(true, "/admin/walks", { ...NO_ORGANISER_PERMISSIONS, permCacheReset: true })
         .map((item) => item.href)

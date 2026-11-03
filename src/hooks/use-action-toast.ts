@@ -26,8 +26,8 @@ type NotifyOptions = {
    * next to the field that failed — toasting the same message on top of
    * that showed the identical error twice (a sonner toast in the corner
    * *and* the inline red box). Off by default for that reason; the rare
-   * caller with no inline error display of its own (the footer newsletter
-   * signup, the admin Messages mark-read/remove buttons) opts back in.
+   * caller with no inline error display of its own (the admin Messages
+   * mark-read/remove buttons) opts back in.
    */
   toastErrors?: boolean;
 };

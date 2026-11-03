@@ -35,7 +35,6 @@ const PERMISSION_AREA_LABEL: Record<keyof OrganiserPermissions, string> = {
   permNotices: "notices",
   permProgress: "the progress goal",
   permEmails: "emails",
-  permSubscribers: "subscribers",
   permDisplay: "site display and branding",
   permCacheReset: "the site cache and reset",
 };

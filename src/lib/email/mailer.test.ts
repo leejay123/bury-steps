@@ -22,7 +22,6 @@ vi.mock("@/lib/db", () => ({ prisma: prismaMock }));
 vi.mock("./unsubscribe", () => ({
   getOrCreateUserUnsubscribeToken,
   memberPreferencesUrl: (token: string) => `https://burysteps-walkinggroup.co.uk/email-preferences/${token}`,
-  newsletterUnsubscribeUrl: (token: string) => `https://burysteps-walkinggroup.co.uk/email-preferences/newsletter/${token}`,
 }));
 
 import {
@@ -32,7 +31,6 @@ import {
   sendAdminPromotedEmail,
   sendContactMessageAdminAlertEmail,
   sendContactMessageReceivedEmail,
-  sendNewsletterSubscribedEmail,
   sendWalkAnnouncedEmail,
   sendWalkCancelledEmail,
   sendWalkReopenedEmail,
@@ -158,16 +156,6 @@ describe("sendContactMessageAdminAlertEmail", () => {
     );
 
     expect(sendEmail).not.toHaveBeenCalled();
-  });
-});
-
-describe("sendNewsletterSubscribedEmail", () => {
-  it("confirms the subscription with a working unsubscribe link", async () => {
-    await sendNewsletterSubscribedEmail({ email: "jane@example.com", unsubscribeToken: "tok123" });
-
-    expect(sendEmail).toHaveBeenCalledWith(
-      expect.objectContaining({ to: "jane@example.com", subject: expect.stringContaining("subscribed") }),
-    );
   });
 });
 

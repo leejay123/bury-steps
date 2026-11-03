@@ -4,7 +4,6 @@ import Link from "next/link";
 import { Facebook } from "lucide-react";
 import { FooterWordmark } from "@/components/footer-wordmark";
 import { FullWidthDivider } from "@/components/full-width-divider";
-import { NewsletterFooterGate } from "@/components/newsletter-footer-gate";
 import { SiteLogo } from "@/components/site-logo";
 import { shouldPrefetchNavLink } from "@/components/site-nav-items";
 import { getOptionalUser } from "@/lib/auth";
@@ -21,9 +20,6 @@ export function SiteFooter({ theme, year }: { theme: SiteTheme; year: number }) 
   return (
     <footer className="relative z-10 shrink-0 bg-background" data-site-footer="">
       <FullWidthDivider position="top" />
-      <Suspense fallback={null}>
-        <FooterNewsletter />
-      </Suspense>
       <div className={`flex flex-col gap-6 py-8 ${PAGE_X}`}>
         <div className="flex flex-wrap items-center justify-between gap-4">
           <SiteLogo alt={theme.siteName} blur={theme.logoBlur} src={theme.logoSrc} />
@@ -73,12 +69,6 @@ export function SiteFooter({ theme, year }: { theme: SiteTheme; year: number }) 
       {theme.footerWordmarkEnabled ? <FooterWordmark showOnPhones={theme.footerWordmarkMobile} /> : null}
     </footer>
   );
-}
-
-async function FooterNewsletter() {
-  const user = await getOptionalUser();
-  if (!user) return null;
-  return <NewsletterFooterGate />;
 }
 
 /** Members-only pages. A visitor would just be sent to sign in. */

@@ -170,7 +170,6 @@ export async function SiteNav() {
                 phoneAlertsOn={pushOn}
                 preferences={{
                   emailAccidentAlerts: user.emailAccidentAlerts,
-                  emailNewsletter: user.emailNewsletter,
                   emailNotices: user.emailNotices,
                   emailProgress: user.emailProgress,
                   emailWalkAnnouncements: user.emailWalkAnnouncements,

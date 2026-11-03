@@ -68,7 +68,6 @@ beforeEach(() => {
     permNotices: true,
     permProgress: true,
     permEmails: true,
-    permSubscribers: true,
     permDisplay: true,
     permCacheReset: true,
   });
@@ -158,8 +157,7 @@ describe("markContactMessageRead", () => {
       permNotices: true,
       permProgress: true,
       permEmails: true,
-      permSubscribers: true,
-      permDisplay: true,
+        permDisplay: true,
       permCacheReset: true,
     });
     const result = await markContactMessageRead(null, contactForm({ messageId: "msg-1" }));
@@ -207,8 +205,7 @@ describe("deleteContactMessage", () => {
       permNotices: true,
       permProgress: true,
       permEmails: true,
-      permSubscribers: true,
-      permDisplay: true,
+        permDisplay: true,
       permCacheReset: true,
     });
     const result = await deleteContactMessage(null, contactForm({ messageId: "msg-1" }));

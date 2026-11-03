@@ -26,7 +26,6 @@ export default async function MyEmailPreferencesPage() {
       <PageTop className="space-y-1" eyebrow="Settings" intro={user.email} title="Email preferences" />
       <MyEmailPreferencesForm
         emailAccidentAlerts={user.emailAccidentAlerts}
-        emailNewsletter={user.emailNewsletter}
         emailNotices={user.emailNotices}
         emailProgress={user.emailProgress}
         emailWalkAnnouncements={user.emailWalkAnnouncements}

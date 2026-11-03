@@ -1,9 +1,8 @@
 import { describe, expect, it, vi, beforeEach } from "vitest";
 
-const { prismaMock, requireUser, syncNewsletterAudienceToPreference } = vi.hoisted(() => ({
+const { prismaMock, requireUser } = vi.hoisted(() => ({
   prismaMock: { user: { update: vi.fn(), findUnique: vi.fn() } },
   requireUser: vi.fn(),
-  syncNewsletterAudienceToPreference: vi.fn(async () => {}),
 }));
 
 vi.mock("@/lib/db", () => ({ prisma: prismaMock }));
@@ -11,10 +10,6 @@ vi.mock("@/lib/auth", async () => {
   const actual = await vi.importActual<typeof import("@/lib/auth")>("@/lib/auth");
   return { ...actual, requireUser };
 });
-vi.mock("@/lib/email/newsletter-opt-out", () => ({
-  syncNewsletterAudienceToPreference,
-}));
-
 import { updateMemberEmailPreferences, updateMyEmailPreferences } from "./email-preferences";
 
 function form(fields: Record<string, string>): FormData {
@@ -36,7 +31,7 @@ describe("updateMemberEmailPreferences", () => {
 
   it("saves checked boxes as true and omitted ones as false", async () => {
     prismaMock.user.findUnique.mockResolvedValueOnce({ role: "MEMBER" });
-    prismaMock.user.update.mockResolvedValueOnce({ email: "a@example.com", firstName: null });
+    prismaMock.user.update.mockResolvedValueOnce({});
 
     const result = await updateMemberEmailPreferences(
       null,
@@ -44,7 +39,7 @@ describe("updateMemberEmailPreferences", () => {
         token: "tok123",
         emailWalkAnnouncements: "on",
         emailNotices: "on",
-        // emailProgress and emailNewsletter left unchecked — omitted from FormData.
+        // emailProgress left unchecked — omitted from FormData.
       }),
     );
 
@@ -54,11 +49,8 @@ describe("updateMemberEmailPreferences", () => {
         emailWalkAnnouncements: true,
         emailNotices: true,
         emailProgress: false,
-        emailNewsletter: false,
       },
-      select: { email: true, firstName: true },
     });
-    expect(syncNewsletterAudienceToPreference).toHaveBeenCalledWith("a@example.com", null);
     expect(result).toEqual({ ok: true, message: "Your email preferences have been saved." });
   });
 
@@ -78,7 +70,7 @@ describe("updateMemberEmailPreferences", () => {
 
   it("saves an organiser's accident-alert preference independently", async () => {
     prismaMock.user.findUnique.mockResolvedValueOnce({ role: "ADMIN" });
-    prismaMock.user.update.mockResolvedValueOnce({ email: "a@example.com", firstName: null });
+    prismaMock.user.update.mockResolvedValueOnce({});
 
     await updateMemberEmailPreferences(
       null,
@@ -94,7 +86,7 @@ describe("updateMemberEmailPreferences", () => {
 
   it("leaves a plain member's accident-alert default alone, so it survives a later promotion", async () => {
     prismaMock.user.findUnique.mockResolvedValueOnce({ role: "MEMBER" });
-    prismaMock.user.update.mockResolvedValueOnce({ email: "a@example.com", firstName: null });
+    prismaMock.user.update.mockResolvedValueOnce({});
 
     await updateMemberEmailPreferences(null, form({ token: "tok123" }));
 
@@ -102,17 +94,6 @@ describe("updateMemberEmailPreferences", () => {
     expect(data).not.toHaveProperty("emailAccidentAlerts");
   });
 
-  it("always aligns Resend to the saved preference, including newsletter opt-in", async () => {
-    prismaMock.user.findUnique.mockResolvedValueOnce({ role: "MEMBER" });
-    prismaMock.user.update.mockResolvedValueOnce({ email: "a@example.com", firstName: "Ada" });
-
-    await updateMemberEmailPreferences(
-      null,
-      form({ token: "tok123", emailNewsletter: "on" }),
-    );
-
-    expect(syncNewsletterAudienceToPreference).toHaveBeenCalledWith("a@example.com", "Ada");
-  });
 });
 
 describe("updateMyEmailPreferences", () => {
@@ -121,36 +102,32 @@ describe("updateMyEmailPreferences", () => {
   });
 
   it("saves preferences for the signed-in user, no token needed", async () => {
-    prismaMock.user.update.mockResolvedValueOnce({ email: "a@example.com", firstName: null });
+    prismaMock.user.update.mockResolvedValueOnce({});
 
     const result = await updateMyEmailPreferences(
       null,
-      form({ emailNewsletter: "on" }),
+      form({ emailNotices: "on" }),
     );
 
     expect(prismaMock.user.update).toHaveBeenCalledWith({
       where: { id: "user-1" },
       data: {
         emailWalkAnnouncements: false,
-        emailNotices: false,
+        emailNotices: true,
         emailProgress: false,
-        emailNewsletter: true,
       },
-      select: { email: true, firstName: true },
     });
-    expect(syncNewsletterAudienceToPreference).toHaveBeenCalledWith("a@example.com", null);
     expect(result).toEqual({ ok: true, message: "Your email preferences have been saved." });
   });
 
   it("saves only the named switch when sent from the header drawer", async () => {
-    prismaMock.user.update.mockResolvedValueOnce({ email: "a@example.com", firstName: null });
+    prismaMock.user.update.mockResolvedValueOnce({});
 
     const result = await updateMyEmailPreferences(null, form({ only: "emailProgress" }));
 
     expect(prismaMock.user.update).toHaveBeenCalledWith({
       where: { id: "user-1" },
       data: { emailProgress: false },
-      select: { email: true, firstName: true },
     });
     expect(result.ok).toBe(true);
   });

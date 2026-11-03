@@ -831,16 +831,13 @@ html:is([data-remembered-in], [data-guest-dash]):not([data-page-kind="home"], [d
 @media (min-width: 48rem) { html:is([data-remembered-in], [data-guest-dash]):not([data-page-kind="home"], [data-page-kind="plain"]) [data-shadcn-top] [data-page-top-intro] { font-size: 1.125rem !important; line-height: 1.75rem !important; } }
 html:is([data-remembered-in], [data-guest-dash]):not([data-page-kind="home"], [data-page-kind="plain"]) [data-shadcn-top] > div:last-child:not(:only-of-type) { display: flex; justify-content: center; }
 html:is([data-remembered-in], [data-guest-dash]):not([data-page-kind="home"], [data-page-kind="plain"]) [data-shadcn-top] > a { align-self: center !important; }
-/* Settings pages in the dashboard: their top runs edge to edge like the others, with the way
-   back ("All settings / group") in its top corner and no second line under it. */
+/* Settings pages in the dashboard: their top runs edge to edge like the others.
+   The way back (Settings › group › this page) is in the top bar, same as Walks. */
 html:is([data-remembered-in], [data-guest-dash]):not([data-page-kind="home"], [data-page-kind="plain"]) [data-settings-head] { padding-block: 0 !important; }
 @media (max-width: 47.98rem) { html:is([data-remembered-in], [data-guest-dash]):not([data-page-kind="home"], [data-page-kind="plain"]) [data-settings-head] { padding-inline: 0 !important; } }
 html:is([data-remembered-in], [data-guest-dash]):not([data-page-kind="home"], [data-page-kind="plain"]) [data-settings-head] > div { max-width: none !important; position: relative; }
 html:is([data-remembered-in], [data-guest-dash]):not([data-page-kind="home"], [data-page-kind="plain"]) [data-settings-divider] { display: none !important; }
-html:is([data-remembered-in], [data-guest-dash]):not([data-page-kind="home"], [data-page-kind="plain"]) [data-settings-back] { position: absolute; top: 0.75rem; inset-inline-start: 1rem; z-index: 2; border-radius: var(--radius); background: color-mix(in oklab, var(--background) 85%, transparent); padding: 0.125rem 0.5rem; backdrop-filter: blur(4px); }
-@media (min-width: 48rem) { html:is([data-remembered-in], [data-guest-dash]):not([data-page-kind="home"], [data-page-kind="plain"]) [data-settings-back] { inset-inline-start: 1.5rem; } }
 html:is([data-remembered-in], [data-guest-dash]):not([data-page-kind="home"], [data-page-kind="plain"]) [data-settings-body] { padding-top: 0 !important; }
-@media (min-width: 48rem) { html:is([data-remembered-in], [data-guest-dash]):not([data-page-kind="home"], [data-page-kind="plain"]) [data-settings-head] { padding-top: 1.5rem !important; } }
 /* Every signed-in page is one card, on phones as well as larger screens: one border round
    the page, its hero across the top with a line under it, the rest padded inside, and lists
    running edge to edge across the card rather than boxed inside it (no doubled borders). */

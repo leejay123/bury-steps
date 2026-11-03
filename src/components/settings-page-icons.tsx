@@ -12,7 +12,6 @@ import {
   SlidersHorizontal,
   Text,
   TrendingUp,
-  Users,
   type LucideIcon,
 } from "lucide-react";
 
@@ -27,7 +26,6 @@ const SETTINGS_PAGE_ICONS: Record<string, LucideIcon> = {
   "/admin/settings/site-wording/how-this-started": Text,
   "/admin/settings/notices": Bell,
   "/admin/settings/emails": Mail,
-  "/admin/settings/subscribers": Users,
   "/admin/settings/progress": TrendingUp,
   "/admin/settings/walk-essentials": ListChecks,
   "/admin/settings/behaviour": Settings2,

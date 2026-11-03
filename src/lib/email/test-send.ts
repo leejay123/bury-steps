@@ -1,7 +1,7 @@
 import { sendEmail } from "./client";
 import { getEmailBrand } from "./brand";
 import { resolveEmailCopy } from "./overrides";
-import { getOrCreateUserUnsubscribeToken, memberPreferencesUrl, newsletterUnsubscribeUrl } from "./unsubscribe";
+import { getOrCreateUserUnsubscribeToken, memberPreferencesUrl } from "./unsubscribe";
 import type { EmailTemplateKey } from "./registry";
 import { ORGANISER_INVITE_EXPIRY_DAYS } from "@/lib/organiser-invite";
 import { describeOrganiserPermissions, ORGANISER_PERMISSIONS } from "@/lib/organiser-permissions";
@@ -12,7 +12,6 @@ import { AdminDemotedEmail } from "./templates/admin-demoted";
 import { OrganiserInviteEmail } from "./templates/organiser-invite";
 import { ContactMessageReceivedEmail } from "./templates/contact-message-received";
 import { ContactMessageAdminAlertEmail } from "./templates/contact-message-admin-alert";
-import { NewsletterSubscribedEmail } from "./templates/newsletter-subscribed";
 import { WalkAnnouncedEmail } from "./templates/walk-announced";
 import { WalkCancelledEmail } from "./templates/walk-cancelled";
 import { WalkReopenedEmail } from "./templates/walk-reopened";
@@ -156,18 +155,6 @@ export async function sendTestEmail(key: EmailTemplateKey, admin: TestRecipient)
           ...brand,
           ...SAMPLE_SENDER,
           message: SAMPLE_MESSAGE,
-          bodyParagraphs: copy.bodyParagraphs,
-        }),
-      );
-      return;
-    }
-    case "newsletterSubscribed": {
-      const copy = await resolveEmailCopy("newsletterSubscribed", { siteName: brand.siteName });
-      await send(
-        copy.subject,
-        NewsletterSubscribedEmail({
-          ...brand,
-          unsubscribeUrl: newsletterUnsubscribeUrl("sample"),
           bodyParagraphs: copy.bodyParagraphs,
         }),
       );

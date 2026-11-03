@@ -62,12 +62,7 @@ vi.mock("@/lib/auth", async () => {
   const actual = await vi.importActual<typeof import("@/lib/auth")>("@/lib/auth");
   return { ...actual, requireAdmin };
 });
-vi.mock("@/lib/email/resend-audience", () => ({
-  clearAudienceCache: vi.fn(),
-}));
-
 import { clearSiteCache, resetSiteToDefault } from "./admin-cache";
-import { clearAudienceCache } from "@/lib/email/resend-audience";
 
 // Full access by default so existing tests exercise the authorized path —
 // see the "permission guard" tests below for permCacheReset: false.
@@ -91,7 +86,6 @@ const ADMIN = {
   permNotices: true,
   permProgress: true,
   permEmails: true,
-  permSubscribers: true,
   permDisplay: true,
   permCacheReset: true,
 };
@@ -188,7 +182,6 @@ describe("resetSiteToDefault", () => {
     expect(deleteUser).toHaveBeenCalledTimes(1);
     expect(deleteUser).toHaveBeenCalledWith("clerk-member-1");
     expect(deleteUser).not.toHaveBeenCalledWith(ADMIN.clerkId);
-    expect(clearAudienceCache).toHaveBeenCalled();
   });
 
   it("re-lists at offset 0 for every batch, since deletions shift later users down", async () => {

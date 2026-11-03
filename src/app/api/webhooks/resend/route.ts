@@ -5,20 +5,13 @@ import { prisma } from "@/lib/db";
 /**
  * Records every Resend delivery event (sent/delivered/bounced/complained/
  * opened/clicked/...) so a bounce or spam complaint is visible after the
- * fact instead of failing silently — see EmailEvent in schema.prisma. Also
- * mirrors a "contact.updated" unsubscribe (fired when someone clicks the
- * Resend-hosted one-click unsubscribe link on a newsletter broadcast) back
- * into our own tables — see the block near the bottom of this function.
+ * fact instead of failing silently — see EmailEvent in schema.prisma.
  *
  * Point a Resend webhook at <app-url>/api/webhooks/resend and subscribe it
- * to both the "Email" events AND the "Contact" events (specifically
- * contact.updated — without it, someone who unsubscribes via that link
- * still shows as subscribed in our own subscriber list and on their own
- * preferences page, even though Resend itself correctly stops sending to
- * them either way). Set the webhook's Signing Secret as
+ * to the "Email" events. Set the webhook's Signing Secret as
  * RESEND_WEBHOOK_SECRET. Without that secret this route returns 500 —
  * sending itself is unaffected either way, this is purely for after-the-
- * fact visibility and keeping our own records in sync.
+ * fact visibility.
  */
 export async function POST(req: NextRequest) {
   const secret = process.env.RESEND_WEBHOOK_SECRET?.trim();
@@ -42,7 +35,7 @@ export async function POST(req: NextRequest) {
   // ourselves once the signature's confirmed valid.
   let event: {
     type: string;
-    data: { email_id?: string; to?: string[]; email?: string; unsubscribed?: boolean };
+    data: { email_id?: string; to?: string[] };
   };
   try {
     new Webhook(secret).verify(payload, headers);
@@ -66,36 +59,6 @@ export async function POST(req: NextRequest) {
 
   if (event.type === "email.bounced" || event.type === "email.complained") {
     console.error(`resend webhook: ${event.type} for ${recipient}`, event.data);
-  }
-
-  // A newsletter broadcast's one-click unsubscribe link is Resend-hosted
-  // (the {{{RESEND_UNSUBSCRIBE_URL}}} merge tag) rather than our own
-  // /email-preferences page, so clicking it only updates the contact over
-  // in Resend's audience — Resend itself correctly skips them on every
-  // future broadcast either way, but without this, our own subscriber
-  // list and a member's own "Newsletter" checkbox would keep showing them
-  // as subscribed. Mirror that unsubscribe back into our own tables so
-  // both stay accurate.
-  if (event.type === "contact.updated" && event.data.unsubscribed === true && event.data.email) {
-    // Case-insensitive: contacts are synced to Resend lowercased (see
-    // sendNewsletterCampaign), but a member's own email is stored however
-    // Clerk had it. An exact match would miss "Jane@Example.com", leave
-    // them opted in here, and the next campaign would re-add them.
-    const email = { equals: event.data.email, mode: "insensitive" as const };
-    try {
-      await Promise.all([
-        prisma.newsletterSubscriber.updateMany({
-          where: { email, unsubscribedAt: null },
-          data: { unsubscribedAt: new Date() },
-        }),
-        prisma.user.updateMany({
-          where: { email, emailNewsletter: true },
-          data: { emailNewsletter: false },
-        }),
-      ]);
-    } catch (err) {
-      console.error("resend webhook: failed to mirror contact unsubscribe", err);
-    }
   }
 
   return NextResponse.json({ received: true });

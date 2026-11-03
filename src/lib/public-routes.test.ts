@@ -58,7 +58,6 @@ describe("public route matching", () => {
 describe("isTokenPublicPath", () => {
   it("matches tokenised preference and invite URLs", () => {
     expect(isTokenPublicPath("/email-preferences/abc123")).toBe(true);
-    expect(isTokenPublicPath("/email-preferences/newsletter/abc123")).toBe(true);
     expect(isTokenPublicPath("/organiser-invite/abc123")).toBe(true);
   });
 

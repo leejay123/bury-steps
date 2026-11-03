@@ -22,7 +22,6 @@ vi.mock("@/lib/db", () => ({ prisma: prismaMock }));
 vi.mock("./unsubscribe", () => ({
   getOrCreateUserUnsubscribeToken,
   memberPreferencesUrl: (token: string) => `https://burysteps-walkinggroup.co.uk/email-preferences/${token}`,
-  newsletterUnsubscribeUrl: (token: string) => `https://burysteps-walkinggroup.co.uk/email-preferences/newsletter/${token}`,
 }));
 
 import { sendTestEmail } from "./test-send";

@@ -23,7 +23,7 @@ describe("hasFullAccess", () => {
 });
 
 describe("hasAnySettingsPermission", () => {
-  it("is false when none of the seven settings-area permissions is granted", () => {
+    it("is false when none of the six settings-area permissions is granted", () => {
     expect(hasAnySettingsPermission(NONE)).toBe(false);
     // Core permissions don't count — Walks/Members/Messages/Reports aren't
     // part of the Settings hub.

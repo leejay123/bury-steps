@@ -5,7 +5,6 @@ export type EmailPreferences = {
   emailWalkAnnouncements: boolean;
   emailNotices: boolean;
   emailProgress: boolean;
-  emailNewsletter: boolean;
   emailAccidentAlerts: boolean;
 };
 
@@ -26,7 +25,6 @@ export const EMAIL_PREFERENCE_OPTIONS: {
   },
   { name: "emailNotices", label: "Notices", hint: "A digest when a new notice is posted." },
   { name: "emailProgress", label: "Progress", hint: "Your walk history and group goal updates." },
-  { name: "emailNewsletter", label: "Newsletter", hint: "Occasional group news." },
   {
     name: "emailAccidentAlerts",
     label: "Accident reports",

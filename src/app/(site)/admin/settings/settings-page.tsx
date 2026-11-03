@@ -15,8 +15,9 @@ const SETTINGS_WIDTH = "w-full";
 
 /**
  * Shared shell for every Settings page, the card-table home included —
- * breadcrumbs (All settings › group › this page), then the title and a
- * short intro, any sibling tabs (Site wording), then the page's sections.
+ * title and a short intro, any sibling tabs (Site wording), then the page's
+ * sections. The way back (Settings › group › this page) lives in the top bar
+ * in the shadcn.io design, and above the title in the Original design.
  */
 export function SettingsPage({
   title,
@@ -40,11 +41,7 @@ export function SettingsPage({
     <div className="flex flex-col">
       <div className="relative px-4 py-6 md:px-6" data-settings-head="">
         <div className={cn(SETTINGS_WIDTH, "flex flex-col gap-4")}>
-          {showBackLink ? (
-            <div data-settings-back="">
-              <SettingsBackLink />
-            </div>
-          ) : null}
+          {showBackLink ? <SettingsBackLink /> : null}
           <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between sm:gap-6" data-shadcn-top="">
             <PageTopField word={title} />
             <div className="flex max-w-2xl flex-col gap-1.5">

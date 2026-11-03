@@ -34,7 +34,6 @@ export type OrganiserPermissions = {
   permNotices: boolean;
   permProgress: boolean;
   permEmails: boolean;
-  permSubscribers: boolean;
   permDisplay: boolean;
   permCacheReset: boolean;
 };
@@ -57,7 +56,6 @@ export const FULL_ORGANISER_PERMISSIONS: OrganiserPermissions = {
   permNotices: true,
   permProgress: true,
   permEmails: true,
-  permSubscribers: true,
   permDisplay: true,
   permCacheReset: true,
 };
@@ -89,14 +87,13 @@ export const ORGANISER_PERMISSIONS: OrganiserPermissions = {
   permNotices: false,
   permProgress: false,
   permEmails: false,
-  permSubscribers: false,
   permDisplay: false,
   permCacheReset: false,
 };
 
 /** `group` is a UI grouping only, used by describeOrganiserPermissions'
  * "you'll be able to…" phrasing — every check in this file treats all
- * twenty the same way. */
+ * nineteen the same way. */
 export const ORGANISER_PERMISSION_OPTIONS: {
   name: keyof OrganiserPermissions;
   label: string;
@@ -206,12 +203,6 @@ export const ORGANISER_PERMISSION_OPTIONS: {
     group: "Settings & homepage",
   },
   {
-    name: "permSubscribers",
-    label: "Subscribers",
-    hint: "View newsletter and walk-email subscribers, send campaigns, and export the list.",
-    group: "Settings & homepage",
-  },
-  {
     name: "permDisplay",
     label: "Site display & branding",
     hint: "Site name, logo, colours, homepage copy, cookie notice, and retention settings.",
@@ -233,7 +224,7 @@ const SETTINGS_GROUP_OPTIONS = ORGANISER_PERMISSION_OPTIONS.filter(
   (option) => option.group === "Settings & homepage",
 );
 
-/** True if any of the seven settings-area permissions is granted — used to
+/** True if any of the six settings-area permissions is granted — used to
  * decide whether the Settings hub (and its nav link) shows at all, since
  * the hub itself isn't tied to any one of the pages it links to. Edit walks
  * counts too: Walk essentials (the tick boxes on every walk) is a settings

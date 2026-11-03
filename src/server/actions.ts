@@ -158,14 +158,6 @@ export {
 } from "./actions/contact";
 
 export {
-  subscribeToNewsletter,
-  unsubscribeFromNewsletter,
-  confirmNewsletterUnsubscribe,
-  sendNewsletterCampaign,
-  removeNewsletterSubscriber,
-} from "./actions/newsletter";
-
-export {
   updateMemberEmailPreferences,
   updateMyEmailPreferences,
 } from "./actions/email-preferences";

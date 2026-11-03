@@ -12,10 +12,7 @@ import { getShadcnHomeData } from "./home-data";
 import { PromoBar } from "./promo-bar";
 import { ShadcnAccountTools } from "./account-tools";
 import { siteChrome } from "./chrome";
-import { ShadcnNewsletter } from "./newsletter";
-import { getOptionalUser } from "@/lib/auth";
 import { getProgressEnabled } from "@/lib/progress-settings";
-import { Suspense } from "react";
 import { PageKindMark } from "./page-kind";
 
 /**
@@ -100,9 +97,6 @@ export async function ShadcnHomePage({ theme }: { theme: SiteTheme }) {
               tagline={theme.siteTagline}
               testimonials={testimonials}
             />
-            <Suspense fallback={null}>
-              <MemberNewsletter />
-            </Suspense>
             <GlobalFooter columns={columns} facebookUrl={facebookUrl} siteName={theme.siteName} year={year} />
           </div>
         </div>
@@ -110,10 +104,4 @@ export async function ShadcnHomePage({ theme }: { theme: SiteTheme }) {
       <PromoBar next={data.next} />
     </div>
   );
-}
-
-/** The newsletter band for signed-in members only (as the usual footer does). */
-async function MemberNewsletter() {
-  const user = await getOptionalUser();
-  return user ? <ShadcnNewsletter /> : null;
 }

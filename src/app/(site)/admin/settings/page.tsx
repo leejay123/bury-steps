@@ -79,8 +79,6 @@ async function AdminSettingsPageContent() {
     faqCount,
     noticeCount,
     customisedEmailCount,
-    footerSubscriberEmails,
-    memberSubscriberEmails,
   ] = await Promise.all([
     getSiteTheme(),
     prisma.siteSetting.findUnique({
@@ -100,10 +98,6 @@ async function AdminSettingsPageContent() {
     prisma.emailTemplateOverride.count({
       where: { OR: [{ subject: { not: null } }, { body: { not: null } }] },
     }),
-    // Emails, not counts: someone on both lists is one subscriber (the same
-    // count the Subscribers page shows).
-    prisma.newsletterSubscriber.findMany({ where: { unsubscribedAt: null }, select: { email: true } }),
-    prisma.user.findMany({ where: { emailNewsletter: true }, select: { email: true } }),
   ]);
 
   const contactOwner =
@@ -143,15 +137,6 @@ async function AdminSettingsPageContent() {
         : !isSet("EMAIL_FROM")
           ? "Emails come from a test address that only reaches the account owner (EMAIL_FROM isn't set)."
           : undefined,
-    },
-    "/admin/settings/subscribers": {
-      status: plural(
-        new Set([...footerSubscriberEmails, ...memberSubscriberEmails].map((row) => row.email.toLowerCase())).size,
-        "subscriber",
-      ),
-      attention: !isSet("RESEND_WEBHOOK_SECRET")
-        ? "People who unsubscribe using the link in a newsletter aren't recorded here (RESEND_WEBHOOK_SECRET isn't set)."
-        : undefined,
     },
     "/admin/settings/progress": {
       status: `${goal ? `Goal: ${goal.toLocaleString("en-GB")} a month` : "No goal"}${progressEnabled ? "" : " · page hidden"}`,

@@ -33,9 +33,6 @@ model User {
   emailNotices             Boolean   @default(true)
   /// Personal/group progress summaries (monthly clock-in goal, streaks).
   emailProgress            Boolean   @default(true)
-  /// Newsletter campaigns. Off by default — needs explicit opt-in (PECR),
-  /// separate from the account-lifecycle toggles above.
-  emailNewsletter          Boolean   @default(false)
   /// New accident-report alerts, sent to organisers. Only consulted for
   /// ADMIN rows (see notifyOtherAdminsOfAccidentReport) — meaningless, and
   /// harmless, on a MEMBER row.
@@ -535,11 +532,6 @@ model SiteSetting {
   reportBannerData            Bytes?
   /// Tiny blurred preview of the printed-report banner.
   reportBannerBlur            String?
-  /// Resend audience (Segment) id that newsletter subscribers are synced
-  /// into. Created automatically on first use — see
-  /// src/lib/email/resend-audience.ts — so there's nothing to configure by
-  /// hand in the Resend dashboard.
-  resendAudienceId            String?
   /// The single organiser who gets contact-form alert emails and is
   /// expected to reply (via the alert email's reply-to). Null means no one
   /// is notified. Cleared automatically if that organiser is removed
@@ -645,22 +637,6 @@ model ContactMessage {
   message   String
   readAt    DateTime?
   createdAt DateTime  @default(now())
-
-  @@index([createdAt])
-}
-
-/// Footer newsletter signups from visitors who aren't (or aren't yet)
-/// members — a separate list from User.emailNewsletter, which covers
-/// members who opted in from their own account.
-model NewsletterSubscriber {
-  id               String    @id @default(cuid())
-  email            String    @unique
-  /// Powers the public unsubscribe link — always set at creation with
-  /// makeCapabilityToken() (same entropy as member preference tokens).
-  /// Not a Prisma default: cuid() is too predictable for a capability URL.
-  unsubscribeToken String    @unique
-  createdAt        DateTime  @default(now())
-  unsubscribedAt   DateTime?
 
   @@index([createdAt])
 }

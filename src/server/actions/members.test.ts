@@ -72,9 +72,6 @@ vi.mock("@/lib/email/mailer", () => ({
   sendAdminDemotedEmail: vi.fn(async () => {}),
   sendOrganiserInviteEmail: vi.fn(async () => {}),
 }));
-vi.mock("@/lib/email/resend-audience", () => ({
-  syncContactUnsubscribed: vi.fn(async () => {}),
-}));
 vi.mock("@/lib/organiser-invite", () => ({
   makeOrganiserInviteToken: vi.fn(() => "invite-token-123"),
   organiserInviteExpiresAt: vi.fn((from = new Date()) => new Date(from.getTime() + 7 * 24 * 60 * 60 * 1000)),
@@ -120,7 +117,6 @@ const ADMIN = {
   permNotices: true,
   permProgress: true,
   permEmails: true,
-  permSubscribers: true,
   permDisplay: true,
   permCacheReset: true,
 };
@@ -679,8 +675,7 @@ describe("getMemberHistory", () => {
       permNotices: true,
       permProgress: true,
       permEmails: true,
-      permSubscribers: true,
-      permDisplay: true,
+        permDisplay: true,
       permCacheReset: true,
       _count: { walksCreated: 4 },
       attendances: [
@@ -769,8 +764,7 @@ describe("searchMembers", () => {
       permNotices: true,
       permProgress: true,
       permEmails: true,
-      permSubscribers: true,
-      permDisplay: true,
+        permDisplay: true,
       permCacheReset: true,
       _count: { attendances: 2, walksCreated: 0 },
       ...overrides,

@@ -34,7 +34,7 @@ export function openEmailPreferences() {
 // of switches. Each switch saves straight away.
 const SECTIONS: { heading: string; names: (keyof EmailPreferences)[] }[] = [
   { heading: "Walks", names: ["emailWalkAnnouncements", "emailProgress"] },
-  { heading: "News", names: ["emailNotices", "emailNewsletter"] },
+  { heading: "News", names: ["emailNotices"] },
   { heading: "Organisers", names: ["emailAccidentAlerts"] },
 ];
 
@@ -60,7 +60,6 @@ export function EmailPreferencesDrawer({
   useResetOnChange(
     [
       preferences.emailAccidentAlerts,
-      preferences.emailNewsletter,
       preferences.emailNotices,
       preferences.emailProgress,
       preferences.emailWalkAnnouncements,

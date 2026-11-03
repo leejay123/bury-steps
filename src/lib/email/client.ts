@@ -17,12 +17,6 @@ function getClient(): Resend | null {
   return cachedClient;
 }
 
-/** Shared with resend-audience.ts and the newsletter campaign sender — same
- * lazy client, same "not configured" semantics as sendEmail() below. */
-export function getResendClient(): Resend | null {
-  return getClient();
-}
-
 export function isEmailConfigured(): boolean {
   return getClient() !== null;
 }
@@ -56,7 +50,7 @@ export type SendEmailInput = {
   /**
    * Which of the site's emails this is. Set on every system email so the
    * owner's on/off switches (Settings → Emails) apply; left out for test
-   * sends and newsletters, which always go.
+   * sends, which always go.
    */
   template?: EmailTemplateKey;
 };

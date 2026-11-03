@@ -50,7 +50,6 @@ import {
 } from "@/lib/site-defaults";
 import { isResetConfirmWord } from "@/lib/site-reset";
 import { DEFAULT_CANCELLED_WALK_RETENTION_DAYS } from "@/lib/walk-retention";
-import { clearAudienceCache } from "@/lib/email/resend-audience";
 import {
   type ActionResult,
   isNotFoundStatus,
@@ -102,7 +101,6 @@ async function resetSiteToDefaultWork(
       await tx.siteNotice.deleteMany();
       await tx.siteNoticeCategory.deleteMany();
       await tx.contactMessage.deleteMany();
-      await tx.newsletterSubscriber.deleteMany();
       await tx.emailTemplateOverride.deleteMany();
       await tx.emailEvent.deleteMany();
       await tx.siteNoticeCategory.create({
@@ -181,7 +179,6 @@ async function resetSiteToDefaultWork(
           reportBannerMime: null,
           reportBannerData: null,
           reportBannerBlur: null,
-          resendAudienceId: null,
           contactMessagesOwnerId: null,
           organiserInviteRequired: false,
           cancelledWalkRetentionDays: DEFAULT_CANCELLED_WALK_RETENTION_DAYS,
@@ -242,7 +239,6 @@ async function resetSiteToDefaultWork(
           reportBannerMime: null,
           reportBannerData: null,
           reportBannerBlur: null,
-          resendAudienceId: null,
           contactMessagesOwnerId: null,
           organiserInviteRequired: false,
           cancelledWalkRetentionDays: DEFAULT_CANCELLED_WALK_RETENTION_DAYS,
@@ -291,10 +287,6 @@ async function resetSiteToDefaultWork(
     return logActionError("resetSiteToDefault", err, "Could not reset the site. Try again.");
   }
 
-  // SiteSetting.resendAudienceId was cleared above — drop the in-process
-  // cache so the next campaign doesn't keep mailing the pre-wipe segment.
-  clearAudienceCache();
-
   // List Clerk after the DB wipe so anyone who signed up during the wipe is
   // still revoked — do not trust a pre-transaction snapshot (TOCTOU).
   const clerk = await clerkClient();
@@ -337,7 +329,6 @@ async function resetSiteToDefaultWork(
   revalidatePath("/admin/messages");
   revalidatePath("/admin/reports");
   revalidatePath("/admin/settings");
-  revalidatePath("/admin/settings/subscribers");
   revalidatePath("/admin/settings/emails");
   revalidatePath("/admin/settings/retention");
   revalidatePath("/admin/settings/branding");

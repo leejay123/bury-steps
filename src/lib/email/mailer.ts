@@ -1,7 +1,7 @@
 import { sendEmail, sendEmailBatch, type SendEmailInput } from "./client";
 import { getEmailBrand } from "./brand";
 import { resolveEmailCopy } from "./overrides";
-import { getOrCreateUserUnsubscribeToken, memberPreferencesUrl, newsletterUnsubscribeUrl } from "./unsubscribe";
+import { getOrCreateUserUnsubscribeToken, memberPreferencesUrl } from "./unsubscribe";
 import { WelcomeEmail } from "./templates/welcome";
 import { AccountDeletedEmail } from "./templates/account-deleted";
 import { AdminPromotedEmail } from "./templates/admin-promoted";
@@ -11,7 +11,6 @@ import { ORGANISER_INVITE_EXPIRY_DAYS } from "@/lib/organiser-invite";
 import { describeOrganiserPermissions, type OrganiserPermissions } from "@/lib/organiser-permissions";
 import { ContactMessageReceivedEmail } from "./templates/contact-message-received";
 import { ContactMessageAdminAlertEmail } from "./templates/contact-message-admin-alert";
-import { NewsletterSubscribedEmail } from "./templates/newsletter-subscribed";
 import { WalkAnnouncedEmail } from "./templates/walk-announced";
 import { WalkCancelledEmail } from "./templates/walk-cancelled";
 import { WalkReopenedEmail } from "./templates/walk-reopened";
@@ -190,28 +189,6 @@ export async function sendContactMessageAdminAlertEmail(
     subject: copy.subject,
     react: ContactMessageAdminAlertEmail({ ...brand, ...submission, bodyParagraphs: copy.bodyParagraphs }),
     replyTo: submission.email,
-  });
-}
-
-/** Confirmation for a footer newsletter signup (src/server/actions/newsletter.ts). */
-export async function sendNewsletterSubscribedEmail(subscriber: {
-  email: string;
-  unsubscribeToken: string;
-}): Promise<void> {
-  const brand = await getEmailBrand();
-  const copy = await resolveEmailCopy("newsletterSubscribed", { siteName: brand.siteName });
-  await sendEmail({
-    to: subscriber.email,
-    template: "newsletterSubscribed",
-    subject: copy.subject,
-    react: NewsletterSubscribedEmail({
-      ...brand,
-      unsubscribeUrl: newsletterUnsubscribeUrl(subscriber.unsubscribeToken),
-      bodyParagraphs: copy.bodyParagraphs,
-    }),
-    // A retried subscribeToNewsletter call (network hiccup, double form
-    // submit) reuses this key instead of sending a second confirmation.
-    idempotencyKey: `newsletter-subscribed/${subscriber.email}`,
   });
 }
 

@@ -56,26 +56,6 @@ export async function membersListTotal(): Promise<number | undefined> {
   }
 }
 
-async function cachedNewsletterCounts(): Promise<{ members: number; footer: number }> {
-  "use cache: remote";
-  cacheLife({ revalidate: 300 });
-  const [members, footer] = await Promise.all([
-    prisma.user.count({ where: { emailNewsletter: true } }),
-    prisma.newsletterSubscriber.count({ where: { unsubscribedAt: null } }),
-  ]);
-  return { members: Math.min(members, 200), footer: Math.min(footer, 200) };
-}
-
-/** How many newsletter rows the Subscribers page lists (members, then footer
- * signups), for its placeholder — counts only, never who. */
-export async function newsletterListRows(): Promise<{ members: number; footer: number } | undefined> {
-  try {
-    return await cachedNewsletterCounts();
-  } catch {
-    return undefined;
-  }
-}
-
 /**
  * How many of the Members list's first page fall in each group (Owner, Organisers,
  * Members; empty groups left out), as the page shows it with no search or filter:

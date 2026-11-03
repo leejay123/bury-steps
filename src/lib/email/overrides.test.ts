@@ -19,38 +19,36 @@ beforeEach(() => {
 
 describe("resolveEmailCopy", () => {
   it("uses the registry default when there is no saved override", async () => {
-    const copy = await resolveEmailCopy("newsletterSubscribed", { siteName: "Bury Steps" });
-    expect(copy.subject).toBe("You're subscribed — Bury Steps");
-    expect(copy.bodyParagraphs).toEqual([
-      "Thanks for subscribing to the Bury Steps newsletter. Expect occasional updates on walks and group news — nothing more often than that.",
-    ]);
+    const copy = await resolveEmailCopy("welcome", { siteName: "Bury Steps" });
+    expect(copy.subject).toBe("Welcome to Bury Steps");
+    expect(copy.bodyParagraphs[0]).toContain("Thanks for joining Bury Steps.");
   });
 
   it("fills placeholders in a saved override", async () => {
     prismaMock.emailTemplateOverride.findUnique.mockResolvedValueOnce({
-      subject: "You're on the list, {siteName}!",
+      subject: "You're in, {siteName}!",
       body: "Thanks for joining {siteName}.",
     });
-    const copy = await resolveEmailCopy("newsletterSubscribed", { siteName: "Bury Steps" });
-    expect(copy.subject).toBe("You're on the list, Bury Steps!");
+    const copy = await resolveEmailCopy("welcome", { siteName: "Bury Steps" });
+    expect(copy.subject).toBe("You're in, Bury Steps!");
     expect(copy.bodyParagraphs).toEqual(["Thanks for joining Bury Steps."]);
   });
 
   it("falls back to the default subject when the override's subject is blank", async () => {
     prismaMock.emailTemplateOverride.findUnique.mockResolvedValueOnce({ subject: "  ", body: null });
-    const copy = await resolveEmailCopy("newsletterSubscribed", { siteName: "Bury Steps" });
-    expect(copy.subject).toBe("You're subscribed — Bury Steps");
+    const copy = await resolveEmailCopy("welcome", { siteName: "Bury Steps" });
+    expect(copy.subject).toBe("Welcome to Bury Steps");
   });
 
   it("keeps a deliberately empty override body empty, rather than falling back", async () => {
     prismaMock.emailTemplateOverride.findUnique.mockResolvedValueOnce({ subject: null, body: "" });
-    const copy = await resolveEmailCopy("newsletterSubscribed", { siteName: "Bury Steps" });
+    const copy = await resolveEmailCopy("welcome", { siteName: "Bury Steps" });
     expect(copy.bodyParagraphs).toEqual([]);
   });
 
   it("falls back to the default copy if the lookup throws", async () => {
     prismaMock.emailTemplateOverride.findUnique.mockRejectedValueOnce(new Error("db down"));
-    const copy = await resolveEmailCopy("newsletterSubscribed", { siteName: "Bury Steps" });
-    expect(copy.subject).toBe("You're subscribed — Bury Steps");
+    const copy = await resolveEmailCopy("welcome", { siteName: "Bury Steps" });
+    expect(copy.subject).toBe("Welcome to Bury Steps");
   });
 });

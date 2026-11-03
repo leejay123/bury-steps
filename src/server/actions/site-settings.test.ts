@@ -55,7 +55,6 @@ const ADMIN = {
   permNotices: true,
   permProgress: true,
   permEmails: true,
-  permSubscribers: true,
   permDisplay: true,
   permCacheReset: true,
 };

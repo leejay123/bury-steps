@@ -61,7 +61,6 @@ function admin(overrides: Partial<Record<string, boolean>> = {}) {
     permNotices: true,
     permProgress: true,
     permEmails: true,
-    permSubscribers: true,
     permDisplay: true,
     permCacheReset: true,
     ...overrides,

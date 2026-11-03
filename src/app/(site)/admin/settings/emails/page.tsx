@@ -20,7 +20,7 @@ const CATEGORY_ORDER: EmailTemplateMeta["category"][] = [
   "Walks",
   "Notices",
   "Progress",
-  "Contact & newsletter",
+  "Contact",
   "Organiser alerts",
 ];
 

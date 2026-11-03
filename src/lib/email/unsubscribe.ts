@@ -38,7 +38,3 @@ export async function getOrCreateUserUnsubscribeToken(
 export function memberPreferencesUrl(token: string): string {
   return `${appUrl()}/email-preferences/${token}`;
 }
-
-export function newsletterUnsubscribeUrl(token: string): string {
-  return `${appUrl()}/email-preferences/newsletter/${token}`;
-}
