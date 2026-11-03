@@ -2,6 +2,7 @@ import type { ReactNode } from "react";
 import Link from "next/link";
 import { ArrowRight, ChevronRight, Footprints, Mail, Scale, ShieldCheck } from "lucide-react";
 import { BUTTON_OUTLINE, Guides, Section, Tile } from "./parts";
+import { HeroField } from "./ascii-field";
 import { PageKindMark } from "./page-kind";
 
 export type ShadcnLegalSection = { id: string; title: string; content: ReactNode };
@@ -19,6 +20,12 @@ const ICON = {
   terms: Scale,
   privacy: ShieldCheck,
   about: Footprints,
+} as const;
+
+const HERO_WORD = {
+  terms: "TERMS",
+  privacy: "PRIVACY",
+  about: "ABOUT",
 } as const;
 
 /**
@@ -55,6 +62,7 @@ export function ShadcnLegal({
           className="px-5 md:px-12 flex flex-col items-center relative isolate justify-center min-h-[29rem] sm:min-h-[30rem] md:min-h-[36rem] lg:min-h-[35rem] xl:min-h-[34rem] gap-8 pt-6 pb-8 sm:pt-8 sm:pb-12 md:pt-10 md:pb-14"
           data-slot="hero"
         >
+          <HeroField heading="legal-title" word={HERO_WORD[icon]} />
           <div className="flex flex-col max-w-4xl gap-4 md:gap-5 mx-auto min-w-0 items-center text-center">
             <div className="flex justify-center">
               <nav aria-label="breadcrumb" className="cn-breadcrumb" data-slot="breadcrumb">

@@ -1,4 +1,5 @@
 import type { ReactNode } from "react";
+import { PageTopField } from "@/components/shadcnio/page-top-field";
 
 /**
  * A page's own title and intro line. The usual look is unchanged (a small
@@ -30,6 +31,7 @@ export function PageTop({
       className={action ? "flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between" : "contents"}
       data-shadcn-top=""
     >
+      <PageTopField word={typeof title === "string" ? title : eyebrow} />
       <div className={className}>
         <p className="hidden" data-page-top-eyebrow="">
           {eyebrow}

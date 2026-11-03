@@ -1,5 +1,6 @@
 import type { ReactNode } from "react";
 import Link from "next/link";
+import { PageTopField } from "@/components/shadcnio/page-top-field";
 import { ExternalLink } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { FullWidthDivider } from "@/components/full-width-divider";
@@ -45,6 +46,7 @@ export function SettingsPage({
             </div>
           ) : null}
           <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between sm:gap-6" data-shadcn-top="">
+            <PageTopField word={title} />
             <div className="flex max-w-2xl flex-col gap-1.5">
               <p className="hidden" data-page-top-eyebrow="">
                 Organisers
