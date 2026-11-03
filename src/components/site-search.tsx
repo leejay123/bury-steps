@@ -54,8 +54,8 @@ export function SiteSearchBar({ className, onOpen }: { className?: string; onOpe
 /**
  * The search dialog itself (the command menu and its search code) is a
  * large download most visitors never use, so it isn't part of the page:
- * it loads the first time someone points at or focuses a search bar, and
- * opens when they tap it or press ⌘K. After that it handles itself.
+ * it loads (and is built, closed) the first time someone points at or focuses a
+ * search bar, and opens when they tap it or press ⌘K. After that it handles itself.
  */
 const loadDialog = () => import("@/components/site-search-dialog");
 const LazySiteSearchDialog = dynamic(() => loadDialog().then((mod) => mod.SiteSearchDialogInner), { ssr: false });
@@ -67,6 +67,10 @@ let dialogSeq = 0;
 
 export function SiteSearchDialog() {
   const [holder, setHolder] = React.useState(false);
+  // Built (closed) as soon as a search bar is pointed at or focused, so it's ready —
+  // with its list fetched — by the time the tap lands, and the tap only shows it.
+  // Building it on the tap itself took about a third of a second before it appeared.
+  const [mounted, setMounted] = React.useState(false);
   const [opened, setOpened] = React.useState(false);
   const idRef = React.useRef(0);
 
@@ -82,7 +86,10 @@ export function SiteSearchDialog() {
 
   React.useEffect(() => {
     if (!holder || opened) return;
-    const open = () => setOpened(true);
+    const open = () => {
+      setMounted(true);
+      setOpened(true);
+    };
     const onKey = (event: KeyboardEvent) => {
       if (event.key.toLowerCase() === "k" && (event.metaKey || event.ctrlKey)) {
         event.preventDefault();
@@ -92,7 +99,9 @@ export function SiteSearchDialog() {
     // Start downloading as soon as a search bar is pointed at or focused,
     // so it's usually ready by the time the tap lands.
     const warm = (event: Event) => {
-      if ((event.target as Element | null)?.closest?.("[data-site-search]")) void loadDialog();
+      if (!(event.target as Element | null)?.closest?.("[data-site-search]")) return;
+      void loadDialog();
+      setMounted(true);
     };
     document.addEventListener("keydown", onKey);
     window.addEventListener(OPEN_EVENT, open);
@@ -107,5 +116,5 @@ export function SiteSearchDialog() {
   }, [holder, opened]);
 
   if (!holder) return null;
-  return opened ? <LazySiteSearchDialog initialOpen /> : null;
+  return mounted ? <LazySiteSearchDialog initialOpen={opened} /> : null;
 }

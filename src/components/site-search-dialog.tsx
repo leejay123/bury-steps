@@ -43,6 +43,13 @@ const GROUP_ICONS: Record<SiteSearchKind, LucideIcon> = {
 export function SiteSearchDialogInner({ initialOpen }: { initialOpen: boolean }) {
   const router = useRouter();
   const [open, setOpen] = React.useState(initialOpen);
+  // Built ahead of the tap (closed): a tap that lands before this has started
+  // listening for the open event arrives as initialOpen turning true instead.
+  const [askedOpen, setAskedOpen] = React.useState(initialOpen);
+  if (initialOpen !== askedOpen) {
+    setAskedOpen(initialOpen);
+    if (initialOpen) setOpen(true);
+  }
   const [groups, setGroups] = React.useState<SiteSearchGroup[] | null>(null);
   const [failed, setFailed] = React.useState(false);
   const [query, setQuery] = React.useState("");
