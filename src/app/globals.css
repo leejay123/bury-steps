@@ -687,8 +687,8 @@ html:not([data-design="shadcnio"]):has([data-bottom-nav]:not([hidden], [hidden] 
 
 
 /* Phone bottom navigation (bottom-nav-bar.tsx): its height, including the
-   iPhone home indicator, so the page spacer, back-to-top button, cookie
-   banner and toasts all sit above it. Zero when there's no bar.
+   iPhone home indicator, so the page spacer, cookie banner and toasts
+   all sit above it. Zero when there's no bar.
    Keyed on the setting (data-phone-menu, set by the root layout) rather
    than on the bar itself: the bar streams in after the header, and waiting
    for it drew the logo in the middle and then jumped it to the left. */

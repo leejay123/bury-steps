@@ -161,7 +161,7 @@ const tabClass = (active: boolean) =>
  * the bottom with the iPhone home indicator's safe area underneath; a
  * spacer the same height keeps it off
  * the footer, and globals.css (html[data-phone-menu="bottom"]) lifts the
- * back-to-top button, cookie banner and toasts above it.
+ * cookie banner and toasts above it.
  */
 export function BottomNavBar({
   tabs,

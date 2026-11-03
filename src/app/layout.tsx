@@ -35,7 +35,6 @@ import { MobileMenuShell } from "@/components/mobile-menu-shell";
 import { SiteFooter, copyrightYear } from "@/components/site-footer";
 import { SiteBrandLink } from "@/components/site-brand-link";
 import { SiteLogo } from "@/components/site-logo";
-import { BackToTopGate } from "@/components/back-to-top-gate";
 import { UnlockPageOnNavigate } from "@/components/overlay-root";
 import { SiteCookieConsentGate } from "@/components/site-cookie-consent-gate";
 import { StaleDeployReload } from "@/components/stale-deploy-reload";
@@ -389,11 +388,6 @@ export default async function RootLayout({ children }: { children: React.ReactNo
           <HeaderPartBoundary name="cookie-notice">
             <Suspense fallback={null}>
               <SiteCookieConsentGate />
-            </Suspense>
-          </HeaderPartBoundary>
-          <HeaderPartBoundary name="back-to-top">
-            <Suspense fallback={null}>
-              <BackToTopGate />
             </Suspense>
           </HeaderPartBoundary>
         </SiteMotionConfig>
