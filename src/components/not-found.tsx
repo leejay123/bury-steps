@@ -20,12 +20,12 @@ export function GridMessageFrame({ children }: { children: React.ReactNode }) {
   );
 }
 
-/** shadcn.io's own 404 (their markup and classes, as on shadcn.io/any-missing-page):
+/** shadcn.io's own 404, a page on its own (their markup and classes, as on shadcn.io/any-missing-page):
  * the big grey 404, "Page Not Found", a line, and Back to Home or Report Issue
  * (ours goes to the Contact page). */
 export function NotFoundPage() {
   return (
-    <div className="flex min-h-[calc(100dvh-8.5rem)] items-center justify-center py-12">
+    <main className="style-nova theme-neutral radius-default flex min-h-dvh items-center justify-center bg-background py-12">
       <div className="container flex flex-col items-center gap-6 text-center">
         <div className="flex flex-col items-center gap-2">
           <span className="font-bold text-6xl text-muted-foreground sm:text-8xl">404</span>
@@ -45,7 +45,7 @@ export function NotFoundPage() {
           </Link>
         </div>
       </div>
-    </div>
+    </main>
   );
 }
 

@@ -1,22 +1,18 @@
-import { copyrightYear } from "@/components/site-footer";
 import { NotFoundPage } from "@/components/not-found";
-import { ShadcnLayoutFrame } from "@/components/shadcnio/layout-frame";
-import { getSiteTheme } from "@/lib/site-theme";
+import { PageKindMark } from "@/components/shadcnio/page-kind";
 
 /**
- * Unmatched addresses (not a page in (site)) don't get the dashboard layout,
- * so the shadcn.io design wraps this itself. A missing page under (site)
- * uses (site)/not-found.tsx instead, which already sits in the frame.
+ * Every missing page, on its own as shadcn.io's is: no header, sidebar or
+ * footer. Unmatched addresses come here, and so does notFound() from any page
+ * under (site) — there's no (site)/not-found.tsx, so Next.js uses this one,
+ * outside the dashboard layout (docs: file-conventions/not-found).
  */
-export default async function NotFound() {
-  const [theme, year] = await Promise.all([getSiteTheme(), copyrightYear()]);
-  const page = <NotFoundPage />;
-  if (theme.siteDesign === "shadcnio") {
-    return (
-      <ShadcnLayoutFrame theme={theme} year={year}>
-        {page}
-      </ShadcnLayoutFrame>
-    );
-  }
-  return page;
+export default function NotFound() {
+  return (
+    <>
+      {/* "home": it draws its whole own page (page-kind.tsx). */}
+      <PageKindMark kind="home" />
+      <NotFoundPage />
+    </>
+  );
 }
