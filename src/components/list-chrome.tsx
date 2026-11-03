@@ -2,6 +2,7 @@
 
 import { AlertCircle, Mail, Search } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { ButtonGroup } from "@/components/ui/button-group";
 import { InputGroup, InputGroupAddon, InputGroupInput } from "@/components/ui/input-group";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -125,8 +126,8 @@ export function WalkListChrome({ lines }: { lines?: { title: string; detail: str
 /** Role, sort and Needs attention — the same bar the members list uses. */
 export function MembersFilterChrome() {
   return (
-    <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-end" data-edge-bar="" data-edge-top="">
-      <InputGroup className="w-full min-w-0 sm:min-w-56 sm:flex-1">
+    <div className="flex flex-wrap items-center gap-2" data-edge-bar="" data-edge-top="">
+      <InputGroup className="min-w-0 flex-1 basis-full sm:basis-56">
         <InputGroupInput
           aria-label="Search members"
           defaultValue=""
@@ -137,30 +138,30 @@ export function MembersFilterChrome() {
           <Search data-icon="inline-start" />
         </InputGroupAddon>
       </InputGroup>
-      <FilterSelect
-        id="member-role-filter-hold"
-        label="Role"
-        options={[
-          { value: "all", label: "All roles" },
-          { value: "ADMIN", label: "Organisers" },
-          { value: "MEMBER", label: "Members" },
-        ]}
-        value="all"
-        width="sm:w-44"
-      />
-      <FilterSelect
-        id="member-sort-hold"
-        label="Sort by"
-        options={[
-          { value: "oldest", label: "Oldest first" },
-          { value: "newest", label: "Newest first" },
-          { value: "name", label: "Name A–Z" },
-          { value: "clockins", label: "Most clock-ins" },
-        ]}
-        value="oldest"
-        width="sm:w-44"
-      />
-      <Button className="shrink-0 gap-1.5" type="button" variant="outline">
+      <ButtonGroup aria-label="Filter members" className="max-sm:w-full">
+        <Select onValueChange={() => {}} value="all">
+          <SelectTrigger aria-label="Role" className="max-sm:flex-1 sm:w-40" id="member-role-filter-hold">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">All roles</SelectItem>
+            <SelectItem value="ADMIN">Organisers</SelectItem>
+            <SelectItem value="MEMBER">Members</SelectItem>
+          </SelectContent>
+        </Select>
+        <Select onValueChange={() => {}} value="oldest">
+          <SelectTrigger aria-label="Sort by" className="max-sm:flex-1 sm:w-40" id="member-sort-hold">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="oldest">Oldest first</SelectItem>
+            <SelectItem value="newest">Newest first</SelectItem>
+            <SelectItem value="name">Name A–Z</SelectItem>
+            <SelectItem value="clockins">Most clock-ins</SelectItem>
+          </SelectContent>
+        </Select>
+      </ButtonGroup>
+      <Button className="shrink-0 gap-1.5 max-sm:w-full" type="button" variant="outline">
         <AlertCircle />
         Needs attention
       </Button>

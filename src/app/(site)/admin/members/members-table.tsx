@@ -45,7 +45,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { DropdownMenuItem } from "@/components/ui/dropdown-menu";
 import { InputGroup, InputGroupAddon, InputGroupInput } from "@/components/ui/input-group";
-import { Label } from "@/components/ui/label";
+import { ButtonGroup } from "@/components/ui/button-group";
 import { SkeletonReveal } from "@/components/spectrumui/skeleton-reveal";
 import {
   Select,
@@ -498,8 +498,8 @@ function MembersTableInner({
 
   return (
     <div className="flex flex-col gap-4" ref={listRef}>
-      <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-end" data-edge-bar="" data-edge-top="">
-        <InputGroup className="w-full min-w-0 sm:min-w-56 sm:flex-1">
+      <div className="flex flex-wrap items-center gap-2" data-edge-bar="" data-edge-top="">
+        <InputGroup className="min-w-0 flex-1 basis-full sm:basis-56">
           <InputGroupInput
             aria-label="Search members"
             onChange={(event) => handleQueryChange(event.target.value)}
@@ -510,8 +510,9 @@ function MembersTableInner({
             <Search data-icon="inline-start" />
           </InputGroupAddon>
         </InputGroup>
-        <div className="flex shrink-0 flex-col gap-1.5">
-          <Label htmlFor="member-role-filter">Role</Label>
+        {/* Role and Sort as one group (shadcn's ButtonGroup), as on Walks; on phones it takes
+            its own row under the search, half each. */}
+        <ButtonGroup aria-label="Filter members" className="max-sm:w-full">
           <Select
             onValueChange={(value) => {
               const params = new URLSearchParams(window.location.search);
@@ -522,7 +523,7 @@ function MembersTableInner({
             }}
             value={roleFilter}
           >
-            <SelectTrigger className="w-full sm:w-44" id="member-role-filter">
+            <SelectTrigger aria-label="Role" className="max-sm:flex-1 sm:w-40" id="member-role-filter">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
@@ -531,11 +532,8 @@ function MembersTableInner({
               <SelectItem value="MEMBER">Members</SelectItem>
             </SelectContent>
           </Select>
-        </div>
-        <div className="flex shrink-0 flex-col gap-1.5">
-          <Label htmlFor="member-sort">Sort by</Label>
           <Select onValueChange={(value) => handleSortChange(value as MemberSort)} value={sort}>
-            <SelectTrigger className="w-full sm:w-44" id="member-sort">
+            <SelectTrigger aria-label="Sort by" className="max-sm:flex-1 sm:w-40" id="member-sort">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
@@ -545,7 +543,7 @@ function MembersTableInner({
               <SelectItem value="clockins">Most clock-ins</SelectItem>
             </SelectContent>
           </Select>
-        </div>
+        </ButtonGroup>
         {/* Surfaces the two things on this list most worth a look: a member
             who's never clocked in, and an organiser invite that's expired —
             see MemberRow.needsAttention. Rows matching either are also
@@ -557,7 +555,7 @@ function MembersTableInner({
         <Button
           aria-pressed={needsAttention}
           className={cn(
-            "shrink-0 gap-1.5",
+            "shrink-0 gap-1.5 max-sm:w-full",
             needsAttention &&
               "border-amber-300 bg-amber-50 text-amber-800 hover:bg-amber-100 hover:text-amber-800 dark:border-amber-800 dark:bg-amber-950 dark:text-amber-200 dark:hover:bg-amber-900",
           )}

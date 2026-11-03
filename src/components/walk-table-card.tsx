@@ -31,6 +31,7 @@ import { formatTime } from "@/lib/dates";
 import { LIST_PAGE_SIZE } from "@/lib/list-page-size";
 import { SkLine } from "@/components/list-skeletons";
 import { RememberedRows } from "@/components/remembered-rows";
+import { ButtonGroup } from "@/components/ui/button-group";
 import { cn } from "@/lib/utils";
 
 /** One walk as the table shows it. */
@@ -132,9 +133,12 @@ export function WalkTableCard<S extends string, O extends string>({
             <Search data-icon="inline-start" />
           </InputGroupAddon>
         </InputGroup>
+        {/* Filter and Show 10 as one group (shadcn's ButtonGroup); on phones it takes its
+            own row under the search, half each, instead of Show 10 wrapping on its own. */}
+        <ButtonGroup aria-label="Filter and page size" className="max-sm:w-full">
         <Popover>
           <PopoverTrigger asChild>
-            <button className={TOOL} type="button">
+            <button className={cn(TOOL, "max-sm:flex-1 max-sm:justify-center")} type="button">
               <SlidersHorizontal aria-hidden />
               Filter
               {filtersOn ? (
@@ -187,7 +191,7 @@ export function WalkTableCard<S extends string, O extends string>({
         >
           <SelectTrigger
             aria-label="Walks per page"
-            className="h-9 w-auto gap-2"
+            className="h-9 w-auto gap-2 max-sm:flex-1 max-sm:justify-center"
           >
             <SelectValue />
           </SelectTrigger>
@@ -199,6 +203,7 @@ export function WalkTableCard<S extends string, O extends string>({
             ))}
           </SelectContent>
         </Select>
+        </ButtonGroup>
       </div>
 
       {rows.length === 0 ? (
@@ -343,12 +348,13 @@ export function WalkTableCardSkeleton({
             <Search data-icon="inline-start" />
           </InputGroupAddon>
         </InputGroup>
-        <span className={TOOL}>
+        <ButtonGroup aria-label="Filter and page size" className="max-sm:w-full">
+        <span className={cn(TOOL, "max-sm:flex-1 max-sm:justify-center")}>
           <SlidersHorizontal aria-hidden />
           Filter
         </span>
         <Select value="10">
-          <SelectTrigger aria-label="Walks per page" className="h-9 w-auto gap-2" tabIndex={-1}>
+          <SelectTrigger aria-label="Walks per page" className="h-9 w-auto gap-2 max-sm:flex-1 max-sm:justify-center" tabIndex={-1}>
             <SelectValue />
           </SelectTrigger>
           <SelectContent align="end">
@@ -359,6 +365,7 @@ export function WalkTableCardSkeleton({
             ))}
           </SelectContent>
         </Select>
+        </ButtonGroup>
       </div>
       <RememberedRows
         as="ul"
