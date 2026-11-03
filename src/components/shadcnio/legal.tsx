@@ -120,11 +120,11 @@ export function ShadcnLegal({
         </div>
       </section>
       {/* As theirs: only the guide line above the row (no border of its own), and on
-          phones short tiles with the title alone. */}
+          phones short tiles with the title alone, two to a row with a line between the rows. */}
       <div className="relative">
         <Guides />
         <nav aria-label="Related pages">
-          <ul className="grid grid-cols-2 sm:grid-cols-4 [clip-path:inset(0_0_0_1px)] *:border-l">
+          <ul className="grid grid-cols-2 sm:grid-cols-4 [clip-path:inset(0_0_0_1px)] *:border-l max-sm:[&>li:nth-child(n+3)]:border-t">
             {DOCS.map((doc) => (
               <Tile
                 current={doc.href === current}

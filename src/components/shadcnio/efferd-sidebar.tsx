@@ -1,6 +1,6 @@
 import { Suspense } from "react";
 import { IntentLink as Link } from "@/components/intent-link";
-import { ChevronsUpDown, LogIn, Mail } from "lucide-react";
+import { ChevronsUpDown, Mail } from "lucide-react";
 import { ClerkIsland } from "@/components/clerk-island";
 import { LazySiteUserButton } from "@/components/clerk-lazy";
 import { AvatarPlaceholder, BellPlaceholder } from "@/components/header-placeholders";
@@ -62,11 +62,9 @@ const GUEST_GROUPS: SidebarGroup[] = [
 export function EfferdSidebarBody({
   data,
   progressEnabled,
-  signInHref,
 }: {
   data: ShadcnHomeData;
   progressEnabled: boolean;
-  signInHref: string;
 }) {
   const next = data.next ? data.upcoming[0] : null;
   return (
@@ -111,20 +109,7 @@ export function EfferdSidebarBody({
         {/* The person, as in Efferd's shell: their photo, name and email (from this browser's
             memory, so at once); the whole row opens their account menu (the photo's button
             covers it). */}
-        {/* A visitor: Sign in where a member's own row goes. */}
-        <div className="border-t p-2" data-sb-for="guest">
-          <FoldedTip label="Sign in">
-            <a
-              aria-label="Sign in"
-              className="flex h-12 w-full items-center gap-2 overflow-hidden rounded-md p-2 text-sm font-medium hover:bg-muted [&>svg]:size-4 [&>svg]:shrink-0"
-              data-efferd-button=""
-              href={signInHref}
-            >
-              <LogIn aria-hidden />
-              <span className="truncate">Sign in</span>
-            </a>
-          </FoldedTip>
-        </div>
+        {/* A visitor has no row here: Sign in is in the top bar. */}
         <div className="border-t p-2" data-sb-for="member">
           <div
             className="relative flex h-12 w-full items-center gap-2 overflow-hidden rounded-md p-2 text-sm hover:bg-muted [&_button]:after:absolute [&_button]:after:inset-0 [&_button]:after:content-['']"
