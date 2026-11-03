@@ -10,7 +10,7 @@ import { CUP_BODY_COOKIE, CUP_TITLE_COOKIE, TOGETHER_BODY_COOKIE } from "@/lib/r
 /** Same cell as the loaded stat: the number is the only part still loading. */
 function StatSkeleton({ label }: { label: string }) {
   return (
-    <div className="flex flex-col gap-1 border-b p-3 last:border-b-0 sm:border-b-0 sm:border-r sm:last:border-r-0">
+    <div className="flex flex-col gap-1 border-b p-4 last:border-b-0 sm:border-b-0 sm:border-r sm:last:border-r-0">
       <SkLine className="w-8" size="lg" />
       <p className="text-sm text-muted-foreground">{label}</p>
     </div>
@@ -70,24 +70,26 @@ export function ProgressSkeleton() {
         )}
       </RememberedText>
 
-      <section className="flex flex-col gap-3 rounded-xl border p-4" data-reveal-card="">
-        <h2 className="font-medium">This month</h2>
-        <p className="text-sm text-muted-foreground">
-          Everyone who has clocked in to a finished walk this month, grouped by how many. People
-          with the same count sit together — a draw, not a place. People with none are not listed.
-        </p>
-      </section>
-      {/* As the board (progress-board.tsx): a count strip, then the names. */}
-      <div className="flex flex-col" data-edge-board="">
-        <div className="flex flex-col">
-          <section className="flex flex-col" data-edge-group="">
-            <div className="flex flex-col gap-1" data-edge-group-head="">
-              <SkLine className="w-14" size="xs" />
-            </div>
-            <NameRowsSkeleton remember="progress" />
-          </section>
+      <section className="flex flex-col gap-6 rounded-xl border p-4" data-reveal-card="">
+        <div className="flex flex-col gap-1.5">
+          <h2 className="font-medium">This month</h2>
+          <p className="text-sm text-muted-foreground">
+            Everyone who has clocked in to a finished walk this month, grouped by how many. People
+            with the same count sit together — a draw, not a place. People with none are not listed.
+          </p>
         </div>
-      </div>
+        {/* As the board (progress-board.tsx): a count strip, then the names. */}
+        <div className="flex flex-col" data-edge-board="">
+          <div className="flex flex-col">
+            <section className="flex flex-col" data-edge-group="">
+              <div className="flex flex-col gap-1" data-edge-group-head="">
+                <SkLine className="w-14" size="xs" />
+              </div>
+              <NameRowsSkeleton remember="progress" />
+            </section>
+          </div>
+        </div>
+      </section>
     </>
   );
 }
@@ -101,7 +103,7 @@ export function ProgressPersonalSkeleton() {
   return (
     <>
       <section className="overflow-hidden rounded-xl border" data-reveal-card="">
-        <div className="grid grid-cols-1 sm:grid-cols-3" data-edge-stats="">
+        <div className="grid grid-cols-1 sm:grid-cols-3">
           <StatSkeleton label="This month" />
           <StatSkeleton label="This year" />
           <StatSkeleton label="Weeks in a row" />

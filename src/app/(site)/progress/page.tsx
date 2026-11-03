@@ -39,7 +39,7 @@ function formatNameList(names: string[]): string {
 
 function Stat({ label, value }: { label: string; value: string }) {
   return (
-    <div className="flex flex-col gap-1 border-b p-3 last:border-b-0 sm:border-b-0 sm:border-r sm:last:border-r-0">
+    <div className="flex flex-col gap-1 border-b p-4 last:border-b-0 sm:border-b-0 sm:border-r sm:last:border-r-0">
       <p className="text-2xl font-semibold tracking-tight">{value}</p>
       <p className="text-sm text-muted-foreground">{label}</p>
     </div>
@@ -142,7 +142,7 @@ async function ProgressBody({
       ) : (
         <>
       <section className="overflow-hidden rounded-xl border" data-reveal-card="">
-        <div className="grid grid-cols-1 sm:grid-cols-3" data-edge-stats="">
+        <div className="grid grid-cols-1 sm:grid-cols-3">
           <Stat
             label="This month"
             value={game.viewer.monthCount.toLocaleString("en-GB")}
@@ -201,22 +201,24 @@ async function ProgressBody({
         </section>
       ) : null}
 
-      <section className="flex flex-col gap-3 rounded-xl border p-4" data-reveal-card="">
-        <h2 className="font-medium">This month</h2>
-        <p className="text-sm text-muted-foreground">
-          Everyone who has clocked in to a finished walk this month, grouped by how many. People
-          with the same count sit together — a draw, not a place. People with none are not listed.
-        </p>
+      <section className="flex flex-col gap-6 rounded-xl border p-4" data-reveal-card="">
+        <div className="flex flex-col gap-1.5">
+          <h2 className="font-medium">This month</h2>
+          <p className="text-sm text-muted-foreground">
+            Everyone who has clocked in to a finished walk this month, grouped by how many. People
+            with the same count sit together — a draw, not a place. People with none are not listed.
+          </p>
+        </div>
+        {game.board.length === 0 ? (
+          <EmptyState
+            description="When a walk is finished, names will show here. Come as you are — there is nothing to catch up."
+            icon={Footprints}
+            title="No clock-ins this month yet"
+          />
+        ) : (
+          <ProgressBoard board={game.board} />
+        )}
       </section>
-      {game.board.length === 0 ? (
-        <EmptyState
-          description="When a walk is finished, names will show here. Come as you are — there is nothing to catch up."
-          icon={Footprints}
-          title="No clock-ins this month yet"
-        />
-      ) : (
-        <ProgressBoard board={game.board} />
-      )}
     </>
   );
 }
