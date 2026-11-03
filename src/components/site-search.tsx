@@ -75,6 +75,8 @@ export function SiteSearchDialog() {
   const idRef = React.useRef(0);
 
   React.useEffect(() => {
+    // Search is for signed-in people (its list is): no box or ⌘K for a visitor.
+    if (!document.documentElement.hasAttribute("data-remembered-in")) return;
     if (dialogHolder != null) return;
     idRef.current = ++dialogSeq;
     dialogHolder = idRef.current;

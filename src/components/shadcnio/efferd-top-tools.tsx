@@ -10,8 +10,9 @@ const ICON_BUTTON =
 
 /**
  * The signed-in top bar's search and light / dark switch. Search opens the
- * same command box as the original header (⌘K / Ctrl+K). Customize stays
- * in the main site's header.
+ * same command box as the original header (⌘K / Ctrl+K); it's for signed-in
+ * people only (its list is), so a visitor on a dashboard-style page (a shared
+ * walk) sees just the light / dark switch. Customize stays in the main site's header.
  */
 export function EfferdTopTools() {
   const toggleTheme = () => setColorMode(document.documentElement.classList.contains("dark") ? "light" : "dark");
@@ -20,6 +21,7 @@ export function EfferdTopTools() {
       <button
         aria-label="Search"
         className={ICON_BUTTON}
+        data-signed-in-only=""
         data-site-search=""
         onClick={openSiteSearch}
         title="Search (⌘K)"

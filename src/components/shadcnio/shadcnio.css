@@ -1041,6 +1041,9 @@ html:is([data-remembered-in], [data-guest-dash]):not([data-page-kind="home"], [d
 /* A visitor on a shared walk page (html[data-guest-dash], sidebar-state.ts): their short menu
    and Sign in; everyone else, the members' menu and their own row. */
 html:not([data-guest-dash]) [data-sb-for="guest"], html[data-remembered-in] [data-sb-for="guest"], html[data-guest-dash]:not([data-remembered-in]) [data-sb-for="member"] { display: none !important; }
+/* Signed-in-only controls (the top bar's search): gone for a visitor from the first paint
+   (html[data-remembered-in] is set before it). */
+html:not([data-remembered-in]) [data-signed-in-only] { display: none !important; }
 /* A placeholder's filters sit in a wrapper (data-sk-filters, hidden with an empty list): the
    list still butts onto their strip, as on the real page. */
 html:is([data-remembered-in], [data-guest-dash]):not([data-page-kind="home"], [data-page-kind="plain"]) [data-slot="docs-page"] :has(> [data-sk-filters] > [data-edge-bar]) { row-gap: 0 !important; }
