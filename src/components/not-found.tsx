@@ -1,14 +1,5 @@
 import Link from "next/link";
-import { CompassIcon, HomeIcon } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import {
-  Empty,
-  EmptyContent,
-  EmptyDescription,
-  EmptyHeader,
-} from "@/components/ui/empty";
 import { PAGE_X_BLEED } from "@/lib/page-x";
-import { shouldPrefetchNavLink } from "@/components/site-nav-items";
 
 /**
  * The page-in-a-grid frame of the Not found page: the message in the middle
@@ -29,40 +20,34 @@ export function GridMessageFrame({ children }: { children: React.ReactNode }) {
   );
 }
 
+/** shadcn.io's own 404 (their markup and classes, as on shadcn.io/any-missing-page):
+ * the big grey 404, "Page Not Found", a line, and Back to Home or Report Issue
+ * (ours goes to the Contact page). */
 export function NotFoundPage() {
   return (
-    <GridMessageFrame>
-      <Empty className="h-full">
-        <EmptyHeader>
-          {/* The page's heading, so screen readers announce what this is. */}
-          <h1 className="font-mono text-8xl font-black tracking-tight" data-slot="empty-title">
-            404<span className="sr-only"> — page not found</span>
-          </h1>
-          <EmptyDescription className="sm:text-nowrap">
-            The page you’re looking for might have been{" "}
-            <br className="hidden sm:inline" />
-            moved or doesn’t exist.
-          </EmptyDescription>
-        </EmptyHeader>
-        <EmptyContent>
-          <div className="flex flex-wrap justify-center gap-2">
-            <Button asChild>
-              <Link href="/">
-                <HomeIcon data-icon="inline-start" />
-                Go Home
-              </Link>
-            </Button>
-            <Button asChild variant="outline">
-              {/* Guests see this page too: prefetching a sign-in-only
-                  page redirects cross-site and logs a CORS error. */}
-              <Link href="/walks" prefetch={shouldPrefetchNavLink("/walks") ? undefined : false}>
-                <CompassIcon data-icon="inline-start" />
-                Explore
-              </Link>
-            </Button>
-          </div>
-        </EmptyContent>
-      </Empty>
-    </GridMessageFrame>
+    <div className="flex min-h-[calc(100dvh-8.5rem)] items-center justify-center py-12">
+      <div className="container flex flex-col items-center gap-6 text-center">
+        <div className="flex flex-col items-center gap-2">
+          <span className="font-bold text-6xl text-muted-foreground sm:text-8xl">404</span>
+          <h1 className="font-semibold text-2xl">Page Not Found</h1>
+          <p className="max-w-xs text-lg text-muted-foreground">
+            The page you&apos;re looking for doesn&apos;t exist or has been moved.
+          </p>
+        </div>
+        <div className="flex flex-row-reverse items-center gap-4">
+          <Link className={`${BUTTON} cn-button-variant-default`} href="/">
+            Back to Home
+          </Link>
+          <span className="text-muted-foreground">or</span>
+          {/* Guests see this page too, so nothing here is fetched ahead. */}
+          <Link className={`${BUTTON} cn-button-variant-outline bg-background hover:bg-muted`} href="/contact" prefetch={false}>
+            Report Issue
+          </Link>
+        </div>
+      </div>
+    </div>
   );
 }
+
+const BUTTON =
+  "cn-button group/button relative inline-flex shrink-0 select-none items-center justify-center whitespace-nowrap outline-none transition-transform disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:shrink-0 data-disabled:pointer-events-none data-disabled:opacity-50 aria-disabled:pointer-events-none aria-disabled:opacity-50 data-[state=loading]:pointer-events-none active:not-aria-[haspopup]:scale-[0.98] cn-button-size-lg rounded-[calc(var(--radius)*100)] h-11 px-6 font-medium text-[15px]";

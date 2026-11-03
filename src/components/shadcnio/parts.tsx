@@ -157,9 +157,9 @@ export const GRID_PHONE_LIST = `${GRID} max-sm:grid-cols-1`;
 export const WALKS_GRID = "grid border-t [clip-path:inset(1px_0_0_1px)] *:border-t *:border-l grid-cols-1 sm:grid-cols-2 lg:grid-cols-3";
 
 const TILE =
-  "group flex flex-col outline-none hover:bg-muted/60 focus-visible:bg-muted/60 focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-inset relative h-40 overflow-hidden";
+  "group flex flex-col outline-none hover:bg-muted/60 focus-visible:bg-muted/60 dark:hover:bg-foreground/[0.025] dark:focus-visible:bg-foreground/[0.025] focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-inset relative h-40 overflow-hidden";
 const RING =
-  "absolute border transition-[scale,border-color] motion-safe:group-focus-visible:scale-[1.03] motion-safe:group-hover:scale-[1.03] duration-300 ease-out motion-reduce:transition-none";
+  "absolute border transition-[border-color] duration-300 ease-out motion-reduce:transition-none";
 const RING_TONES = [
   "border-foreground/[0.07] group-hover:border-foreground/[0.11] group-focus-visible:border-foreground/[0.11]",
   "border-foreground/[0.1] group-hover:border-foreground/[0.15] group-focus-visible:border-foreground/[0.15]",
@@ -219,7 +219,7 @@ const FAN_CARD = `pointer-events-none absolute -end-6 -bottom-8 h-30 w-48 origin
 const FAN_POSES = [
   "-translate-x-[6.5rem] translate-y-2 -rotate-[8deg] rtl:translate-x-[6.5rem] rtl:rotate-[8deg] group-hover:-translate-x-[7.25rem] group-hover:-rotate-[10deg] group-focus-visible:-translate-x-[7.25rem] group-focus-visible:-rotate-[10deg]",
   "-translate-x-[3.25rem] translate-y-1 -rotate-[4deg] rtl:translate-x-[3.25rem] rtl:rotate-[4deg] group-hover:-translate-x-[3.75rem] group-hover:-rotate-[5deg] group-focus-visible:-translate-x-[3.75rem] group-focus-visible:-rotate-[5deg]",
-  "motion-safe:group-hover:-translate-y-1 motion-safe:group-focus-visible:-translate-y-1",
+  "",
 ];
 const FAN_IMAGE =
   "size-full object-cover opacity-80 grayscale transition-[filter,opacity,scale] duration-300 ease-out motion-reduce:transition-none group-hover:opacity-100 group-hover:grayscale-0 group-focus-visible:opacity-100 group-focus-visible:grayscale-0 motion-safe:group-focus-visible:scale-[1.04] motion-safe:group-hover:scale-[1.04]";
@@ -243,7 +243,7 @@ function IconSquare({ icon }: { icon: ReactNode }) {
     <span
       aria-hidden="true"
       className={cn(
-        "pointer-events-none absolute flex motion-safe:group-focus-visible:-translate-y-1 motion-safe:group-hover:-translate-y-1 -end-5 -bottom-7 size-28 overflow-hidden rounded-[1.75rem] transition-[translate,border-color]",
+        "pointer-events-none absolute flex -end-5 -bottom-7 size-28 overflow-hidden rounded-[1.75rem] transition-[translate,border-color]",
         PANEL,
       )}
     >
@@ -261,7 +261,7 @@ function IconCircle({ icon }: { icon: ReactNode }) {
     <span
       aria-hidden="true"
       className={cn(
-        "pointer-events-none absolute flex motion-safe:group-focus-visible:-translate-y-1 motion-safe:group-hover:-translate-y-1 -end-4 -bottom-4 size-28 overflow-hidden rounded-full transition-[translate,border-color]",
+        "pointer-events-none absolute flex -end-4 -bottom-4 size-28 overflow-hidden rounded-full transition-[translate,border-color]",
         PANEL,
       )}
     >
@@ -283,7 +283,7 @@ function Stack({ icons }: { icons: ReactNode[] }) {
     <span
       aria-hidden="true"
       className={cn(
-        "pointer-events-none absolute flex transition-[translate] duration-300 ease-out motion-safe:group-focus-visible:-translate-y-1 motion-safe:group-hover:-translate-y-1 inset-0",
+        "pointer-events-none absolute flex transition-[translate] duration-300 ease-out inset-0",
         STACK_CARD,
       )}
     >
