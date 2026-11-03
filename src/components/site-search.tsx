@@ -60,11 +60,28 @@ export function SiteSearchBar({ className, onOpen }: { className?: string; onOpe
 const loadDialog = () => import("@/components/site-search-dialog");
 const LazySiteSearchDialog = dynamic(() => loadDialog().then((mod) => mod.SiteSearchDialogInner), { ssr: false });
 
+/** Only one dialog on the page: the original header and the dashboard
+ *  top bar both mount this, and two copies would stack on ⌘K. */
+let dialogHolder: number | null = null;
+let dialogSeq = 0;
+
 export function SiteSearchDialog() {
+  const [holder, setHolder] = React.useState(false);
   const [opened, setOpened] = React.useState(false);
+  const idRef = React.useRef(0);
 
   React.useEffect(() => {
-    if (opened) return;
+    if (dialogHolder != null) return;
+    idRef.current = ++dialogSeq;
+    dialogHolder = idRef.current;
+    setHolder(true);
+    return () => {
+      if (dialogHolder === idRef.current) dialogHolder = null;
+    };
+  }, []);
+
+  React.useEffect(() => {
+    if (!holder || opened) return;
     const open = () => setOpened(true);
     const onKey = (event: KeyboardEvent) => {
       if (event.key.toLowerCase() === "k" && (event.metaKey || event.ctrlKey)) {
@@ -87,7 +104,8 @@ export function SiteSearchDialog() {
       document.removeEventListener("pointerover", warm);
       document.removeEventListener("focusin", warm);
     };
-  }, [opened]);
+  }, [holder, opened]);
 
+  if (!holder) return null;
   return opened ? <LazySiteSearchDialog initialOpen /> : null;
 }

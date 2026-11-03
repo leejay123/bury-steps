@@ -1,5 +1,5 @@
-import Link from "next/link";
 import { HistoryFilterChrome } from "@/components/list-chrome";
+import { MembersBackLink } from "./members-back-link";
 import { HistoryRowsSkeleton, SkButtonSpace, SkLine } from "@/components/list-skeletons";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -17,17 +17,16 @@ function StatCardSkeleton({ label }: { label: string }) {
 }
 
 /**
- * A member's page (page.tsx) while it loads, part for part: the back link,
- * the name card (photo, name, role, email, joined date, buttons), the
- * emergency contact card, the stat cards, then their walk history. Fixed
- * wording is real; their own details and buttons are grey — no gaps.
+ * A member's page (page.tsx) while it loads, part for part: the name card
+ * (photo, name, role, email, joined date, buttons), the emergency contact
+ * card, the stat cards, then their walk history. Fixed wording is real;
+ * their own details and buttons are grey — no gaps. The way back lives in
+ * the top bar in the shadcn.io design.
  */
 export function MemberDetailSkeleton() {
   return (
     <div data-page-loading="" aria-busy="true" className="flex flex-col gap-6 px-4 py-6 md:px-6" data-edge-sections="">
-      <Link className="text-sm text-muted-foreground hover:text-foreground" href="/admin/members">
-        &larr; All members
-      </Link>
+      <MembersBackLink />
 
       <Card>
         <CardHeader className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
@@ -71,21 +70,17 @@ export function MemberDetailSkeleton() {
         <StatCardSkeleton label="Cancelled after clock-in" />
       </div>
 
-      <section className="flex flex-col gap-3">
-        {/* "12 walks" */}
-        <SkLine className="w-16" size="sm" />
-        {/* As the history list: search and filters, the year, then exactly
-            as many rows as they have (saved when you clicked them in the
-            list); with none, the empty box's shape, and no filters. */}
-        <div className="flex flex-col gap-6 [&:has([data-reveal-list][hidden])>[data-sk-filters]]:hidden">
-          <div className="contents" data-sk-filters="">
-            <HistoryFilterChrome />
-          </div>
-          <section className="flex flex-col gap-3">
-            <HistoryRowsSkeleton remember="member-detail" />
-          </section>
+      {/* As the history list: search and filters, the year, then exactly
+          as many rows as they have (saved when you clicked them in the
+          list); with none, the empty box's shape, and no filters. */}
+      <div className="flex flex-col gap-6 [&:has([data-reveal-list][hidden])>[data-sk-filters]]:hidden" data-edge-history="">
+        <div className="contents" data-sk-filters="">
+          <HistoryFilterChrome />
         </div>
-      </section>
+        <section className="flex flex-col gap-3">
+          <HistoryRowsSkeleton remember="member-detail" />
+        </section>
+      </div>
     </div>
   );
 }

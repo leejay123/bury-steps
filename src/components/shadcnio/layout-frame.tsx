@@ -68,8 +68,6 @@ export async function ShadcnLayoutFrame({
           <EfferdSidebarBody data={data} progressEnabled={progressEnabled} signInHref={signInHref} />
         </>
       }
-      search={search}
-      siteName={theme.siteName}
       tools={<EfferdHeaderTools signInHref={signInHref} />}
     >
       {children}

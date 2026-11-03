@@ -9,7 +9,6 @@ import { Breadcrumb, BreadcrumbItem, BreadcrumbLink, BreadcrumbList, BreadcrumbP
 import { EfferdTopTools } from "./efferd-top-tools";
 import { SetPageCrumb } from "./page-crumb";
 import { Guides } from "./parts";
-import type { SearchItem } from "./search-panel";
 import { SIDEBAR_KEY, SIDEBAR_TOGGLE_EVENT, syncGuestDash } from "./sidebar-state";
 import { settingsHeaderTrail } from "@/lib/settings-pages";
 
@@ -31,8 +30,6 @@ export function ShadcnSiteShell({
   nav,
   sidebar,
   tools,
-  search,
-  siteName,
   footer,
   children,
 }: {
@@ -41,9 +38,6 @@ export function ShadcnSiteShell({
   sidebar: ReactNode;
   /** Signed-in pages' top bar, right end: the bell and the avatar. */
   tools: ReactNode;
-  /** The search's pages and walks (the same as the main header's). */
-  search: SearchItem[];
-  siteName: string;
   footer: ReactNode;
   children: ReactNode;
 }) {
@@ -204,8 +198,8 @@ export function ShadcnSiteShell({
               </button>
               <span aria-hidden="true" className="mr-2 h-4 w-px shrink-0 bg-border" />
               {/* shadcn/ui's breadcrumb: the page's name, or on a page inside a list
-                  (one walk, one notice, one settings page) the list as a link, then
-                  the page (Walks › Sunday stroll; Settings › How the site works › Data retention). */}
+                  (one walk, one notice, one member, one settings page) the list as a
+                  link, then the page (Walks › Sunday stroll; Members › Jane Hall). */}
               <Breadcrumb className="min-w-0">
                 <BreadcrumbList className="flex-nowrap">
                   {settingsTrail ? (
@@ -254,7 +248,7 @@ export function ShadcnSiteShell({
             </div>
             <div className="flex shrink-0 items-center gap-3">
               <div className="flex items-center gap-2">
-                <EfferdTopTools search={search} siteName={siteName} />
+                <EfferdTopTools />
               </div>
               {tools}
             </div>
@@ -361,9 +355,10 @@ function pageTitle(path: string | null) {
   return PAGE_TITLES.find(([href]) => path === href || path.startsWith(href.endsWith("/") ? href : `${href}/`))?.[1] ?? "";
 }
 
-/** On a page inside a list (one walk, one notice), the list it belongs to: the breadcrumb's first step. */
+/** On a page inside a list (one walk, one notice, one member), the list it belongs to: the breadcrumb's first step. */
 function crumbParent(path: string | null) {
   if (path && /^\/admin\/walks\/[^/]+$/.test(path)) return { href: "/admin/walks", label: "Walks" };
+  if (path && /^\/admin\/members\/[^/]+$/.test(path)) return { href: "/admin/members", label: "Members" };
   if (path && /^\/notices\/[^/]+$/.test(path)) return { href: "/notices", label: "Notices" };
   return null;
 }

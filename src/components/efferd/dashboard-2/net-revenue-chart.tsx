@@ -71,7 +71,7 @@ export function NetRevenueChart() {
 	const busiest = Math.max(0, ...chartRows.map((row) => row.clockIns));
 	const growthPct = total ? (((busiest - total / 7) / (total / 7)) * 100).toFixed(1) : "0";
 	return (
-		<DashboardCard className="gap-0 md:col-span-2">
+		<DashboardCard className="gap-4 md:col-span-2">
 			<CardHeader className="gap-2">
 				<div className="flex flex-wrap items-center gap-2">
 					<CardTitle >Busiest days</CardTitle>

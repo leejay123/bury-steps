@@ -31,7 +31,7 @@ export function DashboardSkeleton() {
         </DashboardCard>
       ))}
       {/* Busiest days. */}
-      <DashboardCard className="gap-0 md:col-span-2">
+      <DashboardCard className="gap-4 md:col-span-2">
         <CardHeader className="gap-2">
           <div className="flex flex-wrap items-center gap-2">
             <CardTitle>Busiest days</CardTitle>
@@ -46,7 +46,7 @@ export function DashboardSkeleton() {
         </CardContent>
       </DashboardCard>
       {/* You and the group. */}
-      <DashboardCard className="gap-0 md:col-span-2">
+      <DashboardCard className="gap-4 md:col-span-2">
         <CardHeader>
           <div className="min-w-0 space-y-2">
             <div className="flex flex-wrap items-center gap-2">

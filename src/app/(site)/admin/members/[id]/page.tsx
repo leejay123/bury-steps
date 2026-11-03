@@ -3,8 +3,9 @@ import { cacheLife } from "next/cache";
 import { PRIVATE_SAVED_COPY } from "@/lib/private-saved-copy";
 import { PlaceholderPreview } from "@/components/placeholder-preview";
 import { MemberDetailSkeleton } from "./member-detail-skeleton";
-import Link from "next/link";
 import { Crown } from "lucide-react";
+import { HeaderCrumb } from "@/components/shadcnio/page-crumb";
+import { MembersBackLink } from "./members-back-link";
 import { notFound } from "next/navigation";
 import { requirePermission } from "@/lib/auth";
 import { prisma } from "@/lib/db";
@@ -59,9 +60,8 @@ async function MemberDetailPageContent({ id }: { id: string }) {
     <div className="flex flex-col gap-6 px-4 py-6 md:px-6" data-edge-sections="">
       {/* For a refresh of this page (a click from the list saves it too). */}
       <RememberListCount count={Math.min(member.items.length, LIST_PAGE_SIZE)} id="member-detail" />
-      <Link className="text-sm text-muted-foreground hover:text-foreground" href="/admin/members">
-        &larr; All members
-      </Link>
+      <HeaderCrumb title={member.name} />
+      <MembersBackLink />
 
       <Card>
         <CardHeader className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
@@ -156,45 +156,36 @@ async function MemberDetailPageContent({ id }: { id: string }) {
         <StatCard label="Cancelled after clock-in" value={cancelledCount} />
       </div>
 
-      <section className="flex flex-col gap-3">
-        <h2 className="text-sm font-medium text-muted-foreground">
-          {attendanceCount === 0
-            ? "Walk history"
-            : attendanceCount === 1
-              ? "1 walk"
-              : `${attendanceCount} walks`}
-        </h2>
-        {member.items.length < attendanceCount ? (
-          <p className="text-xs text-muted-foreground">
-            Showing the {member.items.length.toLocaleString("en-GB")} most recent.
-          </p>
-        ) : null}
-        <AttendanceHistory
-          emptyDescription={`${member.name} hasn’t clocked in to a walk yet. Walks they clock in to will show here.`}
-          rows={member.items.map((item) => ({
-            id: item.id,
-            title: item.walkTitle,
-            location: item.location,
-            startsAt: item.startsAt,
-            durationMins: item.durationMins,
-            cancelledAt: item.cancelledAt,
-            clockedInAt: item.clockedInAt,
-            clockedOutAt: item.clockedOutAt,
-            clockedOutReason: item.clockedOutReason,
-            completed:
-              walkStatus({
-                cancelledAt: item.cancelledAt ? new Date(item.cancelledAt) : null,
-                startsAt: new Date(item.startsAt),
-                durationMins: item.durationMins,
-                endedAt: item.endedAt ? new Date(item.endedAt) : null,
-              }) === "completed",
-            href:
-              item.cancelledAt && !viewerCanOpenCancelledWalk
-                ? undefined
-                : `/admin/walks/${item.walkId}`,
-          }))}
-        />
-      </section>
+      {member.items.length < attendanceCount ? (
+        <p data-edge-note="">
+          Showing the {member.items.length.toLocaleString("en-GB")} most recent.
+        </p>
+      ) : null}
+      <AttendanceHistory
+        emptyDescription={`${member.name} hasn’t clocked in to a walk yet. Walks they clock in to will show here.`}
+        rows={member.items.map((item) => ({
+          id: item.id,
+          title: item.walkTitle,
+          location: item.location,
+          startsAt: item.startsAt,
+          durationMins: item.durationMins,
+          cancelledAt: item.cancelledAt,
+          clockedInAt: item.clockedInAt,
+          clockedOutAt: item.clockedOutAt,
+          clockedOutReason: item.clockedOutReason,
+          completed:
+            walkStatus({
+              cancelledAt: item.cancelledAt ? new Date(item.cancelledAt) : null,
+              startsAt: new Date(item.startsAt),
+              durationMins: item.durationMins,
+              endedAt: item.endedAt ? new Date(item.endedAt) : null,
+            }) === "completed",
+          href:
+            item.cancelledAt && !viewerCanOpenCancelledWalk
+              ? undefined
+              : `/admin/walks/${item.walkId}`,
+        }))}
+      />
     </div>
   );
 }

@@ -63,7 +63,7 @@ export function ChannelSalesChart() {
 	const growthPctNum = growthPctForWindow(chartRows);
 
 	return (
-		<DashboardCard className="gap-0 md:col-span-2">
+		<DashboardCard className="gap-4 md:col-span-2">
 			<CardHeader>
 				<div className="min-w-0 space-y-2">
 					<div className="flex flex-wrap items-center gap-2">
