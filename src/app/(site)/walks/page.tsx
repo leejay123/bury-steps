@@ -12,7 +12,8 @@ import { MemberWalksHold } from "@/components/list-chrome";
 import { RememberListCount } from "@/components/remember-list-count";
 import { LIST_PAGE_SIZE } from "@/lib/list-page-size";
 import { Button } from "@/components/ui/button";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { QueryTabs } from "@/components/query-tabs";
 import { MemberWelcomeDialog } from "@/components/member-welcome-dialog";
 import { getAllWalksSiteWide, getWalkMemberCountsByWalkIds } from "@/lib/walk-members";
 import { AdminWalkTable } from "@/app/(site)/admin/admin-walk-table";
@@ -268,7 +269,7 @@ function WalksBody({ view }: { view: WalksView }) {
       <RememberListCount count={recent.length} id="member-recent" max={3} />
       <MemberWelcomeDialog firstName={view.firstName} hasNoWalks={view.showWelcome} userId={view.userId} />
 
-      <Tabs defaultValue="upcoming">
+      <QueryTabs defaultValue="upcoming">
         <div data-edge-bar="" data-edge-top="">
           <TabsList>
             <TabsTrigger value="upcoming">
@@ -312,7 +313,7 @@ function WalksBody({ view }: { view: WalksView }) {
             walks={allWalks.map((walk) => ({ ...walk, href: walk.href ?? null }))}
           />
         </TabsContent>
-      </Tabs>
+      </QueryTabs>
 
       {recent.length > 0 ? (
         <section className="flex flex-col gap-3">

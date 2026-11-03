@@ -10,7 +10,8 @@ import { getOptionalAdmin } from "@/lib/auth";
 import { CreateWalkDrawer } from "../create-walk-drawer";
 import { AdminPageIntro } from "../admin-page-intro";
 import { AdminWalkTable } from "../admin-walk-table";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { QueryTabs } from "@/components/query-tabs";
 import { upcomingListLookbackFrom, walkStatus } from "@/lib/walk-window";
 import { StoriesSlot } from "@/components/stories/stories-slot";
 import { getUpcomingWalkLines } from "@/lib/upcoming-walk-lines";
@@ -41,8 +42,6 @@ function toRow(
   };
 }
 
-// One short line; the details (filters, Clock in now, sharing, cancelling)
-// are in the organiser Guide.
 const WALKS_INTRO = "Upcoming walks first. Finished and cancelled walks are under History.";
 
 /**
@@ -169,7 +168,7 @@ async function AdminWalksTabs() {
     <RememberListCount count={Math.min(upcoming.length, LIST_PAGE_SIZE)} id="admin-walks" />
     <RememberListCount count={upcoming.length} id="admin-walks-upcoming" max={10000} />
     <RememberListCount count={past.length} id="admin-walks-past" max={10000} />
-    <Tabs className="w-full" defaultValue="upcoming">
+    <QueryTabs className="w-full" defaultValue="upcoming">
       <div data-edge-bar="" data-edge-top="">
         <TabsList>
           <TabsTrigger value="upcoming">Upcoming ({upcoming.length})</TabsTrigger>
@@ -193,7 +192,7 @@ async function AdminWalksTabs() {
           walks={past}
         />
       </TabsContent>
-    </Tabs>
+    </QueryTabs>
     </>
   );
 }

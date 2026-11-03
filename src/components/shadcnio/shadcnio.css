@@ -981,9 +981,12 @@ html:is([data-remembered-in], [data-guest-dash]):not([data-page-kind="home"], [d
   html:is([data-remembered-in], [data-guest-dash]):not([data-page-kind="home"], [data-page-kind="plain"]) [data-slot="docs-page"] [data-edge-stats] > * { border: 0 !important; border-radius: 0 !important; border-inline-end: 1px solid var(--border) !important; box-shadow: none !important; background: transparent !important; padding: 0.75rem !important; gap: 0.25rem !important; }
   html:is([data-remembered-in], [data-guest-dash]):not([data-page-kind="home"], [data-page-kind="plain"]) [data-slot="docs-page"] [data-edge-stats] > *:last-child { border-inline-end: 0 !important; }
   html:is([data-remembered-in], [data-guest-dash]):not([data-page-kind="home"], [data-page-kind="plain"]) [data-slot="docs-page"] [data-edge-stats] > * :is([data-slot="card-header"], [data-slot="card-content"]) { padding: 0 !important; }
-  /* The way back lives in the top bar (Members › this person). A leftover or
-     cached ← All members link was a full 1.5rem band of empty white. */
+  /* The way back lives in the top bar (Members › this person; Walks › History ›
+     this walk). A leftover or cached ← All members / ← All walks link was a
+     full 1.5rem band of empty white. */
   html:is([data-remembered-in], [data-guest-dash]):not([data-page-kind="home"], [data-page-kind="plain"]) [data-slot="docs-page"] a[href="/admin/members"] { display: none !important; }
+  html:is([data-remembered-in], [data-guest-dash]):not([data-page-kind="home"], [data-page-kind="plain"]) [data-slot="docs-page"] a[href="/admin/walks"] { display: none !important; }
+  html[data-remembered-in]:not([data-page-kind="home"], [data-page-kind="plain"]) [data-slot="docs-page"] span:has(> a[data-member-home][href="/walks"]) { display: none !important; }
   /* Cards in a band also keep py-6 / px-6, which stacked on the strip's 1.5rem
      and sat the name in from walk titles (p-3). One 0.75rem inset, same as the list. */
   html:is([data-remembered-in], [data-guest-dash]):not([data-page-kind="home"], [data-page-kind="plain"]) [data-slot="docs-page"] [data-edge-sections] > [data-slot="card"] { padding: 0.75rem !important; gap: 0.5rem !important; }

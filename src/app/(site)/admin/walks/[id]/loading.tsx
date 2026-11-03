@@ -1,4 +1,4 @@
-import Link from "next/link";
+import { WalksBackLink } from "./walks-back-link";
 import { SkLine } from "@/components/list-skeletons";
 import { Skeleton } from "@/components/ui/skeleton";
 import { WalkPageColumns } from "@/components/walk-page-columns";
@@ -38,9 +38,7 @@ async function OrganiserWalkLoading() {
     );
   return (
     <div data-page-loading="" aria-busy="true" className="flex flex-col gap-6 px-4 py-6 md:px-6" data-edge-sections="">
-      <Link className="text-sm text-muted-foreground hover:text-foreground" href="/admin/walks">
-        &larr; All walks
-      </Link>
+      <WalksBackLink />
 
       {isWalkTabsVariant(choice.layout) ||
     isWalkIdeaLayout(choice.layout) ||

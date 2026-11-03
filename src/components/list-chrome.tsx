@@ -5,7 +5,8 @@ import { Button } from "@/components/ui/button";
 import { InputGroup, InputGroupAddon, InputGroupInput } from "@/components/ui/input-group";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { QueryTabs } from "@/components/query-tabs";
 import { SkLine, WalkRowsSkeleton } from "@/components/list-skeletons";
 import { Skeleton } from "@/components/ui/skeleton";
 import { RememberedRows } from "@/components/remembered-rows";
@@ -62,7 +63,7 @@ export function WalkListChrome({ lines }: { lines?: { title: string; detail: str
   // RememberedRows); with no rows last time the list hides itself, and the
   // search and filters with it, as on the real page.
   return (
-    <Tabs className="w-full" defaultValue="upcoming">
+    <QueryTabs className="w-full" defaultValue="upcoming">
       <div data-edge-bar="" data-edge-top="">
         <TabsList>
           <TabsTrigger value="upcoming">
@@ -109,7 +110,15 @@ export function WalkListChrome({ lines }: { lines?: { title: string; detail: str
           </div>
         </TabsContent>
       }
-    </Tabs>
+      <TabsContent className="mt-4" value="past">
+        <div className="hidden [html[data-design=shadcnio]_&]:contents">
+          <WalkTableCardSkeleton remember="admin-walks-past" />
+        </div>
+        <div className="flex flex-col gap-4 has-[>[data-reveal-list][hidden]]:hidden [html[data-design=shadcnio]_&]:hidden">
+          <WalkRowsSkeleton remember="admin-walks-past" />
+        </div>
+      </TabsContent>
+      </QueryTabs>
   );
 }
 
@@ -256,7 +265,7 @@ export function HistoryFilterChrome() {
 export function MemberWalksHold({ lines }: { lines?: { title: string; detail: string }[] } = {}) {
   return (
     <div className="contents" data-page-loading="">
-      <Tabs defaultValue="upcoming">
+      <QueryTabs defaultValue="upcoming">
         <div data-edge-bar="" data-edge-top="">
           <TabsList>
             <TabsTrigger value="upcoming">
@@ -301,8 +310,8 @@ export function MemberWalksHold({ lines }: { lines?: { title: string; detail: st
             {/* The same rows as the organisers' list, which members now use too. */}
             <WalkRowsSkeleton remember="member-walks-rows" />
           </div>
-        </TabsContent>
-      </Tabs>
+      </TabsContent>
+    </QueryTabs>
       {/* Your recent walks, as the page draws them (walks/page.tsx and recent-walks-carousel.tsx):
           the heading with its View all button, then the carousel's cards (two across from
           tablets), and its ‹ › buttons when there's more than one. Hidden with no recent walks. */}

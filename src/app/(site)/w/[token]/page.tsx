@@ -1,3 +1,5 @@
+import { WalkHeaderCrumb } from "@/components/shadcnio/walk-header-crumb";
+import { MEMBER_WALKS_ALL_HREF } from "@/lib/walk-header-trail";
 import { WalkLinkLoading } from "./loading";
 import { parseExtraFacts } from "@/lib/extra-facts";
 import { Fragment, Suspense, cache, cloneElement, isValidElement } from "react";
@@ -226,6 +228,16 @@ async function WalkForAddress({ params }: { params: Promise<{ token: string }> }
   const cancelledAtIso = walk.cancelledAt?.toISOString() ?? null;
   const endedAtIso = walk.endedAt?.toISOString() ?? null;
   const startsAtIso = walk.startsAt.toISOString();
+  const headerCrumb = (
+    <WalkHeaderCrumb
+      audience="member"
+      cancelledAt={cancelledAtIso}
+      durationMins={walk.durationMins}
+      endedAt={endedAtIso}
+      startsAt={startsAtIso}
+      title={walk.title}
+    />
+  );
 
   // One of the shared sections, chosen and ordered in Settings → Site
   // wording → Walk page cards (walk-page-sections.ts).
@@ -512,13 +524,16 @@ async function WalkForAddress({ params }: { params: Promise<{ token: string }> }
       : null;
     return (
       <div className="flex flex-col gap-6">
+        {headerCrumb}
         <div className="contents" data-member-home="">
           <WalkDesignRender
             audience="member"
             data={designs.member}
             parts={{
               ...ideaParts,
-              back: { href: "/walks", label: "Walks" },
+              back: cancelled
+                ? { href: MEMBER_WALKS_ALL_HREF, label: "All walks" }
+                : { href: "/walks", label: "Walks" },
               liveCompact,
               myClockIn,
               peopleStack,
@@ -553,6 +568,7 @@ async function WalkForAddress({ params }: { params: Promise<{ token: string }> }
     // walk page; members have no organiser buttons, so only their parts show.
     return (
       <div className="flex flex-col gap-6">
+        {headerCrumb}
         <span className="text-sm text-muted-foreground">
           <Link className="hover:text-foreground" data-member-home="" href="/walks">
             ← Walks
@@ -578,6 +594,7 @@ async function WalkForAddress({ params }: { params: Promise<{ token: string }> }
     // sit in Overview with the details.
     return (
       <div className="flex flex-col gap-6">
+        {headerCrumb}
         <span className="text-sm text-muted-foreground">
           <Link className="hover:text-foreground" data-member-home="" href="/walks">
             ← Walks
@@ -684,6 +701,7 @@ async function WalkForAddress({ params }: { params: Promise<{ token: string }> }
     }
     return (
       <div className="flex flex-col gap-6">
+        {headerCrumb}
         <span className="text-sm text-muted-foreground">
           {/* Members go back to Walks, everyone else Home: both are here, and
               the remembered sign-in shows the right one before anything is drawn. */}
@@ -711,6 +729,7 @@ async function WalkForAddress({ params }: { params: Promise<{ token: string }> }
 
   return (
     <div className="flex flex-col gap-6">
+      {headerCrumb}
       <div className="flex flex-wrap items-center justify-between gap-3">
         <span className="text-sm text-muted-foreground">
           {/* Members go back to Walks, everyone else Home: both are here, and

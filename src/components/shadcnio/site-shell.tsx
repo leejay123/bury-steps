@@ -1,13 +1,13 @@
 "use client";
 
-import { useEffect, useState, type ReactNode } from "react";
+import { Fragment, useEffect, useState, type ReactNode } from "react";
 import { PanelLeft } from "lucide-react";
 import { lockBackgroundScroll } from "@/components/overlay-scroll-lock";
 import { useClientPathname } from "@/components/client-pathname";
 import { IntentLink as Link } from "@/components/intent-link";
 import { Breadcrumb, BreadcrumbItem, BreadcrumbLink, BreadcrumbList, BreadcrumbPage, BreadcrumbSeparator } from "@/components/ui/breadcrumb";
 import { EfferdTopTools } from "./efferd-top-tools";
-import { SetPageCrumb } from "./page-crumb";
+import { SetPageCrumb, type PageCrumb } from "./page-crumb";
 import { Guides } from "./parts";
 import { SIDEBAR_KEY, SIDEBAR_TOGGLE_EVENT, syncGuestDash } from "./sidebar-state";
 import { settingsHeaderTrail } from "@/lib/settings-pages";
@@ -48,7 +48,7 @@ export function ShadcnSiteShell({
   const [drawerUsed, setDrawerUsed] = useState(false);
   if (drawer && !drawerUsed) setDrawerUsed(true);
   // The breadcrumb's last step, named by the page (page-crumb.tsx).
-  const [crumb, setCrumb] = useState<string | null>(null);
+  const [crumb, setCrumb] = useState<PageCrumb | null>(null);
   const parent = crumbParent(path);
   const settingsTrail = path ? settingsHeaderTrail(path) : null;
   const [drawerPath, setDrawerPath] = useState(path);
@@ -197,9 +197,9 @@ export function ShadcnSiteShell({
                 <PanelLeft aria-hidden />
               </button>
               <span aria-hidden="true" className="mr-2 h-4 w-px shrink-0 bg-border" />
-              {/* shadcn/ui's breadcrumb: the page's name, or on a page inside a list
+                  {/* shadcn/ui's breadcrumb: the page's name, or on a page inside a list
                   (one walk, one notice, one member, one settings page) the list as a
-                  link, then the page (Walks › Sunday stroll; Members › Jane Hall). */}
+                  link, then the page (Walks › Sunday stroll; Walks › History › Sunday stroll). */}
               <Breadcrumb className="min-w-0">
                 <BreadcrumbList className="flex-nowrap">
                   {settingsTrail ? (
@@ -220,6 +220,23 @@ export function ShadcnSiteShell({
                         </BreadcrumbPage>
                       </BreadcrumbItem>
                     </>
+                  ) : crumb?.trail?.length ? (
+                    <>
+                      {crumb.trail.map((step, i) => (
+                        <Fragment key={`${step.href}:${step.label}`}>
+                          {i > 0 ? <BreadcrumbSeparator className="shrink-0" /> : null}
+                          <BreadcrumbItem className="shrink-0">
+                            <BreadcrumbLink asChild>
+                              <Link href={step.href}>{step.label}</Link>
+                            </BreadcrumbLink>
+                          </BreadcrumbItem>
+                        </Fragment>
+                      ))}
+                      <BreadcrumbSeparator />
+                      <BreadcrumbItem className="min-w-0">
+                        <BreadcrumbPage className="truncate">{crumb.title}</BreadcrumbPage>
+                      </BreadcrumbItem>
+                    </>
                   ) : parent ? (
                     <>
                       <BreadcrumbItem className="shrink-0">
@@ -233,7 +250,7 @@ export function ShadcnSiteShell({
                         <>
                           <BreadcrumbSeparator />
                           <BreadcrumbItem className="min-w-0">
-                            <BreadcrumbPage className="truncate">{crumb}</BreadcrumbPage>
+                            <BreadcrumbPage className="truncate">{crumb.title}</BreadcrumbPage>
                           </BreadcrumbItem>
                         </>
                       ) : null}
@@ -358,6 +375,7 @@ function pageTitle(path: string | null) {
 /** On a page inside a list (one walk, one notice, one member), the list it belongs to: the breadcrumb's first step. */
 function crumbParent(path: string | null) {
   if (path && /^\/admin\/walks\/[^/]+$/.test(path)) return { href: "/admin/walks", label: "Walks" };
+  if (path && /^\/w\/[^/]+$/.test(path)) return { href: "/walks", label: "Walks" };
   if (path && /^\/admin\/members\/[^/]+$/.test(path)) return { href: "/admin/members", label: "Members" };
   if (path && /^\/notices\/[^/]+$/.test(path)) return { href: "/notices", label: "Notices" };
   return null;

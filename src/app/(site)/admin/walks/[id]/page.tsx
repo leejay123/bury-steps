@@ -8,7 +8,6 @@ import { WalkDesignButton, WalkDesignProvider } from "@/components/walk-designer
 import { WalkDesignRender } from "@/components/walk-designer/render";
 import { PlaceholderPreview } from "@/components/placeholder-preview";
 import WalkDetailLoading from "./loading";
-import Link from "next/link";
 import { redirect } from "next/navigation";
 import { ClipboardList } from "lucide-react";
 import { prisma } from "@/lib/db";
@@ -50,7 +49,9 @@ import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import type { WalkAttendanceRow } from "./walk-attendance";
 import { AvatarStack } from "@/components/avatar-stack";
-import { HeaderCrumb } from "@/components/shadcnio/page-crumb";
+import { WalkHeaderCrumb } from "@/components/shadcnio/walk-header-crumb";
+import { ADMIN_WALKS_HISTORY_HREF } from "@/lib/walk-header-trail";
+import { WalksBackLink } from "./walks-back-link";
 
 
 
@@ -158,6 +159,13 @@ async function WalkDetailPageContent({ id }: { id: string }) {
 
   const viewerIsOwner = admin.isOwner;
   const creatorIsOwner = walk.createdBy.isOwner;
+  const status = walkStatus(walk);
+  const cancelledAtIso = walk.cancelledAt?.toISOString() ?? null;
+  const endedAtIso = walk.endedAt?.toISOString() ?? null;
+  const startsAtIso = walk.startsAt.toISOString();
+  const inHistory = status === "completed" || status === "cancelled";
+  const walksBackHref = inHistory ? ADMIN_WALKS_HISTORY_HREF : "/admin/walks";
+  const walksBackLabel = inHistory ? "History" : "All walks";
 
   // A cancelled walk's full admin view stays owner/View-permission
   // territory even for someone here via Members access — but this isn't a
@@ -165,12 +173,19 @@ async function WalkDetailPageContent({ id }: { id: string }) {
   // a member's own walk history — see the greyed-out row in
   // src/app/admin/members/[id]/page.tsx), so it's honest about what
   // happened rather than a bare 404.
+
   if (walk.cancelledAt && !admin.permWalksView && !viewerIsOwner) {
     return (
       <div className="flex flex-col gap-6 px-4 py-6 md:px-6">
-        <Link href="/admin/walks" className="text-sm text-muted-foreground hover:text-foreground">
-          &larr; All walks
-        </Link>
+        <WalkHeaderCrumb
+          audience="organiser"
+          cancelledAt={cancelledAtIso}
+          durationMins={walk.durationMins}
+          endedAt={endedAtIso}
+          startsAt={startsAtIso}
+          title={walk.title}
+        />
+        <WalksBackLink href={ADMIN_WALKS_HISTORY_HREF} label="History" />
         <Alert variant="destructive">
           <AlertTitle>{theme.walkWording.cancelledTitle}</AlertTitle>
           <AlertDescription>
@@ -212,7 +227,6 @@ async function WalkDetailPageContent({ id }: { id: string }) {
   const viewerAttended = attendances.some((a) => a.userId === admin.id);
   const mine = attendances.find((a) => a.userId === admin.id);
   const canSeeAttendance = admin.permWalksAttendance || viewerAttended;
-  const status = walkStatus(walk);
   const journeyDefaultAt = utcToLondonWallClock(
     status === "in-progress" ? new Date() : walk.startsAt,
   );
@@ -624,7 +638,7 @@ async function WalkDetailPageContent({ id }: { id: string }) {
     timing,
     tips: theme.beforeYouSetOffTips,
     tools,
-    back: { href: "/admin/walks", label: "All walks" },
+    back: { href: walksBackHref, label: walksBackLabel },
     backInHeader: true,
     // For the walk page designer's signed-out visitor preview (hidden from
     // anyone signed in, as on the members' walk page).
@@ -653,8 +667,16 @@ async function WalkDetailPageContent({ id }: { id: string }) {
   const page = (content: ReactNode, { sections = true }: { sections?: boolean } = {}) => {
     const body = (
       <div className="flex flex-col gap-6 px-4 py-6 md:px-6" data-edge-sections={sections ? "" : undefined}>
-        {/* The way back to the walks list: the top bar's breadcrumb (Walks › this walk). */}
-        <HeaderCrumb title={walk.title} />
+        {/* The way back: Walks › this walk, or Walks › History › this walk. */}
+        <WalkHeaderCrumb
+          audience="organiser"
+          cancelledAt={cancelledAtIso}
+          durationMins={walk.durationMins}
+          endedAt={endedAtIso}
+          startsAt={startsAtIso}
+          title={walk.title}
+        />
+        <WalksBackLink href={walksBackHref} label={walksBackLabel} />
         {content}
       </div>
     );
