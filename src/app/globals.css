@@ -549,7 +549,8 @@ html[data-overlay-open] header {
   [data-slot="toaster"],
   [data-slot="cookie-consent"],
   .cl-userButton-root,
-  .cl-userButtonTrigger {
+  .cl-userButtonTrigger,
+  [data-account-button] {
     display: none !important;
   }
 
