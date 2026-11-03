@@ -9,6 +9,7 @@ import { SiteNavBell } from "@/components/site-nav";
 import { getOptionalUser } from "@/lib/auth";
 import { getProgressEnabled } from "@/lib/progress-settings";
 import { staticSidebarGroups } from "./dash-sidebar";
+import { FoldedTip } from "./folded-tip";
 import type { SidebarGroup } from "./sidebar-nav";
 import type { SidebarMe as SidebarMeData } from "./sidebar-state";
 import { EfferdNav } from "./efferd-nav";
@@ -94,15 +95,17 @@ export function EfferdSidebarBody({
         ) : null}
         <ul className="flex flex-col gap-1 border-t p-2">
           <li>
-            <Link
-              className="flex h-7 w-full items-center gap-2 overflow-hidden rounded-md p-2 text-muted-foreground text-xs hover:bg-muted hover:text-foreground [&>svg]:size-4 [&>svg]:shrink-0"
-              data-efferd-button=""
-              href="/contact"
-              title="Contact us"
-            >
-              <Mail aria-hidden />
-              <span className="truncate">Contact us</span>
-            </Link>
+            <FoldedTip label="Contact us">
+              <Link
+                aria-label="Contact us"
+                className="flex h-7 w-full items-center gap-2 overflow-hidden rounded-md p-2 text-muted-foreground text-xs hover:bg-muted hover:text-foreground [&>svg]:size-4 [&>svg]:shrink-0"
+                data-efferd-button=""
+                href="/contact"
+              >
+                <Mail aria-hidden />
+                <span className="truncate">Contact us</span>
+              </Link>
+            </FoldedTip>
           </li>
         </ul>
         {/* The person, as in Efferd's shell: their photo, name and email (from this browser's
@@ -110,15 +113,17 @@ export function EfferdSidebarBody({
             covers it). */}
         {/* A visitor: Sign in where a member's own row goes. */}
         <div className="border-t p-2" data-sb-for="guest">
-          <a
-            className="flex h-12 w-full items-center gap-2 overflow-hidden rounded-md p-2 text-sm font-medium hover:bg-muted [&>svg]:size-4 [&>svg]:shrink-0"
-            data-efferd-button=""
-            href={signInHref}
-            title="Sign in"
-          >
-            <LogIn aria-hidden />
-            <span className="truncate">Sign in</span>
-          </a>
+          <FoldedTip label="Sign in">
+            <a
+              aria-label="Sign in"
+              className="flex h-12 w-full items-center gap-2 overflow-hidden rounded-md p-2 text-sm font-medium hover:bg-muted [&>svg]:size-4 [&>svg]:shrink-0"
+              data-efferd-button=""
+              href={signInHref}
+            >
+              <LogIn aria-hidden />
+              <span className="truncate">Sign in</span>
+            </a>
+          </FoldedTip>
         </div>
         <div className="border-t p-2" data-sb-for="member">
           <div

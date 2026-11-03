@@ -4,6 +4,7 @@ import { Suspense, useState } from "react";
 import { IntentLink as Link } from "@/components/intent-link";
 import { usePathname, useRouter } from "next/navigation";
 import { ChevronRight } from "lucide-react";
+import { FoldedTip } from "./folded-tip";
 import { SIDEBAR_ICONS, type SidebarGroup } from "./sidebar-nav";
 
 /*
@@ -58,17 +59,19 @@ function NavList({ groups, onNavigate, path }: NavProps & { path: string }) {
                 return <SubMenu current={current} key={`${link.href}-sub`} link={link} onNavigate={onNavigate} path={path} />;
               return (
                 <li className="relative" data-sb-only={link.only} key={`${link.href}-${link.only ?? ""}`}>
-                  <Link
-                    aria-current={current ? "page" : undefined}
-                    className={`${BUTTON} ${current ? "bg-muted font-medium text-foreground" : "text-foreground/75"}`}
-                    data-efferd-button=""
-                    href={link.href}
-                    onClick={onNavigate}
-                    title={link.label}
-                  >
-                    <Icon aria-hidden />
-                    <span>{link.label}</span>
-                  </Link>
+                  <FoldedTip label={link.label}>
+                    <Link
+                      aria-current={current ? "page" : undefined}
+                      aria-label={link.label}
+                      className={`${BUTTON} ${current ? "bg-muted font-medium text-foreground" : "text-foreground/75"}`}
+                      data-efferd-button=""
+                      href={link.href}
+                      onClick={onNavigate}
+                    >
+                      <Icon aria-hidden />
+                      <span>{link.label}</span>
+                    </Link>
+                  </FoldedTip>
                 </li>
               );
             })}
@@ -112,18 +115,20 @@ function SubMenu({
   };
   return (
     <li className="relative" data-sb-only={link.only}>
-      <button
-        aria-expanded={open}
-        className={`${BUTTON} ${current ? "font-medium text-foreground" : "text-foreground/75"}`}
-        data-efferd-button=""
-        onClick={toggle}
-        title={link.label}
-        type="button"
-      >
-        <Icon aria-hidden />
-        <span>{link.label}</span>
-        <ChevronRight aria-hidden className={`ml-auto transition-transform duration-200 ${open ? "rotate-90" : ""}`} />
-      </button>
+      <FoldedTip label={link.label}>
+        <button
+          aria-expanded={open}
+          aria-label={link.label}
+          className={`${BUTTON} ${current ? "font-medium text-foreground" : "text-foreground/75"}`}
+          data-efferd-button=""
+          onClick={toggle}
+          type="button"
+        >
+          <Icon aria-hidden />
+          <span>{link.label}</span>
+          <ChevronRight aria-hidden className={`ml-auto transition-transform duration-200 ${open ? "rotate-90" : ""}`} />
+        </button>
+      </FoldedTip>
       {open ? (
         <ul className="mx-3.5 flex min-w-0 translate-x-px flex-col gap-1 border-l px-2.5 py-0.5" data-efferd-sub="">
           {link.children!.map((child) => {
