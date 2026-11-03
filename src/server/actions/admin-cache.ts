@@ -196,7 +196,6 @@ async function resetSiteToDefaultWork(
           sliderHeroWords: "site",
           pageTransition: "fade",
           mobileNav: "bottom",
-          titleRevealEnabled: true,
           announcementEnabled: true,
           announcementText: "",
           announcementLink: "",

@@ -35,6 +35,7 @@ export async function loadMembersPage({
   role = "all",
   sort = "oldest",
   needsAttention = false,
+  refreshPhotos = true,
 }: {
   page?: number;
   query?: string;
@@ -42,6 +43,9 @@ export async function loadMembersPage({
   sort?: MemberSort;
   /** Only members needing a look — see MemberRow.needsAttention. */
   needsAttention?: boolean;
+  /** Re-check stale photos with Clerk (off inside a server-saved copy, which can't
+   * reach Clerk: the saved photos are used as they are). */
+  refreshPhotos?: boolean;
 }): Promise<{ rows: MemberRow[]; total: number; groupTotals: MemberGroupTotals }> {
   const needle = query.trim();
   let searchWhere: Prisma.UserWhereInput | undefined;
@@ -129,7 +133,9 @@ export async function loadMembersPage({
     getOwnerIds(),
   ]);
   const ownerIdSet = new Set(ownerIds);
-  const photos = await withMemberPhotos(members);
+  const photos = refreshPhotos
+    ? await withMemberPhotos(members)
+    : new Map(members.map((member) => [member.id, member.imageUrl]));
 
   const nowMs = now.getTime();
   return {

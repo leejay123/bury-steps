@@ -107,7 +107,6 @@ export {
   updateFooterWordmarkEnabled,
   updateFooterWordmarkMobile,
   updateAnnouncementBanner,
-  updateTitleRevealEnabled,
   updateHomeFramed,
   updateSliderHeroWords,
   updateMobileNav,

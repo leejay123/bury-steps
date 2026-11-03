@@ -7,7 +7,6 @@ import { SettingsPage, SettingsSection, SettingsSectionGroup } from "../settings
 import { SettingsMask } from "../settings-mask";
 import { PlaceholderPreview } from "@/components/placeholder-preview";
 import { CarouselToggle } from "./carousel-toggle";
-import { TitleRevealToggle } from "./title-reveal-toggle";
 import { MemberNoticesToggle } from "./member-notices-toggle";
 import { SectionBgPatternSelect } from "./section-bg-pattern-select";
 
@@ -49,7 +48,6 @@ function SettingsView({ theme }: { theme: SiteTheme }) {
     <>
       <SettingsSectionGroup title="Show or hide">
         <CarouselToggle enabled={theme.carouselEnabled} />
-        <TitleRevealToggle enabled={theme.titleRevealEnabled} />
         <MemberNoticesToggle enabled={theme.memberNoticesEnabled} />
       </SettingsSectionGroup>
       <SettingsSection

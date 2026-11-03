@@ -17,7 +17,6 @@ import { getOptionalUser } from "@/lib/auth";
 import { getProgressEnabled } from "@/lib/progress-settings";
 import { Suspense } from "react";
 import { PageKindMark } from "./page-kind";
-import { TitleRevealProvider } from "@/components/section-title";
 
 /**
  * The whole homepage in the shadcn.io site design — join bar, header, page,
@@ -44,7 +43,6 @@ export async function ShadcnHomePage({ theme }: { theme: SiteTheme }) {
     ...faqData.faqs.map((faq) => ({ href: "/#faq", label: faq.question, caption: faq.categoryLabel, scope: "questions" as const })),
   ];
   return (
-    <TitleRevealProvider enabled={theme.titleRevealEnabled}>
     <div className="style-nova theme-neutral radius-default flex min-h-dvh flex-col" data-shadcnio-home="">
       <PageKindMark kind="home" />
       {theme.announcementEnabled ? (
@@ -111,7 +109,6 @@ export async function ShadcnHomePage({ theme }: { theme: SiteTheme }) {
       </div>
       <PromoBar next={data.next} />
     </div>
-    </TitleRevealProvider>
   );
 }
 

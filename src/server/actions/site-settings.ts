@@ -655,30 +655,6 @@ async function updateSliderHeroWordsWork(
   };
 }
 
-async function updateTitleRevealEnabledWork(
-  _prev: ActionResult | null,
-  formData: FormData,
-): Promise<ActionResult> {
-  const admin = await requireAdmin();
-  if (!admin.permDisplay) return permissionDenied("permDisplay");
-  const enabled = String(formData.get("titleRevealEnabled") ?? "") === "on";
-
-  try {
-    await prisma.siteSetting.upsert({
-      where: { id: SITE_SETTING_ID },
-      create: { id: SITE_SETTING_ID, primaryColor: DEFAULT_PRIMARY_COLOR, carouselEnabled: true, titleRevealEnabled: enabled },
-      update: { titleRevealEnabled: enabled },
-    });
-  } catch (err) {
-    return logActionError("updateTitleRevealEnabled", err, "Could not save that setting. Try again.");
-  }
-
-  revalidateTag(HOMEPAGE_CACHE_TAG, { expire: 0 });
-  revalidatePath("/", "layout");
-  revalidatePath("/admin/settings/homepage-layout");
-  return { ok: true, message: enabled ? "Section titles now animate in." : "Section titles are plain again." };
-}
-
 /** Settings → Homepage layout → Framed sections (shadcn.io style). */
 async function updateHomeFramedWork(
   _prev: ActionResult | null,
@@ -1997,7 +1973,6 @@ export const updateScrollToTopEnabled = guardForm("organiser", pass, readPass, u
 export const updateAnnouncementBanner = guardForm("organiser", pass, readPass, updateAnnouncementBannerWork);
 export const updateMobileNav = guardForm("organiser", pass, readPass, updateMobileNavWork);
 export const updateSliderHeroWords = guardForm("organiser", pass, readPass, updateSliderHeroWordsWork);
-export const updateTitleRevealEnabled = guardForm("organiser", pass, readPass, updateTitleRevealEnabledWork);
 export const updateHomeFramed = guardForm("organiser", pass, readPass, updateHomeFramedWork);
 export const updateFooterWordmarkMobile = guardForm("organiser", pass, readPass, updateFooterWordmarkMobileWork);
 export const updateFooterWordmarkEnabled = guardForm("organiser", pass, readPass, updateFooterWordmarkEnabledWork);

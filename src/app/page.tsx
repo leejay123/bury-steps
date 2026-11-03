@@ -154,7 +154,6 @@ async function HomeSections({
       photos={slides}
       // The Photo slider hero already shows these photos — don't repeat them below.
       photosEnabled={theme.carouselEnabled && theme.heroStyle !== "slider"}
-      titleRevealEnabled={theme.titleRevealEnabled}
       progressEnabled={progressEnabled}
       sectionBgPatterns={{
         howThisStarted: theme.howThisStartedBgPattern,

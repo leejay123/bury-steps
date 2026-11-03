@@ -89,7 +89,9 @@ export type MembersPageGroup = { owner: boolean; invites: boolean[] };
 async function cachedMembersFirstPageGroups(): Promise<MembersPageGroup[]> {
   "use cache: remote";
   cacheLife({ revalidate: 60 * 60 });
-  const { rows } = await loadMembersPage({});
+  // No photo re-check: Clerk can't be reached from a server-saved copy, and
+  // the placeholder draws no photos anyway.
+  const { rows } = await loadMembersPage({ refreshPhotos: false });
   const pick = (owner: boolean, keep: (row: (typeof rows)[number]) => boolean): MembersPageGroup => ({
     owner,
     invites: rows.filter(keep).map((row) => Boolean(row.pendingInvite)),

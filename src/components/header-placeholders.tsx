@@ -34,8 +34,22 @@ export function BellPlaceholder() {
 /** The member's photo from last visit (same address Clerk's button uses, so it's already cached), else their initial. */
 export function AvatarPlaceholder({ image, initial }: { image?: string | null; initial?: string | null }) {
   if (image) {
-    // eslint-disable-next-line @next/next/no-img-element
-    return <img alt="" aria-hidden className="size-7 shrink-0 rounded-full object-cover" src={image} />;
+    // Asked for exactly as Clerk's button asks for it (the same sized copies, the same
+    // crossorigin), so when the button takes over its photo is already downloaded and
+    // nothing flashes. A plain imageUrl is a different address to the browser.
+    // https://clerk.com/docs/guides/development/image-optimization
+    const sized = /^https:\/\/img\.clerk\.com\//.test(image) && !image.includes("?");
+    return (
+      // eslint-disable-next-line @next/next/no-img-element
+      <img
+        alt=""
+        aria-hidden
+        className="size-7 shrink-0 rounded-full object-cover"
+        crossOrigin="anonymous"
+        src={sized ? `${image}?width=160` : image}
+        srcSet={sized ? `${image}?width=80 1x,${image}?width=160 2x` : undefined}
+      />
+    );
   }
   return (
     <span
