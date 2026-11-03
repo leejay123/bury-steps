@@ -58,7 +58,7 @@ export function Guides({ at = "top" }: { at?: "top" | "bottom" }) {
       aria-hidden="true"
       className={cn(
         "absolute size-3.5 text-muted-foreground",
-        at === "top" ? "top-0 -translate-y-[calc(50%+0.5px)]" : "bottom-0 translate-y-[calc(50%+0.5px)]",
+        at === "top" ? "top-0 -translate-y-[calc(50%-0.5px)]" : "bottom-0 translate-y-[calc(50%+0.5px)]",
         side === "start"
           ? "start-0 -translate-x-[calc(50%+0.5px)] rtl:translate-x-[calc(50%+0.5px)]"
           : "end-0 translate-x-[calc(50%+0.5px)] rtl:-translate-x-[calc(50%+0.5px)]",
@@ -78,13 +78,15 @@ export function Guides({ at = "top" }: { at?: "top" | "bottom" }) {
       className={cn(
         // Above the section before it: Safari on iPhones drew the hero's moving letters (a
         // canvas) over the line, which sits on the hero's bottom edge, leaving only the + marks.
+        // The top line sits inside this box (the box starts 1px higher): Safari on Macs left
+        // out a line drawn above its box when the hero's letters were on the page.
         "pointer-events-none absolute inset-0 z-[1] border-0 [--guides-inset:1rem] sm:[--guides-inset:2rem]",
-        at === "top" && "only:hidden",
+        at === "top" && "-top-px only:hidden",
       )}
       data-slot="guides"
     >
       <div
-        className={cn("absolute h-px border-t -inset-x-[100vw]", at === "top" ? "-top-px" : "-bottom-px")}
+        className={cn("absolute h-px border-t -inset-x-[100vw]", at === "top" ? "top-0" : "-bottom-px")}
         data-slot="guides-line"
       />
       {mark("start")}
