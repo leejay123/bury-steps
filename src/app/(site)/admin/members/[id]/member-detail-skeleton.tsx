@@ -23,8 +23,8 @@ function StatCardSkeleton({ label }: { label: string }) {
 }
 
 /**
- * A member's page (page.tsx) while it loads, part for part: the name card
- * (photo, name, role, email, joined date, buttons), the emergency contact
+ * A member's page (page.tsx) while it loads, part for part: the page top (name,
+ * email, joined date), the card (photo, role, buttons), the emergency contact
  * card, the stat cards, then their walk history. Fixed wording is real;
  * their own details and buttons are grey — no gaps. The way back lives in
  * the top bar in the shadcn.io design.
@@ -33,29 +33,26 @@ export function MemberDetailSkeleton() {
   return (
     <div data-page-loading="" aria-busy="true" className="flex flex-col gap-6 px-4 py-6 md:px-6" data-edge-sections="">
       <MembersBackLink />
-      {/* The same animated page top: the role, name and email still loading. */}
+      {/* The same animated page top: the name, email and joined date still loading. */}
       <PageTop
         className="flex flex-col gap-3"
         eyebrow="Member"
-        intro={<Line className="h-5 w-56 max-w-full" />}
+        intro={
+          <>
+            <Line className="h-5 w-56 max-w-full" />
+            <br />
+            <Line className="h-5 w-72 max-w-full" />
+          </>
+        }
         title={<Line className="h-10 w-64 max-w-full" />}
       />
 
       <Card>
         <CardHeader className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-          <div className="flex min-w-0 gap-3">
+          <div className="flex min-w-0 items-center gap-3">
             <Skeleton className="size-12 shrink-0 rounded-full" />
-            <div className="flex min-w-0 flex-col gap-1.5">
-              <div className="flex flex-wrap items-center gap-2">
-                {/* Name (text-2xl, leading-none) and the role badge. */}
-                <Skeleton className="h-6 w-40 rounded-lg" />
-                <Skeleton className="h-7 w-20 rounded-md" />
-              </div>
-              <div className="flex flex-col gap-1">
-                <SkLine className="w-48" size="sm" />
-                <SkLine className="w-64 max-w-full" size="sm" />
-              </div>
-            </div>
+            {/* The role badge (name, email and joined date are in the page top). */}
+            <Skeleton className="h-7 w-20 rounded-md" />
           </div>
           {/* "Log in as" and the ⋯ menu. */}
           <div className="flex flex-wrap gap-2 sm:shrink-0 sm:justify-end">

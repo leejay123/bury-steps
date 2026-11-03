@@ -67,23 +67,25 @@ async function MemberDetailPageContent({ id }: { id: string }) {
       <PageTop
         className="flex flex-col gap-3"
         eyebrow={member.isOwner ? "Owner" : member.role === "ADMIN" ? "Organiser" : "Member"}
-        intro={member.email || undefined}
+        intro={
+          // Their email and when they joined sit under the name here, not again in the card.
+          <>
+            <span className="wrap-break-word">{member.email || "No email"}</span>
+            <br />
+            Joined {formatDate(joinedAt)} · member for {formatMembershipAge(joinedAt)}
+          </>
+        }
         title={member.name}
       />
 
       <Card>
         <CardHeader className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-          <div className="flex min-w-0 gap-3">
+          <div className="flex min-w-0 items-center gap-3">
             <Avatar className="size-12 shrink-0">
               {member.imageUrl ? <AvatarImage alt="" src={member.imageUrl} /> : null}
               <AvatarFallback>{initials(member.name)}</AvatarFallback>
             </Avatar>
-            <div className="flex min-w-0 flex-col gap-1.5">
-              <div className="flex flex-wrap items-center gap-2">
-                {/* The page top above holds the page's one <h1>. */}
-                <div className="text-2xl leading-none font-semibold" data-slot="card-title">
-                  {member.name}
-                </div>
+            <div className="flex min-w-0 flex-wrap items-center gap-2">
                 {member.pendingInvite ? (
                   // Plain text, not a Badge — an outline badge next to the
                   // outline Resend/Cancel buttons below read as a third
@@ -99,13 +101,6 @@ async function MemberDetailPageContent({ id }: { id: string }) {
                     {member.isOwner ? "Owner" : member.role === "ADMIN" ? "Organiser" : "Member"}
                   </Badge>
                 )}
-              </div>
-              <CardDescription className="flex flex-col gap-1">
-                <span className="wrap-break-word">{member.email || "No email"}</span>
-                <span>
-                  Joined {formatDate(joinedAt)} · member for {formatMembershipAge(joinedAt)}
-                </span>
-              </CardDescription>
             </div>
           </div>
           <MemberDetailActions
