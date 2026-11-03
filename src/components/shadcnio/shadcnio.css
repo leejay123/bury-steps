@@ -778,6 +778,15 @@ html:is([data-remembered-in], [data-guest-dash]):not([data-page-kind="home"], [d
    empty gutters once the sidebar folded away). */
 html:is([data-remembered-in], [data-guest-dash]):not([data-page-kind="home"], [data-page-kind="plain"]) [data-slot="docs-container"] { max-width: none; padding: 1rem; min-height: 0; }
 @media (min-width: 48rem) { html:is([data-remembered-in], [data-guest-dash]):not([data-page-kind="home"], [data-page-kind="plain"]) [data-slot="docs-container"] { padding: 1.5rem; } }
+/* iPhones held sideways: the page, the top bar and the slide-out menu keep clear of the
+   camera cut-out and the rounded corners (0 everywhere else, so nothing moves there). */
+html:is([data-remembered-in], [data-guest-dash]):not([data-page-kind="home"], [data-page-kind="plain"]) [data-slot="docs-container"] { padding-inline: max(1rem, env(safe-area-inset-left)) max(1rem, env(safe-area-inset-right)); }
+html:is([data-remembered-in], [data-guest-dash]):not([data-page-kind="home"], [data-page-kind="plain"]) [data-slot="efferd-header"] { padding-inline: max(1rem, env(safe-area-inset-left)) max(1rem, env(safe-area-inset-right)); }
+@media (min-width: 48rem) {
+  html:is([data-remembered-in], [data-guest-dash]):not([data-page-kind="home"], [data-page-kind="plain"]) [data-slot="docs-container"] { padding-inline: max(1.5rem, env(safe-area-inset-left)) max(1.5rem, env(safe-area-inset-right)); }
+  html:is([data-remembered-in], [data-guest-dash]):not([data-page-kind="home"], [data-page-kind="plain"]) [data-slot="efferd-header"] { padding-inline: max(1.5rem, env(safe-area-inset-left)) max(1.5rem, env(safe-area-inset-right)); }
+}
+[data-slot="docs-sidebar-drawer"] aside { width: calc(min(18rem, 85vw) + env(safe-area-inset-left, 0px)); padding-inline-start: env(safe-area-inset-left, 0px); padding-bottom: env(safe-area-inset-bottom, 0px); }
 html:is([data-remembered-in], [data-guest-dash]):not([data-page-kind="home"], [data-page-kind="plain"]) [data-slot="docs-column"] { border-inline: 0 !important; }
 html:is([data-remembered-in], [data-guest-dash]):not([data-page-kind="home"], [data-page-kind="plain"]) [data-slot="docs-page"] { padding: 0 !important; }
 @media (min-width: 64rem) {
