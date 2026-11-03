@@ -92,7 +92,6 @@ export function isTokenPublicPath(pathname: string): boolean {
  */
 export const APP_TOP_LEVEL_SEGMENTS = [
   "admin",
-  "account",
   "api",
   "apple-icon.png",
   "about",

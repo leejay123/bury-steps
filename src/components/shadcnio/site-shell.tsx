@@ -332,7 +332,6 @@ const PAGE_TITLES: [string, string][] = [
   ["/progress", "Progress"],
   ["/history", "History"],
   ["/email-preferences", "Email preferences"],
-  ["/account", "Account"],
   ["/contact", "Contact"],
   ["/apps", "Walking apps"],
 ];
