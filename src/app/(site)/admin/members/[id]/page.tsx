@@ -5,6 +5,7 @@ import { PlaceholderPreview } from "@/components/placeholder-preview";
 import { MemberDetailSkeleton } from "./member-detail-skeleton";
 import { Crown } from "lucide-react";
 import { HeaderCrumb } from "@/components/shadcnio/page-crumb";
+import { PageTop } from "@/components/page-top";
 import { MembersBackLink } from "./members-back-link";
 import { notFound } from "next/navigation";
 import { requirePermission } from "@/lib/auth";
@@ -62,6 +63,13 @@ async function MemberDetailPageContent({ id }: { id: string }) {
       <RememberListCount count={Math.min(member.items.length, LIST_PAGE_SIZE)} id="member-detail" />
       <HeaderCrumb title={member.name} />
       <MembersBackLink />
+      {/* The animated page top the other pages open with, spelling the member's name. */}
+      <PageTop
+        className="flex flex-col gap-3"
+        eyebrow={member.isOwner ? "Owner" : member.role === "ADMIN" ? "Organiser" : "Member"}
+        intro={member.email || undefined}
+        title={member.name}
+      />
 
       <Card>
         <CardHeader className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
@@ -72,10 +80,10 @@ async function MemberDetailPageContent({ id }: { id: string }) {
             </Avatar>
             <div className="flex min-w-0 flex-col gap-1.5">
               <div className="flex flex-wrap items-center gap-2">
-                {/* The page's one <h1> (CardTitle is a div). */}
-                <h1 className="text-2xl leading-none font-semibold" data-slot="card-title">
+                {/* The page top above holds the page's one <h1>. */}
+                <div className="text-2xl leading-none font-semibold" data-slot="card-title">
                   {member.name}
-                </h1>
+                </div>
                 {member.pendingInvite ? (
                   // Plain text, not a Badge — an outline badge next to the
                   // outline Resend/Cancel buttons below read as a third

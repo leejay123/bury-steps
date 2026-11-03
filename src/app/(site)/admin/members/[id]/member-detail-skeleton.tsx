@@ -1,8 +1,14 @@
 import { HistoryFilterChrome } from "@/components/list-chrome";
 import { MembersBackLink } from "./members-back-link";
+import { PageTop } from "@/components/page-top";
 import { HistoryRowsSkeleton, SkButtonSpace, SkLine } from "@/components/list-skeletons";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
+
+/** Grey shapes where the page top's words go (spans: they sit inside its heading and line). */
+function Line({ className }: { className: string }) {
+  return <span className={`inline-block animate-pulse rounded-md bg-accent align-middle ${className}`} />;
+}
 
 /** Same card as the loaded stat: only the number is still loading. */
 function StatCardSkeleton({ label }: { label: string }) {
@@ -27,6 +33,13 @@ export function MemberDetailSkeleton() {
   return (
     <div data-page-loading="" aria-busy="true" className="flex flex-col gap-6 px-4 py-6 md:px-6" data-edge-sections="">
       <MembersBackLink />
+      {/* The same animated page top: the role, name and email still loading. */}
+      <PageTop
+        className="flex flex-col gap-3"
+        eyebrow="Member"
+        intro={<Line className="h-5 w-56 max-w-full" />}
+        title={<Line className="h-10 w-64 max-w-full" />}
+      />
 
       <Card>
         <CardHeader className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
