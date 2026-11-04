@@ -10,8 +10,6 @@ import { getOptionalAdmin } from "@/lib/auth";
 import { CreateWalkDrawer } from "../create-walk-drawer";
 import { AdminPageIntro } from "../admin-page-intro";
 import { AdminWalkTable } from "../admin-walk-table";
-import { TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { QueryTabs } from "@/components/query-tabs";
 import { upcomingListLookbackFrom, walkStatus } from "@/lib/walk-window";
 import { StoriesSlot } from "@/components/stories/stories-slot";
 import { getUpcomingWalkLines } from "@/lib/upcoming-walk-lines";
@@ -158,47 +156,32 @@ async function loadAdminWalks(userId: string) {
   return { upcoming, past };
 }
 
-/** The Upcoming / History tabs — the part of the page that waits for data. */
+/**
+ * Every walk in one table, no Upcoming / History tabs: coming up first (soonest first), then
+ * completed and cancelled (latest first); Filter narrows it by status or changes the order.
+ * The part of the page that waits for data.
+ */
 async function AdminWalksTabs() {
   const view = await getAdminWalksView();
   if (!view?.canView) return null;
   const { upcoming, past } = view;
+  const walks = [...upcoming, ...past];
   return (
     <>
-    <RememberListCount count={Math.min(upcoming.length, LIST_PAGE_SIZE)} id="admin-walks" />
-    <RememberListCount count={upcoming.length} id="admin-walks-upcoming" max={10000} />
-    <RememberListCount count={past.length} id="admin-walks-past" max={10000} />
-    <QueryTabs className="w-full" defaultValue="upcoming">
-      <div data-edge-bar="" data-edge-flush="" data-edge-top="">
-        <TabsList>
-          <TabsTrigger value="upcoming">Upcoming ({upcoming.length})</TabsTrigger>
-          <TabsTrigger value="past">History ({past.length})</TabsTrigger>
-        </TabsList>
-      </div>
-      <TabsContent className="mt-4 data-[state=inactive]:hidden" forceMount value="upcoming">
-        <AdminWalkTable
-          attendanceLabel="On the walk"
-          emptyDescription="Create one and it will show here."
-          emptyTitle="No walks scheduled"
-          scope="upcoming"
-          walks={upcoming}
-        />
-      </TabsContent>
-      <TabsContent className="mt-4" value="past">
-        <AdminWalkTable
-          emptyDescription="Finished walks will show here."
-          emptyTitle="No past walks yet"
-          scope="past"
-          walks={past}
-        />
-      </TabsContent>
-    </QueryTabs>
+      <RememberListCount count={Math.min(walks.length, LIST_PAGE_SIZE)} id="admin-walks" />
+      <AdminWalkTable
+        attendanceLabel="Walkers"
+        emptyDescription="Create one and it will show here."
+        emptyTitle="No walks yet"
+        scope="all"
+        walks={walks}
+      />
     </>
   );
 }
 
-/** Tabs, search and filters stay as the real controls. Only the walk rows
- * are placeholders — as many as the list last showed, from the first paint. */
+/** Search and filters stay as the real controls. Only the walk rows are placeholders — as
+ * many as the list last showed, from the first paint. */
 function AdminWalksSkeleton() {
   // Drawn at once with plain grey lines; its rows take the next walks' names as soon as
   // that saved copy is read (normally at once), so each row is the real row's height.

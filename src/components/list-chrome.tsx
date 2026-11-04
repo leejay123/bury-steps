@@ -59,68 +59,43 @@ function FilterSelect({
   );
 }
 
-/** Upcoming / History, search, status and sort — the same controls the loaded list uses. */
+/** The organisers' Walks list as it loads: the one table (no tabs), its search and Filter, and
+ * the rows as many as last time — the same controls the loaded list uses. */
 export function WalkListChrome({ lines }: { lines?: { title: string; detail: string }[] } = {}) {
-  // Tab counts and rows as last time, from the first paint (RememberedCount /
-  // RememberedRows); with no rows last time the list hides itself, and the
-  // search and filters with it, as on the real page.
   return (
-    <QueryTabs className="w-full" defaultValue="upcoming">
-      <div data-edge-bar="" data-edge-flush="" data-edge-top="">
-        <TabsList>
-          <TabsTrigger value="upcoming">
-            Upcoming
-            <RememberedCount remember="admin-walks-upcoming" />
-          </TabsTrigger>
-          <TabsTrigger value="past">
-            History
-            <RememberedCount remember="admin-walks-past" />
-          </TabsTrigger>
-        </TabsList>
+    <>
+      {/* The shadcn.io design's table (walk-table-card.tsx), as its placeholder. */}
+      <div className="hidden [html[data-design=shadcnio]_&]:contents">
+        <WalkTableCardSkeleton lines={lines} remember="admin-walks" />
       </div>
-      {
-        <TabsContent className="mt-4" value="upcoming">
-          {/* The shadcn.io design's table (walk-table-card.tsx), as its placeholder. */}
-          <div className="hidden [html[data-design=shadcnio]_&]:contents">
-            <WalkTableCardSkeleton lines={lines} remember="admin-walks" />
-          </div>
-          <div className="flex flex-col gap-4 has-[>[data-reveal-list][hidden]]:hidden [html[data-design=shadcnio]_&]:hidden">
-            <div className="flex flex-col gap-3 sm:flex-row sm:items-end" data-edge-bar="">
-              <ListSearch label="Search upcoming walks" placeholder="Search by walk or meeting point…" />
-              <FilterSelect
-                id="walk-status-upcoming-hold"
-                label="Status"
-                options={[
-                  { value: "all", label: "All statuses" },
-                  { value: "upcoming", label: "Upcoming" },
-                  { value: "starting-soon", label: "Starting soon" },
-                  { value: "in-progress", label: "In progress" },
-                ]}
-                value="all"
-              />
-              <FilterSelect
-                id="walk-sort-upcoming-hold"
-                label="Sort"
-                options={[
-                  { value: "asc", label: "Soonest first" },
-                  { value: "desc", label: "Latest first" },
-                ]}
-                value="asc"
-              />
-            </div>
-            <WalkRowsSkeleton remember="admin-walks" />
-          </div>
-        </TabsContent>
-      }
-      <TabsContent className="mt-4" value="past">
-        <div className="hidden [html[data-design=shadcnio]_&]:contents">
-          <WalkTableCardSkeleton remember="admin-walks-past" />
+      <div className="flex flex-col gap-4 has-[>[data-reveal-list][hidden]]:hidden [html[data-design=shadcnio]_&]:hidden">
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-end" data-edge-bar="">
+          <ListSearch label="Search walks" placeholder="Search by walk or meeting point…" />
+          <FilterSelect
+            id="walk-status-all-hold"
+            label="Status"
+            options={[
+              { value: "all", label: "All walks" },
+              { value: "upcoming", label: "Upcoming" },
+              { value: "completed", label: "Completed" },
+              { value: "cancelled", label: "Cancelled" },
+            ]}
+            value="all"
+          />
+          <FilterSelect
+            id="walk-sort-all-hold"
+            label="Sort"
+            options={[
+              { value: "first", label: "Upcoming first" },
+              { value: "desc", label: "Latest first" },
+              { value: "asc", label: "Oldest first" },
+            ]}
+            value="first"
+          />
         </div>
-        <div className="flex flex-col gap-4 has-[>[data-reveal-list][hidden]]:hidden [html[data-design=shadcnio]_&]:hidden">
-          <WalkRowsSkeleton remember="admin-walks-past" />
-        </div>
-      </TabsContent>
-      </QueryTabs>
+        <WalkRowsSkeleton remember="admin-walks" />
+      </div>
+    </>
   );
 }
 

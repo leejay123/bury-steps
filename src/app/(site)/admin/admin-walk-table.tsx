@@ -48,7 +48,9 @@ export type AdminWalkRow = {
 };
 
 type StatusFilter = "all" | WalkStatus;
-type SortOrder = "asc" | "desc";
+/** "first": the one-list order (scope "all"): coming up (soonest first), then completed and
+ * then cancelled (latest first). */
+type SortOrder = "first" | "asc" | "desc";
 
 const UPCOMING_STATUS_OPTIONS: { value: StatusFilter; label: string }[] = [
   { value: "all", label: "All statuses" },
@@ -63,15 +65,34 @@ const PAST_STATUS_OPTIONS: { value: StatusFilter; label: string }[] = [
   { value: "cancelled", label: "Cancelled" },
 ];
 
+const ALL_STATUS_OPTIONS: { value: StatusFilter; label: string }[] = [
+  { value: "all", label: "All walks" },
+  { value: "upcoming", label: "Upcoming" },
+  { value: "starting-soon", label: "Starting soon" },
+  { value: "in-progress", label: "In progress" },
+  { value: "completed", label: "Completed" },
+  { value: "cancelled", label: "Cancelled" },
+];
+
 const UPCOMING_STATUS_VALUES = ["all", "upcoming", "starting-soon", "in-progress"] as const;
 const PAST_STATUS_VALUES = ["all", "completed", "cancelled"] as const;
+const ALL_STATUS_VALUES = ["all", "upcoming", "starting-soon", "in-progress", "completed", "cancelled"] as const;
 const SORTS = ["asc", "desc"] as const;
+const ALL_SORTS = ["first", "desc", "asc"] as const;
+/** In the one list, where each status sits under "Upcoming first". */
+const GROUP_ORDER: Record<WalkStatus, number> = {
+  "in-progress": 0,
+  "starting-soon": 0,
+  upcoming: 0,
+  completed: 1,
+  cancelled: 2,
+};
 
 export function AdminWalkTable(props: {
   attendanceLabel?: string;
   emptyDescription: string;
   emptyTitle: string;
-  scope: "upcoming" | "past";
+  scope: "upcoming" | "past" | "all";
   walks: AdminWalkRow[];
 }) {
   return (
@@ -91,23 +112,24 @@ function AdminWalkTableInner({
   attendanceLabel?: string;
   emptyDescription: string;
   emptyTitle: string;
-  /** Which status choices make sense for this tab. */
-  scope: "upcoming" | "past";
+  /** Which status choices make sense for this tab ("all": every walk in one list, no tabs). */
+  scope: "upcoming" | "past" | "all";
   walks: AdminWalkRow[];
 }) {
-  const [query, setQuery] = useQueryText(scope === "upcoming" ? "q" : "pq");
+  const [query, setQuery] = useQueryText(scope === "past" ? "pq" : "q");
   const [statusFilter, setStatusFilter] = useQueryChoice(
-    scope === "upcoming" ? "status" : "pstatus",
-    scope === "upcoming" ? UPCOMING_STATUS_VALUES : PAST_STATUS_VALUES,
+    scope === "past" ? "pstatus" : "status",
+    scope === "all" ? ALL_STATUS_VALUES : scope === "upcoming" ? UPCOMING_STATUS_VALUES : PAST_STATUS_VALUES,
     "all",
   );
   const [sortOrder, setSortOrder] = useQueryChoice(
-    scope === "upcoming" ? "sort" : "psort",
-    SORTS,
-    scope === "past" ? "desc" : "asc",
+    scope === "past" ? "psort" : "sort",
+    scope === "all" ? ALL_SORTS : SORTS,
+    scope === "all" ? "first" : scope === "past" ? "desc" : "asc",
   );
   const listRef = useRef<HTMLDivElement>(null);
-  const allStatusOptions = scope === "upcoming" ? UPCOMING_STATUS_OPTIONS : PAST_STATUS_OPTIONS;
+  const allStatusOptions =
+    scope === "all" ? ALL_STATUS_OPTIONS : scope === "upcoming" ? UPCOMING_STATUS_OPTIONS : PAST_STATUS_OPTIONS;
   const now = useLiveNow();
   const router = useRouter();
   const design = useSiteDesign();
@@ -187,8 +209,24 @@ function AdminWalkTableInner({
       return hay.includes(needle);
     });
 
+    const statusOf = (walk: AdminWalkRow) =>
+      walkStatus(
+        {
+          cancelledAt: walk.cancelledAt ? new Date(walk.cancelledAt) : null,
+          startsAt: new Date(walk.startsAt),
+          durationMins: walk.durationMins,
+          endedAt: walk.endedAt ? new Date(walk.endedAt) : null,
+        },
+        now,
+      );
     rows.sort((a, b) => {
       const delta = new Date(a.startsAt).getTime() - new Date(b.startsAt).getTime();
+      if (sortOrder === "first") {
+        const group = GROUP_ORDER[statusOf(a)] - GROUP_ORDER[statusOf(b)];
+        if (group !== 0) return group;
+        // Coming up: soonest first; completed and cancelled: latest first.
+        return GROUP_ORDER[statusOf(a)] === 0 ? delta : -delta;
+      }
       return sortOrder === "asc" ? delta : -delta;
     });
     return rows;
@@ -224,9 +262,13 @@ function AdminWalkTableInner({
         durationMins: walk.durationMins,
         endedAt: walk.endedAt,
         cancelledAt: walk.cancelledAt,
-        count: scope === "upcoming" && walk.attendanceCount === 0 ? null : walk.attendanceCount,
+        // A walk still to come shows no count until someone's clocked in.
+        count:
+          (scope === "upcoming" || (scope === "all" && GROUP_ORDER[status] === 0)) && walk.attendanceCount === 0
+            ? null
+            : walk.attendanceCount,
         cue:
-          scope === "upcoming" && canClockIn ? (walk.selfClockedIn ? "You're clocked in" : "Clock in now") : null,
+          scope !== "past" && canClockIn ? (walk.selfClockedIn ? "You're clocked in" : "Clock in now") : null,
         href: walk.href === undefined ? `/admin/walks/${walk.id}` : walk.href,
       };
     });
@@ -250,12 +292,20 @@ function AdminWalkTableInner({
           onStatus={(value) => setStatusFilter(value)}
           query={query}
           rows={rows}
-          searchLabel={scope === "past" ? "Search past walks" : "Search upcoming walks"}
+          searchLabel={scope === "all" ? "Search walks" : scope === "past" ? "Search past walks" : "Search upcoming walks"}
           sort={sortOrder}
-          sortOptions={[
-            { value: "asc", label: "Soonest first" },
-            { value: "desc", label: "Latest first" },
-          ]}
+          sortOptions={
+            scope === "all"
+              ? [
+                  { value: "first", label: "Upcoming first" },
+                  { value: "desc", label: "Latest first" },
+                  { value: "asc", label: "Oldest first" },
+                ]
+              : [
+                  { value: "asc", label: "Soonest first" },
+                  { value: "desc", label: "Latest first" },
+                ]
+          }
           status={statusFilter}
           statusOptions={statusOptions}
         />
