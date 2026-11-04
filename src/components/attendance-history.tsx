@@ -16,7 +16,7 @@ import {
   DataListItemMain,
 } from "@/components/data-list";
 import { InputGroup, InputGroupAddon, InputGroupInput } from "@/components/ui/input-group";
-import { Label } from "@/components/ui/label";
+import { ButtonGroup } from "@/components/ui/button-group";
 import {
   Select,
   SelectContent,
@@ -111,22 +111,22 @@ export function AttendanceHistory({
 
   return (
     <div className="flex flex-col gap-6" data-edge-history="" ref={listRef}>
-      <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-end" data-edge-bar="" data-edge-top="">
-        <InputGroup className="w-full min-w-0 sm:min-w-[16rem] sm:flex-1">
-          <InputGroupInput
-            aria-label="Search your walk history"
-            onChange={(event) => setQuery(event.target.value)}
-            placeholder="Search by walk or meeting point…"
-            value={query}
-          />
-          <InputGroupAddon>
-            <Search data-icon="inline-start" />
-          </InputGroupAddon>
-        </InputGroup>
-        <div className="flex shrink-0 flex-col gap-1.5">
-          <Label htmlFor="history-status-filter">Status</Label>
+      <div className="flex" data-edge-bar="" data-edge-top="">
+        {/* Search and the filters as one bar (shadcn's ButtonGroup), on phones too. */}
+        <ButtonGroup aria-label="Search and filter your walks" className="w-full">
+          <InputGroup className="min-w-0 flex-1">
+            <InputGroupInput
+              aria-label="Search your walk history"
+              onChange={(event) => setQuery(event.target.value)}
+              placeholder="Search by walk or meeting point…"
+              value={query}
+            />
+            <InputGroupAddon>
+              <Search data-icon="inline-start" />
+            </InputGroupAddon>
+          </InputGroup>
           <Select onValueChange={(value) => setStatus(value as StatusFilter)} value={status}>
-            <SelectTrigger className="w-full sm:w-[11rem]" id="history-status-filter">
+            <SelectTrigger aria-label="Status" className="w-28 sm:w-[11rem]" id="history-status-filter">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
@@ -136,12 +136,9 @@ export function AttendanceHistory({
               <SelectItem value="cancelled">Cancelled</SelectItem>
             </SelectContent>
           </Select>
-        </div>
-        {availableYears.length > 1 ? (
-          <div className="flex shrink-0 flex-col gap-1.5">
-            <Label htmlFor="history-year-filter">Year</Label>
+          {availableYears.length > 1 ? (
             <Select onValueChange={setYearFilter} value={yearFilter}>
-              <SelectTrigger className="w-full sm:w-[8.5rem]" id="history-year-filter">
+              <SelectTrigger aria-label="Year" className="w-24 sm:w-[8.5rem]" id="history-year-filter">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
@@ -153,8 +150,8 @@ export function AttendanceHistory({
                 ))}
               </SelectContent>
             </Select>
-          </div>
-        ) : null}
+          ) : null}
+        </ButtonGroup>
       </div>
 
       {filtered.length === 0 ? (

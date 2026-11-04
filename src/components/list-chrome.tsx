@@ -233,29 +233,31 @@ export function MessagesFilterChrome() {
 
 export function HistoryFilterChrome() {
   return (
-    <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-end" data-edge-bar="" data-edge-top="">
-      <InputGroup className="w-full min-w-0 sm:min-w-[16rem] sm:flex-1">
-        <InputGroupInput
-          aria-label="Search your walk history"
-          defaultValue=""
-          placeholder="Search by walk or meeting point…"
-          readOnly
-        />
-        <InputGroupAddon>
-          <Search data-icon="inline-start" />
-        </InputGroupAddon>
-      </InputGroup>
-      <FilterSelect
-        id="history-status-filter-hold"
-        label="Status"
-        options={[
-          { value: "all", label: "All" },
-          { value: "full", label: "Stayed for walk" },
-          { value: "left-early", label: "Left early" },
-          { value: "cancelled", label: "Cancelled" },
-        ]}
-        value="all"
-      />
+    <div className="flex" data-edge-bar="" data-edge-top="">
+      <ButtonGroup aria-label="Search and filter your walks" className="w-full">
+        <InputGroup className="min-w-0 flex-1">
+          <InputGroupInput
+            aria-label="Search your walk history"
+            defaultValue=""
+            placeholder="Search by walk or meeting point…"
+            readOnly
+          />
+          <InputGroupAddon>
+            <Search data-icon="inline-start" />
+          </InputGroupAddon>
+        </InputGroup>
+        <Select onValueChange={() => {}} value="all">
+          <SelectTrigger aria-label="Status" className="w-28 sm:w-[11rem]" id="history-status-filter-hold">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">All</SelectItem>
+            <SelectItem value="full">Stayed for walk</SelectItem>
+            <SelectItem value="left-early">Left early</SelectItem>
+            <SelectItem value="cancelled">Cancelled</SelectItem>
+          </SelectContent>
+        </Select>
+      </ButtonGroup>
     </div>
   );
 }
