@@ -24,10 +24,10 @@ function StatCardSkeleton({ label }: { label: string }) {
 
 /**
  * A member's page (page.tsx) while it loads, part for part: the page top (photo,
- * name, email, joined date), the card (role, buttons), the emergency contact
- * card, the stat cards, then their walk history. Fixed wording is real;
- * their own details and buttons are grey — no gaps. The way back lives in
- * the top bar in the shadcn.io design.
+ * name, email, joined date, actions), the emergency contact card, the stat
+ * cards, then their walk history. Fixed wording is real; their own details
+ * and buttons are grey — no gaps. The way back lives in the top bar in the
+ * shadcn.io design.
  */
 export function MemberDetailSkeleton() {
   return (
@@ -35,6 +35,7 @@ export function MemberDetailSkeleton() {
       <MembersBackLink />
       {/* The same animated page top: the photo, name, email and joined date still loading. */}
       <PageTop
+        action={<SkButtonSpace className="w-8" />}
         className="flex flex-col gap-3"
         eyebrow="Member"
         intro={
@@ -47,20 +48,6 @@ export function MemberDetailSkeleton() {
         media={<Skeleton className="size-20 rounded-full md:size-24" />}
         title={<Line className="h-10 w-64 max-w-full" />}
       />
-
-      <Card>
-        <CardHeader className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-          <div className="flex min-w-0 items-center gap-3">
-            {/* The role badge (name, photo, email and joined date are in the page top). */}
-            <Skeleton className="h-7 w-20 rounded-md" />
-          </div>
-          {/* "Log in as" and the ⋯ menu. */}
-          <div className="flex flex-wrap gap-2 sm:shrink-0 sm:justify-end">
-            <SkButtonSpace className="w-24" />
-            <SkButtonSpace className="w-8" />
-          </div>
-        </CardHeader>
-      </Card>
 
       <Card className="gap-3">
         <CardHeader className="gap-1">

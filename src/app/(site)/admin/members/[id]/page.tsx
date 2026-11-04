@@ -3,7 +3,6 @@ import { cacheLife } from "next/cache";
 import { PRIVATE_SAVED_COPY } from "@/lib/private-saved-copy";
 import { PlaceholderPreview } from "@/components/placeholder-preview";
 import { MemberDetailSkeleton } from "./member-detail-skeleton";
-import { Crown } from "lucide-react";
 import { HeaderCrumb } from "@/components/shadcnio/page-crumb";
 import { PageTop } from "@/components/page-top";
 import { MembersBackLink } from "./members-back-link";
@@ -18,7 +17,6 @@ import { isOwner } from "@/lib/site-owner";
 import { SITE_SETTING_ID } from "@/lib/theme";
 import { AttendanceHistory } from "@/components/attendance-history";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { emergencyPhoneHref } from "@/lib/emergency-contact";
 import { MemberDetailActions } from "./member-detail-actions";
@@ -65,46 +63,7 @@ async function MemberDetailPageContent({ id }: { id: string }) {
       <MembersBackLink />
       {/* The animated page top the other pages open with, spelling the member's name. */}
       <PageTop
-        className="flex flex-col gap-3"
-        eyebrow={member.isOwner ? "Owner" : member.role === "ADMIN" ? "Organiser" : "Member"}
-        intro={
-          // Their email and when they joined sit under the name here, not again in the card.
-          <>
-            <span className="wrap-break-word">{member.email || "No email"}</span>
-            <br />
-            Joined {formatDate(joinedAt)} · member for {formatMembershipAge(joinedAt)}
-          </>
-        }
-        media={
-          <Avatar className="size-20 ring-1 ring-border md:size-24">
-            {member.imageUrl ? <AvatarImage alt="" src={member.imageUrl} /> : null}
-            <AvatarFallback>{initials(member.name)}</AvatarFallback>
-          </Avatar>
-        }
-        title={member.name}
-      />
-
-      <Card>
-        <CardHeader className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-          <div className="flex min-w-0 items-center gap-3">
-            <div className="flex min-w-0 flex-wrap items-center gap-2">
-                {member.pendingInvite ? (
-                  // Plain text, not a Badge — an outline badge next to the
-                  // outline Resend/Cancel buttons below read as a third
-                  // (non-working) button rather than a status label.
-                  <span className="text-sm font-medium text-muted-foreground">
-                    {member.pendingInvite.expired
-                      ? `Invite expired ${formatRelativeDays(new Date(member.pendingInvite.expiresAt))}`
-                      : `Invited ${formatRelativeDays(new Date(member.pendingInvite.sentAt))}`}
-                  </span>
-                ) : (
-                  <Badge className="h-7 border-border px-2" variant="secondary">
-                    {member.isOwner ? <Crown /> : null}
-                    {member.isOwner ? "Owner" : member.role === "ADMIN" ? "Organiser" : "Member"}
-                  </Badge>
-                )}
-            </div>
-          </div>
+        action={
           <MemberDetailActions
             attendanceCount={attendanceCount}
             id={id}
@@ -117,8 +76,32 @@ async function MemberDetailPageContent({ id }: { id: string }) {
             viewerIsOwner={viewerIsOwner}
             walkCount={member.walkCount}
           />
-        </CardHeader>
-      </Card>
+        }
+        className="flex flex-col gap-3"
+        eyebrow={member.isOwner ? "Owner" : member.role === "ADMIN" ? "Organiser" : "Member"}
+        intro={
+          <>
+            <span className="wrap-break-word">{member.email || "No email"}</span>
+            <br />
+            Joined {formatDate(joinedAt)} · member for {formatMembershipAge(joinedAt)}
+            {member.pendingInvite ? (
+              <>
+                <br />
+                {member.pendingInvite.expired
+                  ? `Invite expired ${formatRelativeDays(new Date(member.pendingInvite.expiresAt))}`
+                  : `Invited ${formatRelativeDays(new Date(member.pendingInvite.sentAt))}`}
+              </>
+            ) : null}
+          </>
+        }
+        media={
+          <Avatar className="size-20 ring-1 ring-border md:size-24">
+            {member.imageUrl ? <AvatarImage alt="" src={member.imageUrl} /> : null}
+            <AvatarFallback>{initials(member.name)}</AvatarFallback>
+          </Avatar>
+        }
+        title={member.name}
+      />
 
       <Card className="gap-3">
         <CardHeader className="gap-1">
