@@ -39,7 +39,7 @@ export function DashboardSkeleton() {
               <Skeleton className="h-5 w-16 rounded-md" />
             </div>
             <CardDescription>
-              Clock-ins by day of the week, last 90 days. The badge is the busiest day against the average.
+              Clock-ins by day of the week, last 90 days.
             </CardDescription>
           </CardHeader>
           <CardContent>

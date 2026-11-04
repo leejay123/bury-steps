@@ -80,7 +80,7 @@ export function NetRevenueChart() {
 						<DeltaValue />
 					</Delta>
 				</div>
-				<CardDescription>Clock-ins by day of the week, last 90 days. The badge is the busiest day against the average.</CardDescription>
+				<CardDescription>Clock-ins by day of the week, last 90 days.</CardDescription>
 			</CardHeader>
 			<CardContent>
 				<ChartContainer
