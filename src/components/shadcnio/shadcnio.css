@@ -789,6 +789,12 @@ html:is([data-remembered-in], [data-guest-dash]):not([data-page-kind="home"], [d
   html:is([data-remembered-in], [data-guest-dash]):not([data-page-kind="home"], [data-page-kind="plain"]) [data-slot="efferd-header"] { padding-inline: max(1.5rem, env(safe-area-inset-left)) max(1.5rem, env(safe-area-inset-right)); }
 }
 [data-slot="docs-sidebar-drawer"] aside { width: calc(min(18rem, 85vw) + env(safe-area-inset-left, 0px)); padding-inline-start: env(safe-area-inset-left, 0px); padding-bottom: env(safe-area-inset-bottom, 0px); }
+/* Short screens (a phone held sideways): the logo and the next walk / account rows left the
+   menu between them a sliver, and a swipe anywhere else did nothing; the whole menu scrolls. */
+@media (max-height: 34rem) {
+  [data-slot="docs-sidebar-drawer"] aside { overflow-y: auto; overscroll-behavior: contain; }
+  [data-slot="docs-sidebar-drawer"] aside [data-slot="efferd-nav"] { flex: none; min-height: auto; overflow: visible; }
+}
 html:is([data-remembered-in], [data-guest-dash]):not([data-page-kind="home"], [data-page-kind="plain"]) [data-slot="docs-column"] { border-inline: 0 !important; }
 html:is([data-remembered-in], [data-guest-dash]):not([data-page-kind="home"], [data-page-kind="plain"]) [data-slot="docs-page"] { padding: 0 !important; }
 @media (min-width: 64rem) {
