@@ -152,11 +152,16 @@ export function SectionHead({
   );
 }
 
-export const GRID = "grid border-t [clip-path:inset(1px_0_0_1px)] *:border-t *:border-l grid-cols-2 lg:grid-cols-4";
+// Lines from each tile's top and left edge. overflow-hidden hides the outer ones (the first
+// column's left line, moved 1px out by *:-ms-px, put back inside by *:ps-px; pt-px keeps the
+// top line 1px down); *:relative keeps each line over the tile before it. Not clip-path
+// (shadcn.io's way): in Safari a tile's hover fade under clip-path redrew the whole grid,
+// dropping its top and bottom lines and shimmering the other tiles.
+export const GRID = "grid overflow-hidden pt-px *:relative *:-ms-px *:ps-px *:border-t *:border-l grid-cols-2 lg:grid-cols-4";
 /** GRID as a list on phones (one row each); its tiles take phoneRow. */
 export const GRID_PHONE_LIST = `${GRID} max-sm:grid-cols-1`;
 /** Homepage walks: three columns so titles fit; list is capped at four. */
-export const WALKS_GRID = "grid border-t [clip-path:inset(1px_0_0_1px)] *:border-t *:border-l grid-cols-1 sm:grid-cols-2 lg:grid-cols-3";
+export const WALKS_GRID = "grid overflow-hidden pt-px *:relative *:-ms-px *:ps-px *:border-t *:border-l grid-cols-1 sm:grid-cols-2 lg:grid-cols-3";
 
 const TILE =
   "group flex flex-col outline-none hover:bg-muted/60 focus-visible:bg-muted/60 dark:hover:bg-foreground/[0.025] dark:focus-visible:bg-foreground/[0.025] focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-inset relative h-40 overflow-hidden";
