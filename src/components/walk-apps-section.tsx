@@ -2,6 +2,7 @@ import { Apple, Check, MapPin, Mountain, Play, type LucideIcon } from "lucide-re
 import { Button } from "@/components/ui/button";
 import { HeroCopy } from "@/components/hero-copy";
 import { DecorIcon } from "@/components/decor-icon";
+import { Guides } from "@/components/shadcnio/parts";
 
 type WalkApp = {
   name: string;
@@ -49,16 +50,21 @@ const WALK_APPS: WalkApp[] = [
  * menu's More): the two free apps the group uses, each with what it's for
  * and App Store / Google Play links.
  */
-export function WalkAppsSection() {
+export function WalkAppsSection({ plain = false }: { plain?: boolean } = {}) {
   return (
     <section>
-      <HeroCopy eyebrow="Free to download" title="Apps for our walks" titleAs="h1">
-        <p>Two free apps that make walking with us easier. Download them before your first walk.</p>
-      </HeroCopy>
+      {/* plain: the shadcn.io page has the animated top above (apps/page.tsx) and the guide line
+          over the cards, so no heading or top border here. */}
+      {plain ? null : (
+        <HeroCopy eyebrow="Free to download" title="Apps for our walks" titleAs="h1">
+          <p>Two free apps that make walking with us easier. Download them before your first walk.</p>
+        </HeroCopy>
+      )}
       <div className="relative w-full">
+        {plain ? <Guides /> : null}
         <DecorIcon className="size-4" position="bottom-left" />
         <DecorIcon className="size-4" position="bottom-right" />
-        <div className="grid w-full grid-cols-1 gap-px border-t bg-border md:grid-cols-2">
+        <div className={`grid w-full grid-cols-1 gap-px bg-border md:grid-cols-2 ${plain ? "" : "border-t"}`}>
           {WALK_APPS.map((app) => (
             <article className="flex flex-col gap-6 bg-background p-6 sm:p-8 lg:p-10" key={app.name}>
               <div className="flex items-center gap-4">

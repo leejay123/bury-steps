@@ -3,6 +3,8 @@ import { WalkAppsSection } from "@/components/walk-apps-section";
 import { PAGE_X_BLEED } from "@/lib/page-x";
 import { getSiteTheme } from "@/lib/site-theme";
 import { PageKindMark } from "@/components/shadcnio/page-kind";
+import { PlainHero } from "@/components/shadcnio/legal";
+import { Smartphone } from "lucide-react";
 
 export const metadata: Metadata = {
   title: "Apps for our walks",
@@ -17,7 +19,15 @@ export default async function AppsPage() {
     return (
       <div className="flex flex-1 flex-col">
         <PageKindMark kind="plain" />
-        <WalkAppsSection />
+        <PlainHero
+          heading="apps-title"
+          icon={<Smartphone />}
+          lead="Two free apps"
+          rest="that make walking with us easier. Download them before your first walk."
+          title="Apps for our walks"
+          word="APPS"
+        />
+        <WalkAppsSection plain />
       </div>
     );
   }
