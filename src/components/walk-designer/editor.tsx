@@ -3,7 +3,7 @@
 // No stylesheet import: Puck (0.22+) adds its own styles when it opens. An
 // import here became a separate file loaded on demand, which failed to load
 // alongside the site's inline CSS (experimental.inlineCss) and crashed the page.
-import { useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { Puck, type Data } from "@puckeditor/core";
 import { toast } from "sonner";
 import { X } from "lucide-react";
@@ -343,6 +343,7 @@ export function WalkDesignEditor({
                     current.current = data;
                   }}
                   onPublish={publish}
+                  overrides={{ iframe: FrameStyles }}
                 />
               </WalkPartsProvider>
             </PreviewAudience.Provider>
@@ -351,4 +352,34 @@ export function WalkDesignEditor({
       </div>
     </div>
   );
+}
+
+/**
+ * The preview frame gets the page's styles as text too. Puck copies the page's stylesheet
+ * links into its frame and waits for them to load there; in Firefox on the live site they
+ * didn't, so the preview showed with no styles at all. These copies come from the
+ * stylesheets the page has already loaded, so they need nothing more from the network.
+ * Put first, so Puck's own copies (when they load) still win; the rules are the same.
+ */
+function FrameStyles({ children, document: frame }: { children: ReactNode; document?: Document }) {
+  useEffect(() => {
+    if (!frame) return;
+    for (const sheet of Array.from(window.document.styleSheets)) {
+      const owner = sheet.ownerNode;
+      if (!(owner instanceof HTMLLinkElement)) continue;
+      const key = owner.href;
+      if (Array.from(frame.head.querySelectorAll("style[data-bs-copy]")).some((el) => el.getAttribute("data-bs-copy") === key)) continue;
+      let text = "";
+      try {
+        text = Array.from(sheet.cssRules, (rule) => rule.cssText).join("\n");
+      } catch {
+        continue;
+      }
+      const style = frame.createElement("style");
+      style.setAttribute("data-bs-copy", key);
+      style.textContent = text;
+      frame.head.prepend(style);
+    }
+  }, [frame]);
+  return <>{children}</>;
 }
