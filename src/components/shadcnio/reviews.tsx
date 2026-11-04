@@ -28,7 +28,9 @@ export function ShadcnReviews({ testimonials }: { testimonials: TestimonialView[
       <ul aria-label="What members say" className={`${REVIEW_GRID_3} ${PHONE_REVIEW_LIST}`}>
         {shown.map((review) => (
           <li key={review.id}>
-            <a className="group" href="#faq">
+            {/* Not a link (it went to #faq), as the goals tiles: no href, so it can't be clicked or
+                tabbed to; still an <a> so the grid's tile styles (li > a) and hover apply. */}
+            <a className="group">
               <strong>{review.name}</strong>
               <small>{review.role}</small>
               <blockquote className="relative z-10 mt-3 min-h-0 flex-1 text-pretty text-muted-foreground text-sm leading-5 transition-[color] group-hover:text-foreground group-focus-visible:text-foreground duration-300 ease-out motion-reduce:transition-none">

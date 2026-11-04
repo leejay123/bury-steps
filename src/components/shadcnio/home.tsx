@@ -237,7 +237,9 @@ function ExpectSection({ expect }: { expect: string[] }) {
       <MoreRows className={`${GALLERY_GRID_3} ${PHONE_LIST}`} columns={3} first={3} label="What you can expect">
         {expect.slice(0, 6).map((item, i) => (
           <li key={item}>
-            <a href="#faq">
+            {/* Not a link (it went to #faq): no href, so it can't be clicked or tabbed to; still an
+                <a> so the grid's tile styles (li > a) and hover apply. */}
+            <a>
               <strong>{item}</strong>
               <small>What to expect</small>
               <i />
