@@ -288,6 +288,7 @@ function SelectContent({
   position?: "item-aligned" | "popper";
 } & React.ComponentProps<typeof PopoverContent>) {
   const { triggerWidth } = useSelect();
+  const triggerRef = React.useContext(SelectTriggerRefContext);
   const listKeys = useListKeys();
 
   return (
@@ -308,6 +309,7 @@ function SelectContent({
         if (!chosen) return;
         event.preventDefault();
         chosen.focus({ preventScroll: true });
+        list.style.visibility = "hidden";
         // Scroll the choice into the middle once the list is in place: done
         // straight away, the list wasn't positioned yet and (Safari) opened
         // scrolled past the choice.
@@ -315,15 +317,26 @@ function SelectContent({
           const listBox = list.getBoundingClientRect();
           const box = chosen.getBoundingClientRect();
           list.scrollTop += box.top - listBox.top - (listBox.height - box.height) / 2;
+          // Then, as shadcn.io's (Base UI's alignItemWithTrigger): the list moves so the
+          // choice sits over the button, kept on screen; nothing slides in.
+          const trigger = triggerRef?.current?.getBoundingClientRect();
+          list.style.visibility = "";
+          if (!trigger) return;
+          const placed = list.getBoundingClientRect();
+          const at = chosen.getBoundingClientRect();
+          const shift = trigger.top + (trigger.height - at.height) / 2 - at.top;
+          const room = 8;
+          const clamped = Math.max(room - placed.top, Math.min(window.innerHeight - room - placed.bottom, shift));
+          list.style.translate = `0 ${Math.round(clamped)}px`;
         });
       }}
       className={cn(
         // Never taller than the room on screen (a phone on its side): the
         // whole list stays visible and scrolls inside itself.
         "max-h-[min(18rem,var(--radix-popover-content-available-height))] w-auto overflow-y-auto overscroll-y-contain p-1",
-        // Opens quickly, straight out of its button (a short drop, no zoom): filters are
-        // used all the time, so the list mustn't keep anyone waiting.
-        "duration-150 data-[side=bottom]:slide-in-from-top-1! data-[side=top]:slide-in-from-bottom-1! data-[state=open]:zoom-in-100",
+        // Opens over its button with the choice on it (see above), no slide or zoom, as
+        // shadcn.io's (hidden for the one frame before it's moved there, below).
+        "animate-none!",
         className,
       )}
       data-select-dropdown=""
