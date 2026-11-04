@@ -1010,9 +1010,10 @@ html:is([data-remembered-in], [data-guest-dash]):not([data-page-kind="home"], [d
   html:is([data-remembered-in], [data-guest-dash]):not([data-page-kind="home"], [data-page-kind="plain"]) [data-slot="docs-page"] [data-edge-stats] > * :is([data-slot="card-header"], [data-slot="card-content"]) { padding: 0 !important; }
   /* The way back lives in the top bar (Members › this person; Walks › History ›
      this walk). A leftover or cached ← All members / ← All walks link was a
-     full 1.5rem band of empty white. */
+     full 1.5rem band of empty white. Not the Overview's View All under Recent walks
+     (data-view-all): hidden, the list faded out into nothing. */
   html:is([data-remembered-in], [data-guest-dash]):not([data-page-kind="home"], [data-page-kind="plain"]) [data-slot="docs-page"] a[href="/admin/members"] { display: none !important; }
-  html:is([data-remembered-in], [data-guest-dash]):not([data-page-kind="home"], [data-page-kind="plain"]) [data-slot="docs-page"] a[href="/admin/walks"] { display: none !important; }
+  html:is([data-remembered-in], [data-guest-dash]):not([data-page-kind="home"], [data-page-kind="plain"]) [data-slot="docs-page"] a[href="/admin/walks"]:not([data-view-all]) { display: none !important; }
   html[data-remembered-in]:not([data-page-kind="home"], [data-page-kind="plain"]) [data-slot="docs-page"] span:has(> a[data-member-home][href="/walks"]) { display: none !important; }
   /* Cards in a band also keep py-6 / px-6, which stacked on the strip's 1.5rem
      and sat the name in from walk titles (p-3). One 0.75rem inset, same as the list. */
