@@ -75,16 +75,18 @@ async function MemberDetailPageContent({ id }: { id: string }) {
             Joined {formatDate(joinedAt)} · member for {formatMembershipAge(joinedAt)}
           </>
         }
+        media={
+          <Avatar className="size-20 ring-1 ring-border md:size-24">
+            {member.imageUrl ? <AvatarImage alt="" src={member.imageUrl} /> : null}
+            <AvatarFallback>{initials(member.name)}</AvatarFallback>
+          </Avatar>
+        }
         title={member.name}
       />
 
       <Card>
         <CardHeader className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
           <div className="flex min-w-0 items-center gap-3">
-            <Avatar className="size-12 shrink-0">
-              {member.imageUrl ? <AvatarImage alt="" src={member.imageUrl} /> : null}
-              <AvatarFallback>{initials(member.name)}</AvatarFallback>
-            </Avatar>
             <div className="flex min-w-0 flex-wrap items-center gap-2">
                 {member.pendingInvite ? (
                   // Plain text, not a Badge — an outline badge next to the

@@ -12,6 +12,7 @@ export function PageTop({
   intro,
   eyebrow,
   action,
+  media,
   children,
   className = "flex flex-col gap-1.5",
 }: {
@@ -21,6 +22,8 @@ export function PageTop({
   eyebrow: string;
   /** A button or link beside the title. */
   action?: ReactNode;
+  /** A photo above the title (a member's picture on their page). */
+  media?: ReactNode;
   /** More lines under the intro. */
   children?: ReactNode;
   /** The usual look's wrapper classes. */
@@ -33,6 +36,7 @@ export function PageTop({
     >
       <PageTopField word={typeof title === "string" ? title : eyebrow} />
       <div className={className}>
+        {media ? <div data-page-top-media="">{media}</div> : null}
         <p className="hidden" data-page-top-eyebrow="">
           {eyebrow}
         </p>

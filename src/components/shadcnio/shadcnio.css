@@ -379,6 +379,9 @@ html[data-auth="in"] .globalnav-account-trigger { display: flex; }
   .globalnav-end-list > .globalnav-item:is(.globalnav-search, .globalnav-bell, .globalnav-avatar-item) { padding-inline: 0; }
   /* Same 8px the pill has on the desktop, or it sits on the avatar. */
   .globalnav-end-list > .globalnav-item.globalnav-dashboard { padding-inline: 8px; }
+  /* Signed out: search sits with the menu button, not glued to Sign in. */
+  html:not([data-remembered-in]) .globalnav-end-list > .globalnav-search { order: 1; }
+  html:not([data-remembered-in]) .globalnav-end-list > .globalnav-account:not(.globalnav-dashboard) { padding-inline-end: 8px; }
 }
 @media (min-width: 1024px) { .globalnav-account .globalnav-flyout-content { padding-top: 40px; padding-bottom: 80px; } }
 .globalnav-account-caption { color: var(--gn-color-tertiary); letter-spacing: -0.01em; margin: 0px; font-size: 12px; font-weight: 400; line-height: 1.33337; display: block; }
@@ -844,6 +847,7 @@ html:is([data-remembered-in], [data-guest-dash]):not([data-page-kind="home"], [d
 html:is([data-remembered-in], [data-guest-dash]):not([data-page-kind="home"], [data-page-kind="plain"]) [data-shadcn-top]::before, html:is([data-remembered-in], [data-guest-dash]):not([data-page-kind="home"], [data-page-kind="plain"]) [data-shadcn-top]::after { content: none !important; }
 html:is([data-remembered-in], [data-guest-dash]):not([data-page-kind="home"], [data-page-kind="plain"]) [data-shadcn-top] > div:not(:last-child), html:is([data-remembered-in], [data-guest-dash]):not([data-page-kind="home"], [data-page-kind="plain"]) [data-shadcn-top] > div:only-of-type { display: flex; flex-direction: column; align-items: center; gap: 0.75rem; max-width: 48rem; margin-inline: auto; }
 html:is([data-remembered-in], [data-guest-dash]):not([data-page-kind="home"], [data-page-kind="plain"]) [data-shadcn-top] > div > :is(p, h1, h2) { text-align: center; }
+html:is([data-remembered-in], [data-guest-dash]):not([data-page-kind="home"], [data-page-kind="plain"]) [data-shadcn-top] [data-page-top-media] { display: flex; justify-content: center; }
 html:is([data-remembered-in], [data-guest-dash]):not([data-page-kind="home"], [data-page-kind="plain"]) [data-shadcn-top] [data-page-top-eyebrow] { display: block !important; color: var(--muted-foreground); font-size: 0.75rem; line-height: 1rem; font-weight: 400; margin-bottom: 0.25rem; }
 html:is([data-remembered-in], [data-guest-dash]):not([data-page-kind="home"], [data-page-kind="plain"]) [data-shadcn-top] [data-page-top-title] { font-size: 2.25rem !important; line-height: 1.05 !important; font-weight: 600 !important; letter-spacing: -0.05em !important; text-wrap: balance; color: var(--foreground) !important; }
 @media (min-width: 48rem) { html:is([data-remembered-in], [data-guest-dash]):not([data-page-kind="home"], [data-page-kind="plain"]) [data-shadcn-top] [data-page-top-title] { font-size: 3rem !important; } }

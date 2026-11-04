@@ -23,8 +23,8 @@ function StatCardSkeleton({ label }: { label: string }) {
 }
 
 /**
- * A member's page (page.tsx) while it loads, part for part: the page top (name,
- * email, joined date), the card (photo, role, buttons), the emergency contact
+ * A member's page (page.tsx) while it loads, part for part: the page top (photo,
+ * name, email, joined date), the card (role, buttons), the emergency contact
  * card, the stat cards, then their walk history. Fixed wording is real;
  * their own details and buttons are grey — no gaps. The way back lives in
  * the top bar in the shadcn.io design.
@@ -33,7 +33,7 @@ export function MemberDetailSkeleton() {
   return (
     <div data-page-loading="" aria-busy="true" className="flex flex-col gap-6 px-4 py-6 md:px-6" data-edge-sections="">
       <MembersBackLink />
-      {/* The same animated page top: the name, email and joined date still loading. */}
+      {/* The same animated page top: the photo, name, email and joined date still loading. */}
       <PageTop
         className="flex flex-col gap-3"
         eyebrow="Member"
@@ -44,14 +44,14 @@ export function MemberDetailSkeleton() {
             <Line className="h-5 w-72 max-w-full" />
           </>
         }
+        media={<Skeleton className="size-20 rounded-full md:size-24" />}
         title={<Line className="h-10 w-64 max-w-full" />}
       />
 
       <Card>
         <CardHeader className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
           <div className="flex min-w-0 items-center gap-3">
-            <Skeleton className="size-12 shrink-0 rounded-full" />
-            {/* The role badge (name, email and joined date are in the page top). */}
+            {/* The role badge (name, photo, email and joined date are in the page top). */}
             <Skeleton className="h-7 w-20 rounded-md" />
           </div>
           {/* "Log in as" and the ⋯ menu. */}
