@@ -69,22 +69,30 @@ export function ShadcnSiteShell({
       if (window.matchMedia("(min-width: 64rem)").matches) {
         const root = document.documentElement;
         const collapsed = root.getAttribute("data-docs-sidebar") !== "collapsed";
-        // Only the sidebar animates its width (shadcnio.css, data-sidebar-animating); the page
-        // takes its new place at once and glides there from where it was, so it isn't laid
-        // out again at every step (that was the lag). Nothing animates on arrival.
+        // The sidebar animates its width; the page takes its new place at once and glides there
+        // from where it was, so it isn't laid out again at every step (that was the lag).
+        // data-sidebar-animating keeps the labels until the sidebar has narrowed (shadcnio.css).
         const main = document.querySelector<HTMLElement>('[data-slot="docs-main"]');
+        const side = document.querySelector<HTMLElement>('[data-slot="docs-sidebar"]');
         const before = main?.getBoundingClientRect().left ?? 0;
+        const sideBefore = side?.getBoundingClientRect().width ?? 0;
         root.setAttribute("data-sidebar-animating", "");
         window.clearTimeout(animating);
         animating = window.setTimeout(() => root.removeAttribute("data-sidebar-animating"), 260);
         if (collapsed) root.setAttribute("data-docs-sidebar", "collapsed");
         else root.removeAttribute("data-docs-sidebar");
         const after = main?.getBoundingClientRect().left ?? 0;
-        if (main && before !== after && !window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
-          main.animate([{ transform: `translateX(${before - after}px)` }, { transform: "none" }], {
-            duration: 200,
-            easing: "linear",
-          });
+        const sideAfter = side?.getBoundingClientRect().width ?? 0;
+        if (!window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+          // Both start here, in the same frame, so the page's edge keeps up with the sidebar's
+          // (the sidebar's own CSS transition began a frame later and the page ran ahead).
+          const timing = { duration: 200, easing: "linear" } as const;
+          if (main && before !== after) {
+            main.animate([{ transform: `translateX(${before - after}px)` }, { transform: "none" }], timing);
+          }
+          if (side && sideBefore !== sideAfter) {
+            side.animate([{ width: `${sideBefore}px` }, { width: `${sideAfter}px` }], timing);
+          }
         }
         try {
           if (collapsed) localStorage.setItem(SIDEBAR_KEY, "collapsed");
