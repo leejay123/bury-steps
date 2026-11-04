@@ -47,7 +47,7 @@ export function HeroField({ heading, word = WORD }: { heading: string; word?: st
 export function BandField({ heading }: { heading: string }) {
   useEffect(() => {
     const title = document.getElementById(heading);
-    const host = title?.closest<HTMLElement>("section");
+    const host = title?.closest<HTMLElement>('[data-slot="hero"]');
     const text = title?.parentElement;
     if (!(host && text)) return;
     let gone = false;
