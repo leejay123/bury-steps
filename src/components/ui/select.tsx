@@ -141,7 +141,9 @@ export const SelectContent = (
     sideOffset = 4,
     align = "center",
     alignOffset = 0,
-    alignItemWithTrigger = true,
+    // Ours: the list opens just below its button (theirs: the choice over the button,
+    // which spread long lists over the page around it).
+    alignItemWithTrigger = false,
     ...rest
   } = props;
 
@@ -159,6 +161,8 @@ export const SelectContent = (
         <SelectPrimitive.Popup
           className={cn(
             "bg-popover text-popover-foreground data-open:animate-in data-closed:animate-out data-closed:fade-out-0 data-open:fade-in-0 data-closed:zoom-out-95 data-open:zoom-in-95 data-[side=bottom]:slide-in-from-top-2 data-[side=left]:slide-in-from-right-2 data-[side=right]:slide-in-from-left-2 data-[side=top]:slide-in-from-bottom-2 ring-foreground/10 min-w-36 rounded-lg shadow-md ring-1 duration-100 data-[side=inline-start]:slide-in-from-end-2 data-[side=inline-end]:slide-in-from-start-2 cn-menu-target cn-menu-translucent relative isolate z-50 max-h-(--available-height) w-(--anchor-width) origin-(--transform-origin) overflow-y-auto overflow-x-hidden data-[align-trigger=true]:animate-none",
+            // Ours: about 8 rows at most, then it scrolls (never taller than the room on screen).
+            "max-h-[min(18rem,var(--available-height))]",
             className
           )}
           data-align-trigger={alignItemWithTrigger}
@@ -166,6 +170,7 @@ export const SelectContent = (
           {...rest}
         >
           <SelectScrollUpButton />
+          <ScrollToChosen />
           <SelectPrimitive.List>{children}</SelectPrimitive.List>
           <SelectScrollDownButton />
         </SelectPrimitive.Popup>
@@ -173,6 +178,32 @@ export const SelectContent = (
     </SelectPrimitive.Portal>
   );
 };
+
+/** Ours: a long list opens scrolled to the chosen option (below the button, Base UI doesn't). */
+function ScrollToChosen() {
+  const ref = React.useRef<HTMLSpanElement>(null);
+  React.useEffect(() => {
+    const popup = ref.current?.closest<HTMLElement>('[data-slot="select-content"]');
+    if (!popup) return;
+    // Once it's laid out (it opens at 0 height): a few frames at most.
+    let frame = 0;
+    let tries = 0;
+    const place = () => {
+      const chosen = popup.querySelector<HTMLElement>("[data-selected]");
+      if (!chosen) return;
+      if (popup.clientHeight === 0 && tries++ < 10) {
+        frame = requestAnimationFrame(place);
+        return;
+      }
+      const box = popup.getBoundingClientRect();
+      const at = chosen.getBoundingClientRect();
+      popup.scrollTop += at.top - box.top - (box.height - at.height) / 2;
+    };
+    frame = requestAnimationFrame(place);
+    return () => cancelAnimationFrame(frame);
+  }, []);
+  return <span hidden ref={ref} />;
+}
 
 export const SelectLabel = (props: SelectPrimitive.GroupLabel.Props) => {
   const { className, ...rest } = props;
@@ -192,7 +223,9 @@ export function SelectItem(props: SelectPrimitive.Item.Props) {
   return (
     <SelectPrimitive.Item
       className={cn(
-        "focus:bg-accent focus:text-accent-foreground hover:bg-accent hover:text-accent-foreground data-highlighted:bg-accent data-highlighted:text-accent-foreground not-data-[variant=destructive]:focus:**:text-accent-foreground not-data-[variant=destructive]:hover:**:text-accent-foreground not-data-[variant=destructive]:data-highlighted:**:text-accent-foreground gap-1.5 rounded-md py-1 pe-8 ps-1.5 text-sm [&_svg:not([class*='size-'])]:size-4 *:[span]:last:flex *:[span]:last:items-center *:[span]:last:gap-2 relative flex w-full cursor-default select-none items-center outline-hidden data-disabled:pointer-events-none data-disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:shrink-0",
+        // Ours: one row lit at a time, the highlighted one (under the pointer or reached with
+        // the arrow keys); theirs also lit the focused and the hovered row, so two showed.
+        "data-highlighted:bg-accent data-highlighted:text-accent-foreground not-data-[variant=destructive]:data-highlighted:**:text-accent-foreground gap-1.5 rounded-md py-1 pe-8 ps-1.5 text-sm [&_svg:not([class*='size-'])]:size-4 *:[span]:last:flex *:[span]:last:items-center *:[span]:last:gap-2 relative flex w-full cursor-default select-none items-center outline-hidden data-disabled:pointer-events-none data-disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:shrink-0",
         className
       )}
       data-slot="select-item"
