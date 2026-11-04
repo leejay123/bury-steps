@@ -16,7 +16,7 @@ import {
   DataListItemMain,
 } from "@/components/data-list";
 import { InputGroup, InputGroupAddon, InputGroupInput } from "@/components/ui/input-group";
-import { ButtonGroup } from "@/components/ui/button-group";
+import { EDGE_FILTER, EDGE_SEARCH } from "@/components/edge-search";
 import {
   Select,
   SelectContent,
@@ -111,47 +111,47 @@ export function AttendanceHistory({
 
   return (
     <div className="flex flex-col gap-6" data-edge-history="" ref={listRef}>
-      <div className="flex" data-edge-bar="" data-edge-top="">
-        {/* Search and the filters as one bar (shadcn's ButtonGroup), on phones too. */}
-        <ButtonGroup aria-label="Search and filter your walks" className="w-full">
-          <InputGroup className="min-w-0 flex-1">
-            <InputGroupInput
-              aria-label="Search your walk history"
-              onChange={(event) => setQuery(event.target.value)}
-              placeholder="Search by walk or meeting point…"
-              value={query}
-            />
-            <InputGroupAddon>
-              <Search data-icon="inline-start" />
-            </InputGroupAddon>
-          </InputGroup>
-          <Select onValueChange={(value) => setStatus(value as StatusFilter)} value={status}>
-            <SelectTrigger aria-label="Status" className="w-28 sm:w-[11rem]" id="history-status-filter">
+      {/* Edge to edge: the search fills the strip, no box of its own; the filters sit at
+          the end, each split off by one line. */}
+      <div className="flex items-stretch" data-edge-bar="" data-edge-flush="" data-edge-top="">
+        <InputGroup className={EDGE_SEARCH}>
+          <InputGroupInput
+            aria-label="Search your walk history"
+            className="text-[0.9375rem]"
+            onChange={(event) => setQuery(event.target.value)}
+            placeholder="Search by walk or meeting point…"
+            value={query}
+          />
+          <InputGroupAddon className="pl-3">
+            <Search data-icon="inline-start" />
+          </InputGroupAddon>
+        </InputGroup>
+        <Select onValueChange={(value) => setStatus(value as StatusFilter)} value={status}>
+          <SelectTrigger aria-label="Status" className={`${EDGE_FILTER} w-24 sm:w-[12.5rem]`} id="history-status-filter">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent align="end">
+            <SelectItem value="all">All</SelectItem>
+            <SelectItem value="full">Stayed for the whole walk</SelectItem>
+            <SelectItem value="left-early">Left early</SelectItem>
+            <SelectItem value="cancelled">Cancelled</SelectItem>
+          </SelectContent>
+        </Select>
+        {availableYears.length > 1 ? (
+          <Select onValueChange={setYearFilter} value={yearFilter}>
+            <SelectTrigger aria-label="Year" className={`${EDGE_FILTER} w-24 sm:w-[9rem]`} id="history-year-filter">
               <SelectValue />
             </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">All</SelectItem>
-              <SelectItem value="full">Stayed for the whole walk</SelectItem>
-              <SelectItem value="left-early">Left early</SelectItem>
-              <SelectItem value="cancelled">Cancelled</SelectItem>
+            <SelectContent align="end">
+              <SelectItem value="all">All years</SelectItem>
+              {availableYears.map((year) => (
+                <SelectItem key={year} value={String(year)}>
+                  {year}
+                </SelectItem>
+              ))}
             </SelectContent>
           </Select>
-          {availableYears.length > 1 ? (
-            <Select onValueChange={setYearFilter} value={yearFilter}>
-              <SelectTrigger aria-label="Year" className="w-24 sm:w-[8.5rem]" id="history-year-filter">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All years</SelectItem>
-                {availableYears.map((year) => (
-                  <SelectItem key={year} value={String(year)}>
-                    {year}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          ) : null}
-        </ButtonGroup>
+        ) : null}
       </div>
 
       {filtered.length === 0 ? (

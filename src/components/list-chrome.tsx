@@ -3,6 +3,7 @@
 import { AlertCircle, Mail, Search } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ButtonGroup } from "@/components/ui/button-group";
+import { EDGE_FILTER, EDGE_SEARCH } from "@/components/edge-search";
 import { InputGroup, InputGroupAddon, InputGroupInput } from "@/components/ui/input-group";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -233,31 +234,30 @@ export function MessagesFilterChrome() {
 
 export function HistoryFilterChrome() {
   return (
-    <div className="flex" data-edge-bar="" data-edge-top="">
-      <ButtonGroup aria-label="Search and filter your walks" className="w-full">
-        <InputGroup className="min-w-0 flex-1">
-          <InputGroupInput
-            aria-label="Search your walk history"
-            defaultValue=""
-            placeholder="Search by walk or meeting point…"
-            readOnly
-          />
-          <InputGroupAddon>
-            <Search data-icon="inline-start" />
-          </InputGroupAddon>
-        </InputGroup>
-        <Select onValueChange={() => {}} value="all">
-          <SelectTrigger aria-label="Status" className="w-28 sm:w-[11rem]" id="history-status-filter-hold">
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">All</SelectItem>
-            <SelectItem value="full">Stayed for walk</SelectItem>
-            <SelectItem value="left-early">Left early</SelectItem>
-            <SelectItem value="cancelled">Cancelled</SelectItem>
-          </SelectContent>
-        </Select>
-      </ButtonGroup>
+    <div className="flex items-stretch" data-edge-bar="" data-edge-flush="" data-edge-top="">
+      <InputGroup className={EDGE_SEARCH}>
+        <InputGroupInput
+          aria-label="Search your walk history"
+          className="text-[0.9375rem]"
+          defaultValue=""
+          placeholder="Search by walk or meeting point…"
+          readOnly
+        />
+        <InputGroupAddon className="pl-3">
+          <Search data-icon="inline-start" />
+        </InputGroupAddon>
+      </InputGroup>
+      <Select onValueChange={() => {}} value="all">
+        <SelectTrigger aria-label="Status" className={`${EDGE_FILTER} w-24 sm:w-[12.5rem]`} id="history-status-filter-hold">
+          <SelectValue />
+        </SelectTrigger>
+        <SelectContent>
+          <SelectItem value="all">All</SelectItem>
+          <SelectItem value="full">Stayed for walk</SelectItem>
+          <SelectItem value="left-early">Left early</SelectItem>
+          <SelectItem value="cancelled">Cancelled</SelectItem>
+        </SelectContent>
+      </Select>
     </div>
   );
 }
