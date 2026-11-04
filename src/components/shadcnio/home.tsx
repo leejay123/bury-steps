@@ -24,6 +24,7 @@ import type { FaqCategoryView, FaqView } from "@/lib/faqs";
 import type { TestimonialView } from "@/lib/testimonials";
 import { GALLERY_GRID_3, PHONE_LIST } from "./grids";
 import { SectionTitle } from "@/components/section-title";
+import { CountingNumber } from "@/components/ui/counting-number";
 import { BUTTON_OUTLINE, BUTTON_PRIMARY, PillLink, WALKS_GRID, MiniNote, MiniWalk, Section, SectionHead, Tile } from "./parts";
 import type { ShadcnHomeData } from "./home-data";
 import { ShadcnFaq } from "./faq";
@@ -131,8 +132,10 @@ function Hero({ data, logo, joinHref }: ShadcnHomeProps) {
           </h1>
           <p className="max-w-2xl text-muted-foreground sm:text-lg md:text-xl text-balance">
             <span className="font-medium text-foreground">
-              {number.format(data.upcomingCount)} upcoming walks, {number.format(data.members)} members and{" "}
-              {number.format(data.walksThisYear)} walks so far
+              {/* Counting up as they land, as shadcn.io's Counting Number. */}
+              <CountingNumber grouping trigger="view" value={data.upcomingCount} /> upcoming walks,{" "}
+              <CountingNumber grouping trigger="view" value={data.members} /> members and{" "}
+              <CountingNumber grouping trigger="view" value={data.walksThisYear} /> walks so far
             </span>{" "}
             around{" "}
             {places.map((place, i) => (
