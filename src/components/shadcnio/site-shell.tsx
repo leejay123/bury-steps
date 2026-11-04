@@ -1,6 +1,6 @@
 "use client";
 
-import { Fragment, useEffect, useState, type ReactNode } from "react";
+import { Fragment, useEffect, useLayoutEffect, useRef, useState, type ReactNode } from "react";
 import { PanelLeft } from "lucide-react";
 import { lockBackgroundScroll } from "@/components/overlay-scroll-lock";
 import { useClientPathname } from "@/components/client-pathname";
@@ -61,6 +61,27 @@ export function ShadcnSiteShell({
   // A visitor gets the dashboard's look on a shared walk page only (sidebar-state.ts).
   useEffect(() => {
     if (path) syncGuestDash(path);
+  }, [path]);
+
+  // The dashboard page scrolls in its own box (docs-main), which Next.js doesn't reset as it
+  // does the window: a new page opened at the last one's scroll. Back/Forward keep theirs.
+  const travelled = useRef(false);
+  useEffect(() => {
+    const onPop = () => {
+      travelled.current = true;
+    };
+    window.addEventListener("popstate", onPop);
+    return () => window.removeEventListener("popstate", onPop);
+  }, []);
+  const lastPath = useRef(path);
+  useLayoutEffect(() => {
+    if (lastPath.current === path) return;
+    lastPath.current = path;
+    if (travelled.current) {
+      travelled.current = false;
+      return;
+    }
+    document.querySelector('[data-slot="docs-main"]')?.scrollTo({ top: 0 });
   }, [path]);
 
   useEffect(() => {
