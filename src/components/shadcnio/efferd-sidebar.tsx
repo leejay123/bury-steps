@@ -166,7 +166,6 @@ async function EfferdTools({ signInHref }: { signInHref: string }) {
           <SiteNavBell firstName={user.firstName} userId={user.id} />
         </Suspense>
       </HeaderPartBoundary>
-      <span aria-hidden="true" className="h-4 w-px shrink-0 bg-border" />
       <HeaderPartBoundary fallback={<AvatarPlaceholder initial={initial} />} name="account-menu">
         <ClerkIsland>
           <LazySiteUserButton image={user.imageUrl} initial={initial} progressEnabled={progressEnabled} />
@@ -182,7 +181,6 @@ export function EfferdHeaderTools({ signInHref }: { signInHref: string }) {
       fallback={
         <>
           <BellPlaceholder />
-          <span aria-hidden="true" className="h-4 w-px shrink-0 bg-border" />
           <AvatarPlaceholder />
         </>
       }

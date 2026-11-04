@@ -6,7 +6,7 @@ import { openSiteSearch, SiteSearchDialog } from "@/components/site-search";
 
 // The top bar's icon buttons: plain (no outline), shaded on hover.
 const ICON_BUTTON =
-  "relative inline-flex size-8 shrink-0 items-center justify-center rounded-md text-foreground outline-none hover:bg-muted focus-visible:ring-2 focus-visible:ring-ring [&_svg]:size-4";
+  "relative inline-flex size-7 shrink-0 items-center justify-center rounded-md text-foreground outline-none hover:bg-muted focus-visible:ring-2 focus-visible:ring-ring [&_svg]:size-4";
 
 /**
  * The signed-in top bar's search and light / dark switch. Search opens the
