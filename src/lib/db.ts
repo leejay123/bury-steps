@@ -25,6 +25,10 @@ function withQueryParam(url: string, key: string, value: string) {
  * raise only if spikes stay under the database's limit); a page's other
  * queries wait their turn inside the client instead. Migrations still use
  * DATABASE_URL as stored in Vercel (session / 5432).
+ *
+ * 4 from November 2026: the pooler's pool size was raised from 15 to 30 (Supabase →
+ * Database Settings → Connection pooling), so a handful of fresh isolates after a deploy
+ * still fit under it. Raise this only together with that pool size.
  */
 function runtimeDatasourceUrl(url = process.env.DATABASE_URL) {
   if (!url) return undefined;
@@ -33,7 +37,7 @@ function runtimeDatasourceUrl(url = process.env.DATABASE_URL) {
   if (/pooler\.supabase\.com:6543/i.test(next)) {
     next = withQueryParam(next, "pgbouncer", "true");
   }
-  next = withQueryParam(next, "connection_limit", "2");
+  next = withQueryParam(next, "connection_limit", "4");
   return withQueryParam(next, "pool_timeout", "20");
 }
 
