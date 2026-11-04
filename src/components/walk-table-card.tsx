@@ -4,17 +4,11 @@ import { useState, type ReactNode } from "react";
 import {
   Check,
   ChevronRight,
-  Search,
   SearchX,
   SlidersHorizontal,
 } from "lucide-react";
 import { WalkStatusHeader } from "@/components/walk-status-badge";
 import { IntentLink } from "@/components/intent-link";
-import {
-  InputGroup,
-  InputGroupAddon,
-  InputGroupInput,
-} from "@/components/ui/input-group";
 import {
   Popover,
   PopoverContent,
@@ -31,7 +25,7 @@ import { formatTime } from "@/lib/dates";
 import { LIST_PAGE_SIZE } from "@/lib/list-page-size";
 import { SkLine } from "@/components/list-skeletons";
 import { RememberedRows } from "@/components/remembered-rows";
-import { ButtonGroup } from "@/components/ui/button-group";
+import { EDGE_FILTER, EdgeFilters, EdgeSearch } from "@/components/edge-search";
 import { cn } from "@/lib/utils";
 
 /** One walk as the table shows it. */
@@ -121,24 +115,14 @@ export function WalkTableCard<S extends string, O extends string>({
       className="overflow-hidden rounded-xl border bg-background"
       data-walk-table=""
     >
-      <div className="flex flex-wrap items-center gap-2 border-b p-3">
-        <InputGroup className="min-w-0 flex-1 basis-60">
-          <InputGroupInput
-            aria-label={searchLabel}
-            onChange={(event) => onQuery(event.target.value)}
-            placeholder="Search by walk or meeting point…"
-            value={query}
-          />
-          <InputGroupAddon>
-            <Search data-icon="inline-start" />
-          </InputGroupAddon>
-        </InputGroup>
-        {/* Filter and Show 10 as one group (shadcn's ButtonGroup); on phones it takes its
-            own row under the search, half each, instead of Show 10 wrapping on its own. */}
-        <ButtonGroup aria-label="Filter and page size" className="max-sm:w-full">
+      {/* Edge to edge (design D, as History): the search fills the strip, Filter and Show 10
+          split off by a line; on phones they take a row under the search, half each. */}
+      <div className="flex flex-wrap items-stretch border-b">
+        <EdgeSearch label={searchLabel} onChange={onQuery} placeholder="Search by walk or meeting point…" stack value={query} />
+        <EdgeFilters stack>
         <Popover>
           <PopoverTrigger asChild>
-            <button className={cn(TOOL, "max-sm:flex-1 max-sm:justify-center")} type="button">
+            <button className={cn(TOOL, EDGE_FILTER, "sm:px-4")} type="button">
               <SlidersHorizontal aria-hidden />
               Filter
               {filtersOn ? (
@@ -191,7 +175,7 @@ export function WalkTableCard<S extends string, O extends string>({
         >
           <SelectTrigger
             aria-label="Walks per page"
-            className="h-9 w-auto gap-2 max-sm:flex-1 max-sm:justify-center"
+            className={`${EDGE_FILTER} w-auto gap-2 sm:px-4`}
           >
             <SelectValue />
           </SelectTrigger>
@@ -203,7 +187,7 @@ export function WalkTableCard<S extends string, O extends string>({
             ))}
           </SelectContent>
         </Select>
-        </ButtonGroup>
+        </EdgeFilters>
       </div>
 
       {rows.length === 0 ? (
@@ -341,20 +325,15 @@ export function WalkTableCardSkeleton({
 }) {
   return (
     <div aria-busy="true" className="overflow-hidden rounded-xl border bg-background" data-walk-table="">
-      <div className="flex flex-wrap items-center gap-2 border-b p-3">
-        <InputGroup className="min-w-0 flex-1 basis-60">
-          <InputGroupInput aria-label="Search walks" defaultValue="" placeholder="Search by walk or meeting point…" readOnly />
-          <InputGroupAddon>
-            <Search data-icon="inline-start" />
-          </InputGroupAddon>
-        </InputGroup>
-        <ButtonGroup aria-label="Filter and page size" className="max-sm:w-full">
-        <span className={cn(TOOL, "max-sm:flex-1 max-sm:justify-center")}>
+      <div className="flex flex-wrap items-stretch border-b">
+        <EdgeSearch label="Search walks" placeholder="Search by walk or meeting point…" readOnly stack />
+        <EdgeFilters stack>
+        <span className={cn(TOOL, EDGE_FILTER, "sm:px-4")}>
           <SlidersHorizontal aria-hidden />
           Filter
         </span>
         <Select value="10">
-          <SelectTrigger aria-label="Walks per page" className="h-9 w-auto gap-2 max-sm:flex-1 max-sm:justify-center" tabIndex={-1}>
+          <SelectTrigger aria-label="Walks per page" className={`${EDGE_FILTER} w-auto gap-2 sm:px-4`} tabIndex={-1}>
             <SelectValue />
           </SelectTrigger>
           <SelectContent align="end">
@@ -365,7 +344,7 @@ export function WalkTableCardSkeleton({
             ))}
           </SelectContent>
         </Select>
-        </ButtonGroup>
+        </EdgeFilters>
       </div>
       <RememberedRows
         as="ul"

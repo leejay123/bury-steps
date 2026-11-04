@@ -15,8 +15,7 @@ import {
   DataListItem,
   DataListItemMain,
 } from "@/components/data-list";
-import { InputGroup, InputGroupAddon, InputGroupInput } from "@/components/ui/input-group";
-import { EDGE_FILTER, EDGE_SEARCH } from "@/components/edge-search";
+import { EDGE_FILTER, EdgeBar, EdgeFilters, EdgeSearch } from "@/components/edge-search";
 import {
   Select,
   SelectContent,
@@ -111,21 +110,9 @@ export function AttendanceHistory({
 
   return (
     <div className="flex flex-col gap-6" data-edge-history="" ref={listRef}>
-      {/* Edge to edge: the search fills the strip, no box of its own; the filters sit at
-          the end, each split off by one line. */}
-      <div className="flex items-stretch" data-edge-bar="" data-edge-flush="" data-edge-top="">
-        <InputGroup className={EDGE_SEARCH}>
-          <InputGroupInput
-            aria-label="Search your walk history"
-            className="text-[0.9375rem]"
-            onChange={(event) => setQuery(event.target.value)}
-            placeholder="Search by walk or meeting point…"
-            value={query}
-          />
-          <InputGroupAddon className="pl-3">
-            <Search data-icon="inline-start" />
-          </InputGroupAddon>
-        </InputGroup>
+      <EdgeBar edgeTop>
+        <EdgeSearch label="Search your walk history" onChange={setQuery} placeholder="Search by walk or meeting point…" value={query} />
+        <EdgeFilters>
         <Select onValueChange={(value) => setStatus(value as StatusFilter)} value={status}>
           <SelectTrigger aria-label="Status" className={`${EDGE_FILTER} w-24 sm:w-[12.5rem]`} id="history-status-filter">
             <SelectValue />
@@ -152,7 +139,8 @@ export function AttendanceHistory({
             </SelectContent>
           </Select>
         ) : null}
-      </div>
+        </EdgeFilters>
+      </EdgeBar>
 
       {filtered.length === 0 ? (
         <EmptyState

@@ -12,7 +12,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { PageTop } from "@/components/page-top";
 import { Empty, EmptyContent, EmptyHeader, EmptyMedia, EmptyTitle } from "@/components/ui/empty";
-import { InputGroup, InputGroupAddon, InputGroupInput } from "@/components/ui/input-group";
+import { EdgeBar, EdgeSearch } from "@/components/edge-search";
 import { ListPagination } from "@/components/list-pagination";
 import { centerInScrollStrip } from "@/lib/scroll-strip";
 import { NOTICE_CATS_COOKIE, writeClientCookie } from "@/lib/remembered-rows-key";
@@ -131,20 +131,9 @@ function NoticesBlogSectionInner({
           intro="Updates from the organisers. Short messages stay in the bell; open a row for the full write-up."
           title="Notices"
         />
-        <div data-edge-bar="" data-edge-top="">
-        <InputGroup className="w-full">
-          <InputGroupInput
-            aria-label="Search notices"
-            ref={searchRef}
-            onChange={(event) => setSearchTerm(event.target.value)}
-            placeholder="Search notices…"
-            value={searchTerm}
-          />
-          <InputGroupAddon>
-            <Search data-icon="inline-start" />
-          </InputGroupAddon>
-        </InputGroup>
-        </div>
+        <EdgeBar edgeTop>
+          <EdgeSearch inputRef={searchRef} label="Search notices" onChange={setSearchTerm} placeholder="Search notices…" value={searchTerm} />
+        </EdgeBar>
       </div>
 
       <NoticeCategoryBar active={activeCategory} labels={filters} onSelect={selectCategory} />

@@ -13,8 +13,7 @@ import { Button } from "@/components/ui/button";
 import { Empty, EmptyContent, EmptyHeader, EmptyMedia, EmptyTitle } from "@/components/ui/empty";
 import { WalkStatusHeader } from "@/components/walk-status-badge";
 import { usePagedList } from "@/hooks/use-paged-list";
-import { InputGroup, InputGroupAddon, InputGroupInput } from "@/components/ui/input-group";
-import { Label } from "@/components/ui/label";
+import { EDGE_FILTER, EdgeBar, EdgeFilters, EdgeSearch } from "@/components/edge-search";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 export type AllWalksRow = {
@@ -111,40 +110,26 @@ function AllWalksListInner({ rows }: { rows: AllWalksRow[] }) {
 
   return (
     <div className="flex flex-col gap-4" ref={listRef}>
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-end" data-edge-bar="">
-        <InputGroup className="w-full min-w-0 sm:flex-1">
-          <InputGroupInput
-            aria-label="Search all walks"
-            ref={searchRef}
-            onChange={(event) => setQuery(event.target.value)}
-            placeholder="Search by walk or meeting point…"
-            value={query}
-          />
-          <InputGroupAddon>
-            <Search data-icon="inline-start" />
-          </InputGroupAddon>
-        </InputGroup>
-        <div className="flex shrink-0 flex-col gap-1.5">
-          <Label htmlFor="all-walks-status-filter">Status</Label>
+      {/* Edge to edge (design D, as History). */}
+      <EdgeBar>
+        <EdgeSearch inputRef={searchRef} label="Search all walks" onChange={setQuery} placeholder="Search by walk or meeting point…" value={query} />
+        <EdgeFilters>
           <Select onValueChange={(value) => setStatusFilter(value as StatusFilter)} value={statusFilter}>
-            <SelectTrigger className="w-full sm:w-[9.5rem]" id="all-walks-status-filter">
+            <SelectTrigger aria-label="Status" className={`${EDGE_FILTER} w-28 sm:w-[9.5rem]`} id="all-walks-status-filter">
               <SelectValue />
             </SelectTrigger>
-            <SelectContent>
+            <SelectContent align="end">
               <SelectItem value="all">All statuses</SelectItem>
               {hasCompleted ? <SelectItem value="completed">Completed</SelectItem> : null}
               {hasCancelled ? <SelectItem value="cancelled">Cancelled</SelectItem> : null}
             </SelectContent>
           </Select>
-        </div>
-        {availableYears.length > 1 ? (
-          <div className="flex shrink-0 flex-col gap-1.5">
-            <Label htmlFor="all-walks-year-filter">Year</Label>
+          {availableYears.length > 1 ? (
             <Select onValueChange={setYearFilter} value={yearFilter}>
-              <SelectTrigger className="w-full sm:w-[8.5rem]" id="all-walks-year-filter">
+              <SelectTrigger aria-label="Year" className={`${EDGE_FILTER} w-24 sm:w-[8.5rem]`} id="all-walks-year-filter">
                 <SelectValue />
               </SelectTrigger>
-              <SelectContent>
+              <SelectContent align="end">
                 <SelectItem value="all">All years</SelectItem>
                 {availableYears.map((year) => (
                   <SelectItem key={year} value={String(year)}>
@@ -153,9 +138,9 @@ function AllWalksListInner({ rows }: { rows: AllWalksRow[] }) {
                 ))}
               </SelectContent>
             </Select>
-          </div>
-        ) : null}
-      </div>
+          ) : null}
+        </EdgeFilters>
+      </EdgeBar>
 
       {filtered.length === 0 ? (
         // Same empty state as the Upcoming tab, with a way back to every walk.

@@ -2,8 +2,8 @@
 
 import { AlertCircle, Mail, Search } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { ButtonGroup } from "@/components/ui/button-group";
-import { EDGE_FILTER, EDGE_SEARCH } from "@/components/edge-search";
+import { cn } from "@/lib/utils";
+import { EDGE_FILTER, EdgeBar, EdgeFilters, EdgeSearch } from "@/components/edge-search";
 import { InputGroup, InputGroupAddon, InputGroupInput } from "@/components/ui/input-group";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -127,138 +127,114 @@ export function WalkListChrome({ lines }: { lines?: { title: string; detail: str
 /** Role, sort and Needs attention — the same bar the members list uses. */
 export function MembersFilterChrome() {
   return (
-    <div className="flex flex-wrap items-center gap-2" data-edge-bar="" data-edge-top="">
-      <InputGroup className="min-w-0 flex-1 basis-full sm:basis-56">
-        <InputGroupInput
-          aria-label="Search members"
-          defaultValue=""
-          placeholder="Search by name, email, or role…"
-          readOnly
-        />
-        <InputGroupAddon>
-          <Search data-icon="inline-start" />
-        </InputGroupAddon>
-      </InputGroup>
-      <ButtonGroup aria-label="Filter members" className="max-sm:w-full">
+    <EdgeBar edgeTop>
+      <EdgeSearch label="Search members" placeholder="Search by name, email, or role…" readOnly stack />
+      <EdgeFilters stack>
         <Select onValueChange={() => {}} value="all">
-          <SelectTrigger aria-label="Role" className="max-sm:flex-1 sm:w-40" id="member-role-filter-hold">
+          <SelectTrigger aria-label="Role" className={`${EDGE_FILTER} sm:w-40`} id="member-role-filter-hold" tabIndex={-1}>
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="all">All roles</SelectItem>
-            <SelectItem value="ADMIN">Organisers</SelectItem>
-            <SelectItem value="MEMBER">Members</SelectItem>
+          <SelectItem value="all">All roles</SelectItem>
+          <SelectItem value="ADMIN">Organisers</SelectItem>
+          <SelectItem value="MEMBER">Members</SelectItem>
           </SelectContent>
         </Select>
         <Select onValueChange={() => {}} value="oldest">
-          <SelectTrigger aria-label="Sort by" className="max-sm:flex-1 sm:w-40" id="member-sort-hold">
+          <SelectTrigger aria-label="Sort by" className={`${EDGE_FILTER} sm:w-40`} id="member-sort-hold" tabIndex={-1}>
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="oldest">Oldest first</SelectItem>
-            <SelectItem value="newest">Newest first</SelectItem>
-            <SelectItem value="name">Name A–Z</SelectItem>
-            <SelectItem value="clockins">Most clock-ins</SelectItem>
+          <SelectItem value="oldest">Oldest first</SelectItem>
+          <SelectItem value="newest">Newest first</SelectItem>
+          <SelectItem value="name">Name A–Z</SelectItem>
+          <SelectItem value="clockins">Most clock-ins</SelectItem>
           </SelectContent>
         </Select>
-      </ButtonGroup>
-      <Button className="shrink-0 gap-1.5 max-sm:w-full" type="button" variant="outline">
-        <AlertCircle />
-        Needs attention
-      </Button>
-    </div>
+      </EdgeFilters>
+      <EdgeFilters stack>
+        <Button className={cn(EDGE_FILTER, "gap-1.5")} tabIndex={-1} type="button" variant="outline">
+          <AlertCircle />
+          Needs attention
+        </Button>
+      </EdgeFilters>
+    </EdgeBar>
   );
 }
 
 export function ReportsFilterChrome() {
   return (
-    <div className="flex flex-col gap-3 sm:flex-row sm:items-end" data-edge-bar="" data-edge-top="">
-      <ListSearch label="Search accident reports" placeholder="Search by walk, people involved, or what happened…" />
-      <FilterSelect
-        id="report-link-filter-hold"
-        label="Walk link"
-        options={[
-          { value: "all", label: "All reports" },
-          { value: "linked", label: "Linked to a walk" },
-          { value: "unlinked", label: "No linked walk" },
-        ]}
-        value="all"
-      />
-      <FilterSelect
-        id="report-sort-hold"
-        label="Sort"
-        options={[
-          { value: "desc", label: "Newest first" },
-          { value: "asc", label: "Oldest first" },
-        ]}
-        value="desc"
-      />
-    </div>
+    <EdgeBar edgeTop>
+      <EdgeSearch label="Search accident reports" placeholder="Search by walk, people involved, or what happened…" readOnly stack />
+      <EdgeFilters stack>
+        <Select onValueChange={() => {}} value="all">
+          <SelectTrigger aria-label="Walk link" className={`${EDGE_FILTER} sm:w-[11rem]`} id="report-link-filter-hold" tabIndex={-1}>
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+          <SelectItem value="all">All reports</SelectItem>
+          <SelectItem value="linked">Linked to a walk</SelectItem>
+          <SelectItem value="unlinked">No linked walk</SelectItem>
+          </SelectContent>
+        </Select>
+        <Select onValueChange={() => {}} value="desc">
+          <SelectTrigger aria-label="Sort" className={`${EDGE_FILTER} sm:w-[11rem]`} id="report-sort-hold" tabIndex={-1}>
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+          <SelectItem value="desc">Newest first</SelectItem>
+          <SelectItem value="asc">Oldest first</SelectItem>
+          </SelectContent>
+        </Select>
+      </EdgeFilters>
+    </EdgeBar>
   );
 }
 
 export function MessagesFilterChrome() {
   return (
-    <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-end" data-edge-bar="" data-edge-top="">
-      <InputGroup className="w-full min-w-0 sm:min-w-56 sm:flex-1">
-        <InputGroupInput
-          aria-label="Search messages"
-          defaultValue=""
-          placeholder="Search by name, email, or message…"
-          readOnly
-        />
-        <InputGroupAddon>
-          <Search data-icon="inline-start" />
-        </InputGroupAddon>
-      </InputGroup>
-      <FilterSelect
-        id="message-date-range-hold"
-        label="Date"
-        options={[
-          { value: "all", label: "All time" },
-          { value: "today", label: "Today" },
-          { value: "7", label: "Last 7 days" },
-          { value: "30", label: "Last 30 days" },
-        ]}
-        value="all"
-        width="sm:w-40"
-      />
-      {/* As the real bar (contact-messages-list.tsx): Unread only, off. */}
-      <Button className="shrink-0 gap-1.5" tabIndex={-1} type="button" variant="outline">
-        <Mail />
-        Unread only
-      </Button>
-    </div>
+    <EdgeBar edgeTop>
+      <EdgeSearch label="Search messages" placeholder="Search by name, email, or message…" readOnly stack />
+      <EdgeFilters stack>
+        <Select onValueChange={() => {}} value="all">
+          <SelectTrigger aria-label="Date" className={`${EDGE_FILTER} sm:w-40`} id="message-date-range-hold" tabIndex={-1}>
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+          <SelectItem value="all">All time</SelectItem>
+          <SelectItem value="today">Today</SelectItem>
+          <SelectItem value="7">Last 7 days</SelectItem>
+          <SelectItem value="30">Last 30 days</SelectItem>
+          </SelectContent>
+        </Select>
+        {/* As the real bar (contact-messages-list.tsx): Unread only, off. */}
+        <Button className={cn(EDGE_FILTER, "gap-1.5")} tabIndex={-1} type="button" variant="outline">
+          <Mail />
+          Unread only
+        </Button>
+      </EdgeFilters>
+    </EdgeBar>
   );
 }
 
 export function HistoryFilterChrome() {
   return (
-    <div className="flex items-stretch" data-edge-bar="" data-edge-flush="" data-edge-top="">
-      <InputGroup className={EDGE_SEARCH}>
-        <InputGroupInput
-          aria-label="Search your walk history"
-          className="text-[0.9375rem]"
-          defaultValue=""
-          placeholder="Search by walk or meeting point…"
-          readOnly
-        />
-        <InputGroupAddon className="pl-3">
-          <Search data-icon="inline-start" />
-        </InputGroupAddon>
-      </InputGroup>
-      <Select onValueChange={() => {}} value="all">
-        <SelectTrigger aria-label="Status" className={`${EDGE_FILTER} w-24 sm:w-[12.5rem]`} id="history-status-filter-hold">
-          <SelectValue />
-        </SelectTrigger>
-        <SelectContent>
+    <EdgeBar edgeTop>
+      <EdgeSearch label="Search your walk history" placeholder="Search by walk or meeting point…" readOnly />
+      <EdgeFilters>
+        <Select onValueChange={() => {}} value="all">
+          <SelectTrigger aria-label="Status" className={`${EDGE_FILTER} w-24 sm:w-[12.5rem]`} id="history-status-filter-hold" tabIndex={-1}>
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
           <SelectItem value="all">All</SelectItem>
           <SelectItem value="full">Stayed for walk</SelectItem>
           <SelectItem value="left-early">Left early</SelectItem>
           <SelectItem value="cancelled">Cancelled</SelectItem>
-        </SelectContent>
-      </Select>
-    </div>
+          </SelectContent>
+        </Select>
+      </EdgeFilters>
+    </EdgeBar>
   );
 }
 
@@ -351,13 +327,8 @@ export function MemberWalksHold({ lines }: { lines?: { title: string; detail: st
 
 export function NoticesSearchChrome() {
   return (
-    <div data-edge-bar="" data-edge-top="">
-      <InputGroup className="w-full">
-        <InputGroupInput aria-label="Search notices" defaultValue="" placeholder="Search notices…" readOnly />
-        <InputGroupAddon>
-          <Search data-icon="inline-start" />
-        </InputGroupAddon>
-      </InputGroup>
-    </div>
+    <EdgeBar edgeTop>
+      <EdgeSearch label="Search notices" placeholder="Search notices…" readOnly />
+    </EdgeBar>
   );
 }

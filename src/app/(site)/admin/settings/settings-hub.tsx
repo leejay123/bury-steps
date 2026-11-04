@@ -3,14 +3,14 @@
 import { Fragment, createContext, useContext, useDeferredValue, useState } from "react";
 import { Skeleton } from "@/components/ui/skeleton";
 import Link from "next/link";
-import { AlertCircle, ChevronDown, ChevronRight, Search, SearchX } from "lucide-react";
+import { AlertCircle, ChevronDown, ChevronRight, SearchX } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { unlockIdleDocument } from "@/components/overlay-root";
 import { SettingsPageIcon } from "@/components/settings-page-icons";
 import { DataList, DataListBody, DataListItem } from "@/components/data-list";
 import { EmptyState } from "@/components/empty-state";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { InputGroup, InputGroupAddon, InputGroupInput } from "@/components/ui/input-group";
+import { EdgeBar, EdgeSearch } from "@/components/edge-search";
 import type { SettingsPageLink } from "@/lib/settings-pages";
 
 /** Where a setting stands right now, worked out on the server. */
@@ -252,20 +252,9 @@ export function SettingsHub({ groups }: { groups: SettingsHubGroup[] }) {
         </Alert>
       ) : null}
 
-      <div data-edge-bar="">
-      <InputGroup>
-        <InputGroupInput
-          aria-label="Search settings"
-          onChange={(event) => setQuery(event.target.value)}
-          placeholder="Search settings…"
-          type="search"
-          value={query}
-        />
-        <InputGroupAddon>
-          <Search data-icon="inline-start" />
-        </InputGroupAddon>
-      </InputGroup>
-      </div>
+      <EdgeBar>
+        <EdgeSearch label="Search settings" onChange={setQuery} placeholder="Search settings…" type="search" value={query} />
+      </EdgeBar>
 
       {filtered.length === 0 ? (
         <EmptyState

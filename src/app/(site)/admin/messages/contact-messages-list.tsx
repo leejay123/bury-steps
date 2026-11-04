@@ -39,8 +39,7 @@ import {
   dataListActionsStackClassName,
   dataListItemStackClassName,
 } from "@/components/data-list";
-import { InputGroup, InputGroupAddon, InputGroupInput } from "@/components/ui/input-group";
-import { Label } from "@/components/ui/label";
+import { EDGE_FILTER, EdgeBar, EdgeFilters, EdgeSearch } from "@/components/edge-search";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { LIST_PAGE_SIZE } from "@/lib/list-page-size";
 import { MESSAGE_LINES_COOKIE, writeClientCookie } from "@/lib/remembered-rows-key";
@@ -287,22 +286,12 @@ export function ContactMessagesList({ messages }: { messages: ContactMessageRow[
 
   return (
     <>
-      <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-end" data-edge-bar="" data-edge-top="">
-        <InputGroup className="w-full min-w-0 sm:min-w-56 sm:flex-1">
-          <InputGroupInput
-            aria-label="Search messages"
-            onChange={(event) => setQuery(event.target.value)}
-            placeholder="Search by name, email, or message…"
-            value={query}
-          />
-          <InputGroupAddon>
-            <Search data-icon="inline-start" />
-          </InputGroupAddon>
-        </InputGroup>
-        <div className="flex shrink-0 flex-col gap-1.5">
-          <Label htmlFor="message-date-range">Date</Label>
+      {/* Edge to edge (design D, as History): on phones the filters take a row under the search. */}
+      <EdgeBar edgeTop>
+        <EdgeSearch label="Search messages" onChange={setQuery} placeholder="Search by name, email, or message…" stack value={query} />
+        <EdgeFilters stack>
           <Select onValueChange={(value) => setDateRange(value as DateRange)} value={dateRange}>
-            <SelectTrigger className="w-full sm:w-40" id="message-date-range">
+            <SelectTrigger aria-label="Date" className={`${EDGE_FILTER} sm:w-40`} id="message-date-range">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
@@ -312,11 +301,11 @@ export function ContactMessagesList({ messages }: { messages: ContactMessageRow[
               <SelectItem value="30">Last 30 days</SelectItem>
             </SelectContent>
           </Select>
-        </div>
         <Button
           aria-pressed={unreadOnly}
           className={cn(
-            "shrink-0 gap-1.5",
+            EDGE_FILTER,
+            "gap-1.5",
             unreadOnly &&
               "border-amber-300 bg-amber-50 text-amber-800 hover:bg-amber-100 hover:text-amber-800 dark:border-amber-800 dark:bg-amber-950 dark:text-amber-200 dark:hover:bg-amber-900",
           )}
@@ -328,11 +317,12 @@ export function ContactMessagesList({ messages }: { messages: ContactMessageRow[
           Unread only
         </Button>
         {filtersActive ? (
-          <Button className="shrink-0" onClick={clearFilters} size="sm" type="button" variant="ghost">
+          <Button className={cn(EDGE_FILTER, "font-normal text-muted-foreground")} onClick={clearFilters} type="button" variant="ghost">
             Clear filters
           </Button>
         ) : null}
-      </div>
+        </EdgeFilters>
+      </EdgeBar>
 
       {filtered.length === 0 ? (
         <EmptyState

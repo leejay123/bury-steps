@@ -18,8 +18,7 @@ import { usePagedList } from "@/hooks/use-paged-list";
 import { useUrlListState } from "@/hooks/use-url-list-state";
 import { Button } from "@/components/ui/button";
 import { AdminPageIntro } from "../../admin-page-intro";
-import { Label } from "@/components/ui/label";
-import { InputGroup, InputGroupAddon, InputGroupInput } from "@/components/ui/input-group";
+import { EDGE_FILTER, EdgeBar, EdgeFilters, EdgeSearch } from "@/components/edge-search";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import {
   Drawer,
@@ -101,54 +100,41 @@ export function AccidentReportManager({
         title={intro.title}
       />
       <div className="flex flex-col gap-4" ref={listRef}>
-        <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between" data-edge-bar="" data-edge-top="">
-          {hasAnyReports ? (
-            <div className="flex min-w-0 flex-1 flex-col gap-3 sm:flex-row sm:items-end">
-              <InputGroup className="w-full min-w-0 sm:flex-1">
-                <InputGroupInput
-                  aria-label="Search accident reports"
-                  onChange={(event) => setQuery(event.target.value)}
-                  placeholder="Search by walk, people involved, or what happened…"
-                  value={query}
-                />
-                <InputGroupAddon>
-                  <Search data-icon="inline-start" />
-                </InputGroupAddon>
-              </InputGroup>
-              <div className="flex shrink-0 flex-col gap-1.5">
-                <Label htmlFor="report-link-filter">Walk link</Label>
-                <Select
-                  onValueChange={(value) => setFilter("link", value, "all")}
-                  value={linkFilter}
-                >
-                  <SelectTrigger className="w-full sm:w-[11rem]" id="report-link-filter">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">All reports</SelectItem>
-                    <SelectItem value="linked">Linked to a walk</SelectItem>
-                    <SelectItem value="unlinked">No linked walk</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-              <div className="flex shrink-0 flex-col gap-1.5">
-                <Label htmlFor="report-sort">Sort</Label>
-                <Select
-                  onValueChange={(value) => setFilter("sort", value, "desc")}
-                  value={sortOrder}
-                >
-                  <SelectTrigger className="w-full sm:w-[11rem]" id="report-sort">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="desc">Newest first</SelectItem>
-                    <SelectItem value="asc">Oldest first</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-            </div>
-          ) : null}
-        </div>
+        {hasAnyReports ? (
+          // Edge to edge (design D, as History): on phones the filters take a row under the search.
+          <EdgeBar edgeTop>
+            <EdgeSearch
+              label="Search accident reports"
+              onChange={setQuery}
+              placeholder="Search by walk, people involved, or what happened…"
+              stack
+              value={query}
+            />
+            <EdgeFilters stack>
+              <Select onValueChange={(value) => setFilter("link", value, "all")} value={linkFilter}>
+                <SelectTrigger aria-label="Walk link" className={`${EDGE_FILTER} sm:w-[11rem]`} id="report-link-filter">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All reports</SelectItem>
+                  <SelectItem value="linked">Linked to a walk</SelectItem>
+                  <SelectItem value="unlinked">No linked walk</SelectItem>
+                </SelectContent>
+              </Select>
+              <Select onValueChange={(value) => setFilter("sort", value, "desc")} value={sortOrder}>
+                <SelectTrigger aria-label="Sort" className={`${EDGE_FILTER} sm:w-[11rem]`} id="report-sort">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="desc">Newest first</SelectItem>
+                  <SelectItem value="asc">Oldest first</SelectItem>
+                </SelectContent>
+              </Select>
+            </EdgeFilters>
+          </EdgeBar>
+        ) : (
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between" data-edge-bar="" data-edge-top="" />
+        )}
 
         {!hasAnyReports ? (
           <EmptyState
