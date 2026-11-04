@@ -169,7 +169,7 @@ async function AdminWalksTabs() {
     <RememberListCount count={upcoming.length} id="admin-walks-upcoming" max={10000} />
     <RememberListCount count={past.length} id="admin-walks-past" max={10000} />
     <QueryTabs className="w-full" defaultValue="upcoming">
-      <div data-edge-bar="" data-edge-top="">
+      <div data-edge-bar="" data-edge-flush="" data-edge-top="">
         <TabsList>
           <TabsTrigger value="upcoming">Upcoming ({upcoming.length})</TabsTrigger>
           <TabsTrigger value="past">History ({past.length})</TabsTrigger>

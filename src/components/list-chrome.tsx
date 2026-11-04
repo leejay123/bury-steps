@@ -66,7 +66,7 @@ export function WalkListChrome({ lines }: { lines?: { title: string; detail: str
   // search and filters with it, as on the real page.
   return (
     <QueryTabs className="w-full" defaultValue="upcoming">
-      <div data-edge-bar="" data-edge-top="">
+      <div data-edge-bar="" data-edge-flush="" data-edge-top="">
         <TabsList>
           <TabsTrigger value="upcoming">
             Upcoming
@@ -245,7 +245,7 @@ export function MemberWalksHold({ lines }: { lines?: { title: string; detail: st
   return (
     <div className="contents" data-page-loading="">
       <QueryTabs defaultValue="upcoming">
-        <div data-edge-bar="" data-edge-top="">
+        <div data-edge-bar="" data-edge-flush="" data-edge-top="">
           <TabsList>
             <TabsTrigger value="upcoming">
               Upcoming

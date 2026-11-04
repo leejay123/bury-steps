@@ -79,7 +79,7 @@ export function EdgeFilters({ children, stack }: { children: ReactNode; stack?: 
     <div
       className={cn(
         "flex shrink-0",
-        stack && "max-sm:w-full max-sm:border-t max-sm:*:flex-1 max-sm:*:justify-center max-sm:[&>*:first-child]:border-l-0!",
+        stack && "max-sm:w-full max-sm:border-t max-sm:*:flex-1 max-sm:*:justify-center! max-sm:**:data-[slot=select-value]:flex-none max-sm:[&>*:first-child]:border-l-0!",
       )}
     >
       {children}

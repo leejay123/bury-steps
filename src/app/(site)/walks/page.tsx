@@ -270,7 +270,7 @@ function WalksBody({ view }: { view: WalksView }) {
       <MemberWelcomeDialog firstName={view.firstName} hasNoWalks={view.showWelcome} userId={view.userId} />
 
       <QueryTabs defaultValue="upcoming">
-        <div data-edge-bar="" data-edge-top="">
+        <div data-edge-bar="" data-edge-flush="" data-edge-top="">
           <TabsList>
             <TabsTrigger value="upcoming">
               <LiveUpcomingCount walks={upcoming} />
