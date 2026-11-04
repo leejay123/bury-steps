@@ -1,42 +1,21 @@
 "use client";
 
+/**
+ * shadcn.io's Select (shadcn.io/ui/select: Base UI), as theirs: the list opens with the
+ * chosen option over its button. Kept on our old API so every page's dropdown moved over
+ * unchanged: `value` / `defaultValue` / `onValueChange` take strings ("" = nothing chosen),
+ * `name` posts with a form, and SelectValue shows the chosen item's label (the items are
+ * read from the SelectItems, as before).
+ */
+import { Select as SelectPrimitive } from "@base-ui/react/select";
+import { CheckIcon, ChevronDownIcon, ChevronUpIcon } from "lucide-react";
 import * as React from "react";
-import { CheckIcon, ChevronDownIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { Button } from "@/components/ui/button";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { unlockIdleDocument } from "@/components/overlay-root";
 
-type SelectOption = {
-  disabled?: boolean;
-  label: React.ReactNode;
-  value: string;
-};
-
-type SelectContextValue = {
-  disabled?: boolean;
-  items: SelectOption[];
-  open: boolean;
-  selected: string;
-  select: (value: string) => void;
-  setOpen: (open: boolean) => void;
-  triggerWidth?: number;
-};
-
-const SelectContext = React.createContext<SelectContextValue | null>(null);
-
-function useSelect() {
-  const context = React.useContext(SelectContext);
-  if (!context) throw new Error("Select components must be used within Select");
-  return context;
-}
+type SelectOption = { label: React.ReactNode; value: string };
 
 function isSelectItemElement(child: React.ReactElement) {
-  return (
-    child.type === SelectItem ||
-    (typeof child.type === "function" &&
-      (child.type as { displayName?: string }).displayName === "SelectItem")
-  );
+  return child.type === SelectItem;
 }
 
 function collectSelectItems(node: React.ReactNode): SelectOption[] {
@@ -44,12 +23,8 @@ function collectSelectItems(node: React.ReactNode): SelectOption[] {
   React.Children.forEach(node, (child) => {
     if (!React.isValidElement(child)) return;
     if (isSelectItemElement(child)) {
-      const props = child.props as { children?: React.ReactNode; disabled?: boolean; value: string };
-      items.push({
-        disabled: props.disabled,
-        label: props.children,
-        value: String(props.value),
-      });
+      const props = child.props as { children?: React.ReactNode; value: string };
+      items.push({ label: props.children, value: String(props.value) });
       return;
     }
     const nested = (child.props as { children?: React.ReactNode }).children;
@@ -58,7 +33,9 @@ function collectSelectItems(node: React.ReactNode): SelectOption[] {
   return items;
 }
 
-function Select({
+const empty = (value: string | undefined) => (value === undefined ? undefined : value === "" ? null : value);
+
+export function Select({
   children,
   defaultValue,
   disabled,
@@ -76,337 +53,206 @@ function Select({
   value?: string;
 }) {
   const items = collectSelectItems(children);
-  const triggerRef = React.useRef<HTMLButtonElement>(null);
-  const [uncontrolled, setUncontrolled] = React.useState(defaultValue ?? "");
-  const [open, setOpen] = React.useState(false);
-  const [triggerWidth, setTriggerWidth] = React.useState<number>();
-  const isControlled = value !== undefined;
-  const selected = isControlled ? value : uncontrolled;
-
-  function select(next: string) {
-    if (!isControlled) setUncontrolled(next);
-    onValueChange?.(next);
-    setOpen(false);
-  }
-
-  function openChange(next: boolean) {
-    if (next) {
-      const width = triggerRef.current?.getBoundingClientRect().width;
-      if (width) setTriggerWidth(width);
-    } else {
-      unlockIdleDocument();
-    }
-    setOpen(next);
-  }
-
-  // Scrolling the page closes an open list, instead of leaving it floating
-  // over the page. Scrolling inside the list itself doesn't.
-  React.useEffect(() => {
-    if (!open) return;
-    const openedAt = performance.now();
-    const startY = window.scrollY;
-    const onScroll = (event: Event) => {
-      const target = event.target;
-      if (target instanceof Element && target.closest("[data-select-dropdown]")) return;
-      if (target === document || target === window) {
-        if (Math.abs(window.scrollY - startY) < 8) return;
-      } else if (performance.now() - openedAt < 200) {
-        return; // a box nudging itself into view as the list opens
-      }
-      openChange(false);
-    };
-    window.addEventListener("scroll", onScroll, { capture: true, passive: true });
-    return () => window.removeEventListener("scroll", onScroll, { capture: true });
-  }, [open]);
-
   return (
-    <SelectContext.Provider
-      value={{ disabled, items, open, select, selected, setOpen: openChange, triggerWidth }}
-    >
-      {name ? <input name={name} required={required} type="hidden" value={selected} /> : null}
-      <Popover onOpenChange={openChange} open={open}>
-        <SelectTriggerRefContext.Provider value={triggerRef}>{children}</SelectTriggerRefContext.Provider>
-      </Popover>
-    </SelectContext.Provider>
-  );
-}
-
-const SelectTriggerRefContext = React.createContext<React.RefObject<HTMLButtonElement | null> | null>(
-  null,
-);
-
-function SelectTrigger({
-  className,
-  children,
-  onKeyDown,
-  ...props
-}: React.ComponentProps<typeof Button>) {
-  const { disabled, open, setOpen } = useSelect();
-  const triggerRef = React.useContext(SelectTriggerRefContext);
-
-  return (
-    <PopoverTrigger asChild>
-      {/* min-w-0 lets this shrink to w-full instead of being forced wide by
-          its own unwrapped text content (a long selected label) — the fix
-          inside SelectValue's own truncate only handles that span, not this
-          button's own flex-item sizing one level up. */}
-      <Button
-        aria-expanded={open}
-        aria-haspopup="listbox"
-        className={cn("group min-w-0 w-full justify-between font-normal", className)}
-        data-select-trigger=""
-        disabled={disabled}
-        onKeyDown={(event) => {
-          onKeyDown?.(event);
-          // Up or down arrow opens the list too, as on a built-in dropdown.
-          if (!event.defaultPrevented && !open && (event.key === "ArrowDown" || event.key === "ArrowUp")) {
-            event.preventDefault();
-            setOpen(true);
-          }
-        }}
-        ref={triggerRef}
-        role="combobox"
-        variant="outline"
-        {...props}
-        type="button"
-      >
-        {children}
-        <ChevronDownIcon
-          className={cn(
-            "shrink-0 text-muted-foreground transition-transform duration-200 group-hover:text-foreground",
-            open && "rotate-180",
-          )}
-        />
-      </Button>
-    </PopoverTrigger>
-  );
-}
-
-function SelectValue({
-  className,
-  placeholder,
-}: {
-  className?: string;
-  placeholder?: string;
-}) {
-  const { items, selected } = useSelect();
-  const item = items.find((entry) => entry.value === selected);
-  // min-w-0 is load-bearing: a flex child's default min-width:auto overrides
-  // truncate's overflow-hidden, letting long text (e.g. "Name · email")
-  // push past the trigger's edge instead of ellipsis-cutting inside it.
-  if (!item) {
-    return (
-      <span className={cn("min-w-0 truncate text-muted-foreground", className)}>{placeholder}</span>
-    );
-  }
-  return <span className={cn("min-w-0 truncate", className)}>{item.label}</span>;
-}
-
-function enabledOptions(list: HTMLElement) {
-  return [...list.querySelectorAll<HTMLButtonElement>('[role="option"]:not(:disabled)')];
-}
-
-/** Focuses a choice and scrolls the list (never the page) to show it. */
-function focusOption(list: HTMLElement, option: HTMLElement) {
-  option.focus({ preventScroll: true });
-  const options = enabledOptions(list);
-  if (option === options[0]) {
-    list.scrollTop = 0;
-    return;
-  }
-  if (option === options.at(-1)) {
-    list.scrollTop = list.scrollHeight;
-    return;
-  }
-  const listBox = list.getBoundingClientRect();
-  const box = option.getBoundingClientRect();
-  if (box.top < listBox.top) list.scrollTop -= listBox.top - box.top;
-  else if (box.bottom > listBox.bottom) list.scrollTop += box.bottom - listBox.bottom;
-}
-
-/**
- * Keyboard use inside the open list, as on a built-in dropdown: up and down
- * arrows move between choices, Home and End jump to the first and last, and
- * typing a letter or two jumps to the choice that starts with them. Enter
- * or Space picks the one that has focus.
- */
-function useListKeys() {
-  const typed = React.useRef({ text: "", at: 0 });
-
-  return (event: React.KeyboardEvent<HTMLDivElement>) => {
-    const options = enabledOptions(event.currentTarget);
-    if (options.length === 0) return;
-    const current = options.indexOf(document.activeElement as HTMLButtonElement);
-    const startingWith = (search: string, from: number) => {
-      for (let step = 0; step < options.length; step++) {
-        const index = (from + step) % options.length;
-        if (options[index].textContent?.trim().toLowerCase().startsWith(search)) return index;
-      }
-    };
-    let next: number | undefined;
-
-    if (event.key === "ArrowDown") next = current < 0 ? 0 : Math.min(current + 1, options.length - 1);
-    else if (event.key === "ArrowUp") next = current < 0 ? options.length - 1 : Math.max(current - 1, 0);
-    else if (event.key === "Home") next = 0;
-    else if (event.key === "End") next = options.length - 1;
-    else if (event.key.length === 1 && event.key !== " " && !event.ctrlKey && !event.metaKey && !event.altKey) {
-      const now = event.timeStamp;
-      const text = (now - typed.current.at < 700 ? typed.current.text : "") + event.key.toLowerCase();
-      typed.current = { text, at: now };
-      if (text.length === 1) {
-        next = startingWith(text, current + 1);
-      } else {
-        // Keep matching everything typed ("22" finds 22), and the same
-        // letter again with no such choice moves on to the next one
-        // starting with it.
-        next = startingWith(text, Math.max(current, 0));
-        if (next === undefined && [...text].every((char) => char === text[0])) {
-          next = startingWith(text[0], current + 1);
-        }
-      }
-      if (next === undefined) return;
-    } else {
-      return;
-    }
-    if (event.key.length !== 1) typed.current = { text: "", at: 0 };
-
-    event.preventDefault();
-    focusOption(event.currentTarget, options[next]);
-  };
-}
-
-function SelectContent({
-  children,
-  className,
-  onKeyDown,
-  onOpenAutoFocus,
-  position: _position = "popper",
-  ...props
-}: {
-  children: React.ReactNode;
-  className?: string;
-  position?: "item-aligned" | "popper";
-} & React.ComponentProps<typeof PopoverContent>) {
-  const { triggerWidth } = useSelect();
-  const listKeys = useListKeys();
-
-  return (
-    <PopoverContent
-      align="start"
-      onKeyDown={(event) => {
-        onKeyDown?.(event);
-        if (!event.defaultPrevented) listKeys(event);
-      }}
-      onOpenAutoFocus={(event) => {
-        onOpenAutoFocus?.(event);
-        if (event.defaultPrevented) return;
-        // Start on the current choice, so the arrows move on from it.
-        const list = event.currentTarget as HTMLElement;
-        const chosen =
-          list.querySelector<HTMLButtonElement>('[role="option"][aria-selected="true"]:not(:disabled)') ??
-          enabledOptions(list)[0];
-        if (!chosen) return;
-        event.preventDefault();
-        chosen.focus({ preventScroll: true });
-        // Scroll the choice into the middle once the list is in place: done
-        // straight away, the list wasn't positioned yet and (Safari) opened
-        // scrolled past the choice.
-        window.requestAnimationFrame(() => {
-          const listBox = list.getBoundingClientRect();
-          const box = chosen.getBoundingClientRect();
-          list.scrollTop += box.top - listBox.top - (listBox.height - box.height) / 2;
-        });
-      }}
-      className={cn(
-        // Never taller than the room on screen (a phone on its side): the
-        // whole list stays visible and scrolls inside itself.
-        "max-h-[min(18rem,var(--radix-popover-content-available-height))] w-auto overflow-y-auto overscroll-y-contain p-1",
-        // Opens quickly, straight out of its button (a short drop, no zoom): filters are
-        // used all the time, so the list mustn't keep anyone waiting.
-        "duration-150 data-[side=bottom]:slide-in-from-top-1! data-[side=top]:slide-in-from-bottom-1! data-[state=open]:zoom-in-100",
-        className,
-      )}
-      data-select-dropdown=""
-      // At least as wide as its button, and wide enough for the longest choice on
-      // one line (never wider than the screen), so no choice wraps.
-      style={{
-        minWidth: triggerWidth ? `${triggerWidth}px` : "8rem",
-        width: "max-content",
-        maxWidth: "var(--radix-popover-content-available-width)",
-      }}
-      {...props}
-    >
-      <div className="flex flex-col gap-0.5" role="listbox">
-        {children}
-      </div>
-    </PopoverContent>
-  );
-}
-
-function SelectItem({
-  children,
-  className,
-  disabled,
-  value,
-}: {
-  children: React.ReactNode;
-  className?: string;
-  disabled?: boolean;
-  value: string;
-}) {
-  const { select, selected } = useSelect();
-  const isSelected = selected === value;
-
-  return (
-    <Button
-      aria-selected={isSelected}
-      // A long choice wraps onto a second line rather than being cut off
-      // with "…" (the closed trigger still shows one line).
-      className={cn(
-        "h-auto min-h-8 w-full justify-between py-1.5 text-left font-normal whitespace-normal",
-        isSelected && "bg-accent",
-        className,
-      )}
+    <SelectPrimitive.Root
+      defaultValue={empty(defaultValue)}
       disabled={disabled}
-      onClick={() => select(value)}
-      role="option"
-      size="sm"
-      type="button"
-      variant="ghost"
+      items={items}
+      // The page keeps scrolling with a list open (as before), instead of being locked.
+      modal={false}
+      name={name}
+      onValueChange={(next) => onValueChange?.(next == null ? "" : String(next))}
+      required={required}
+      value={empty(value)}
     >
-      <span className="min-w-0">{children}</span>
-      {isSelected ? <CheckIcon className="shrink-0 text-primary" /> : null}
-    </Button>
+      {children}
+    </SelectPrimitive.Root>
   );
 }
 
-SelectItem.displayName = "SelectItem";
+export const SelectGroup = (props: SelectPrimitive.Group.Props) => {
+  const { className, ...rest } = props;
 
-function SelectGroup({ className, ...props }: React.ComponentProps<"div">) {
-  return <div className={cn("flex flex-col gap-1", className)} role="group" {...props} />;
-}
-
-function SelectLabel({ className, ...props }: React.ComponentProps<"div">) {
   return (
-    <div
-      className={cn("text-muted-foreground px-2 py-1.5 text-xs", className)}
-      data-slot="select-label"
-      {...props}
+    <SelectPrimitive.Group
+      className={cn("scroll-my-1 p-1", className)}
+      data-slot="select-group"
+      {...rest}
     />
   );
+};
+
+export const SelectValue = (props: SelectPrimitive.Value.Props) => {
+  const { className, ...rest } = props;
+
+  return (
+    <SelectPrimitive.Value
+      className={cn("flex flex-1 text-start min-w-0 truncate", className)}
+      data-slot="select-value"
+      {...rest}
+    />
+  );
+};
+
+export const SelectTrigger = (
+  props: SelectPrimitive.Trigger.Props & {
+    size?: "sm" | "default";
+  }
+) => {
+  const { className, size = "default", children, ...rest } = props;
+
+  return (
+    <SelectPrimitive.Trigger
+      className={cn(
+        "border-input data-placeholder:text-muted-foreground dark:bg-input/30 dark:hover:bg-input/50 focus-visible:border-ring focus-visible:ring-ring/50 aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive dark:aria-invalid:border-destructive/50 gap-1.5 rounded-lg border bg-transparent py-2 pe-2 ps-2.5 text-sm transition-colors select-none focus-visible:ring-3 aria-invalid:ring-3 data-[size=default]:h-8 data-[size=sm]:h-7 data-[size=sm]:rounded-[min(var(--radius-md),10px)] *:data-[slot=select-value]:gap-1.5 [&_svg:not([class*='size-'])]:size-4 flex w-fit items-center justify-between whitespace-nowrap outline-none disabled:cursor-not-allowed disabled:opacity-50 *:data-[slot=select-value]:line-clamp-1 *:data-[slot=select-value]:flex *:data-[slot=select-value]:items-center [&_svg]:pointer-events-none [&_svg]:shrink-0",
+        // Ours: full width of its slot unless the page says otherwise (as the old dropdown),
+        // and the height of the inputs beside it.
+        "w-full min-w-0 data-[size=default]:h-9",
+        className
+      )}
+      data-size={size}
+      data-slot="select-trigger"
+      {...rest}
+    >
+      {children}
+      <SelectPrimitive.Icon
+        render={
+          <ChevronDownIcon
+            aria-hidden="true"
+            className="text-muted-foreground size-4 pointer-events-none"
+          />
+        }
+      />
+    </SelectPrimitive.Trigger>
+  );
+};
+
+export const SelectContent = (
+  props: SelectPrimitive.Popup.Props &
+    Pick<
+      SelectPrimitive.Positioner.Props,
+      "align" | "alignOffset" | "side" | "sideOffset" | "alignItemWithTrigger"
+    >
+) => {
+  const {
+    className,
+    children,
+    side = "bottom",
+    sideOffset = 4,
+    align = "center",
+    alignOffset = 0,
+    alignItemWithTrigger = true,
+    ...rest
+  } = props;
+
+  return (
+    <SelectPrimitive.Portal>
+      <SelectPrimitive.Positioner
+        align={align}
+        alignItemWithTrigger={alignItemWithTrigger}
+        alignOffset={alignOffset}
+        // Above drawers and dialogs (z-[60]) when opened inside one.
+        className="isolate z-[100]"
+        side={side}
+        sideOffset={sideOffset}
+      >
+        <SelectPrimitive.Popup
+          className={cn(
+            "bg-popover text-popover-foreground data-open:animate-in data-closed:animate-out data-closed:fade-out-0 data-open:fade-in-0 data-closed:zoom-out-95 data-open:zoom-in-95 data-[side=bottom]:slide-in-from-top-2 data-[side=left]:slide-in-from-right-2 data-[side=right]:slide-in-from-left-2 data-[side=top]:slide-in-from-bottom-2 ring-foreground/10 min-w-36 rounded-lg shadow-md ring-1 duration-100 data-[side=inline-start]:slide-in-from-end-2 data-[side=inline-end]:slide-in-from-start-2 cn-menu-target cn-menu-translucent relative isolate z-50 max-h-(--available-height) w-(--anchor-width) origin-(--transform-origin) overflow-y-auto overflow-x-hidden data-[align-trigger=true]:animate-none",
+            className
+          )}
+          data-align-trigger={alignItemWithTrigger}
+          data-slot="select-content"
+          {...rest}
+        >
+          <SelectScrollUpButton />
+          <SelectPrimitive.List>{children}</SelectPrimitive.List>
+          <SelectScrollDownButton />
+        </SelectPrimitive.Popup>
+      </SelectPrimitive.Positioner>
+    </SelectPrimitive.Portal>
+  );
+};
+
+export const SelectLabel = (props: SelectPrimitive.GroupLabel.Props) => {
+  const { className, ...rest } = props;
+
+  return (
+    <SelectPrimitive.GroupLabel
+      className={cn("text-muted-foreground px-1.5 py-1 text-xs", className)}
+      data-slot="select-label"
+      {...rest}
+    />
+  );
+};
+
+export function SelectItem(props: SelectPrimitive.Item.Props) {
+  const { className, children, ...rest } = props;
+
+  return (
+    <SelectPrimitive.Item
+      className={cn(
+        "focus:bg-accent focus:text-accent-foreground hover:bg-accent hover:text-accent-foreground data-highlighted:bg-accent data-highlighted:text-accent-foreground not-data-[variant=destructive]:focus:**:text-accent-foreground not-data-[variant=destructive]:hover:**:text-accent-foreground not-data-[variant=destructive]:data-highlighted:**:text-accent-foreground gap-1.5 rounded-md py-1 pe-8 ps-1.5 text-sm [&_svg:not([class*='size-'])]:size-4 *:[span]:last:flex *:[span]:last:items-center *:[span]:last:gap-2 relative flex w-full cursor-default select-none items-center outline-hidden data-disabled:pointer-events-none data-disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:shrink-0",
+        className
+      )}
+      data-slot="select-item"
+      {...rest}
+    >
+      <SelectPrimitive.ItemText className="flex flex-1 gap-2 shrink-0 whitespace-nowrap">
+        {children}
+      </SelectPrimitive.ItemText>
+      <SelectPrimitive.ItemIndicator
+        render={<span className="pointer-events-none absolute end-2 flex size-4 items-center justify-center" />}
+      >
+        <CheckIcon
+          aria-hidden="true"
+          className="cn-select-item-indicator-icon pointer-events-none"
+        />
+      </SelectPrimitive.ItemIndicator>
+    </SelectPrimitive.Item>
+  );
 }
 
-function SelectSeparator({ className, ...props }: React.ComponentProps<"div">) {
-  return <div className={cn("bg-border -mx-1 my-1 h-px", className)} data-slot="select-separator" {...props} />;
-}
+export const SelectSeparator = (props: SelectPrimitive.Separator.Props) => {
+  const { className, ...rest } = props;
 
-export {
-  Select,
-  SelectGroup,
-  SelectContent,
-  SelectItem,
-  SelectLabel,
-  SelectSeparator,
-  SelectTrigger,
-  SelectValue,
+  return (
+    <SelectPrimitive.Separator
+      className={cn("bg-border -mx-1 my-1 h-px pointer-events-none", className)}
+      data-slot="select-separator"
+      {...rest}
+    />
+  );
+};
+
+export const SelectScrollUpButton = (
+  props: React.ComponentProps<typeof SelectPrimitive.ScrollUpArrow>
+) => {
+  const { className, ...rest } = props;
+
+  return (
+    <SelectPrimitive.ScrollUpArrow
+      className={cn("bg-popover z-10 flex cursor-default items-center justify-center py-1 [&_svg:not([class*='size-'])]:size-4 top-0 w-full", className)}
+      data-slot="select-scroll-up-button"
+      {...rest}
+    >
+      <ChevronUpIcon aria-hidden="true" />
+    </SelectPrimitive.ScrollUpArrow>
+  );
+};
+
+export const SelectScrollDownButton = (
+  props: React.ComponentProps<typeof SelectPrimitive.ScrollDownArrow>
+) => {
+  const { className, ...rest } = props;
+
+  return (
+    <SelectPrimitive.ScrollDownArrow
+      className={cn("bg-popover z-10 flex cursor-default items-center justify-center py-1 [&_svg:not([class*='size-'])]:size-4 bottom-0 w-full", className)}
+      data-slot="select-scroll-down-button"
+      {...rest}
+    >
+      <ChevronDownIcon aria-hidden="true" />
+    </SelectPrimitive.ScrollDownArrow>
+  );
 };

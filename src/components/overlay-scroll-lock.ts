@@ -120,7 +120,7 @@ function eventTargetInsideOpenOverlay(target: EventTarget | null) {
   return Boolean(
     target.closest(
       // Clerk's own windows (ClerkModalScrollLock) scroll inside themselves.
-      '[data-slot="drawer-content"], [data-slot="dialog-content"], [data-slot="alert-dialog-content"], [data-slot="popover-content"], [data-overlay-panel], .cl-modalBackdrop',
+      '[data-slot="drawer-content"], [data-slot="dialog-content"], [data-slot="alert-dialog-content"], [data-slot="popover-content"], [data-slot="select-content"], [data-overlay-panel], .cl-modalBackdrop',
     ),
   );
 }
