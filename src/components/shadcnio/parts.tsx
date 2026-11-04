@@ -166,7 +166,7 @@ export const WALKS_GRID = "grid overflow-hidden pt-px *:relative *:-ms-px *:ps-p
 const TILE =
   "group flex flex-col outline-none hover:bg-muted/60 focus-visible:bg-muted/60 dark:hover:bg-foreground/[0.025] dark:focus-visible:bg-foreground/[0.025] focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-inset relative h-40 overflow-hidden";
 const RING =
-  "absolute border transition-[border-color] duration-300 ease-out motion-reduce:transition-none";
+  "absolute border transition-[scale,border-color] duration-300 ease-out motion-reduce:transition-none motion-safe:group-focus-visible:scale-[1.03] motion-safe:group-hover:scale-[1.03]";
 const RING_TONES = [
   "border-foreground/[0.07] group-hover:border-foreground/[0.11] group-focus-visible:border-foreground/[0.11]",
   "border-foreground/[0.1] group-hover:border-foreground/[0.15] group-focus-visible:border-foreground/[0.15]",
@@ -224,12 +224,12 @@ const PANEL =
   "border border-foreground/[0.1] bg-background bg-linear-to-b from-transparent to-foreground/[0.03] dark:from-foreground/[0.06] dark:to-foreground/[0.01] shadow-[0_1px_2px_rgb(0_0_0/0.05),0_4px_14px_-2px_rgb(0_0_0/0.08)] dark:shadow-[inset_0_1px_0_color-mix(in_oklab,var(--foreground)_9%,transparent),0_4px_14px_-2px_rgb(0_0_0/0.6)] group-hover:border-foreground/[0.2] group-focus-visible:border-foreground/[0.2] duration-300 ease-out motion-reduce:transition-none";
 const FAN_CARD = `pointer-events-none absolute -end-6 -bottom-8 h-30 w-48 origin-bottom-right overflow-hidden rounded-[1rem] ${PANEL} after:pointer-events-none after:absolute after:inset-0 after:rounded-[inherit] dark:after:shadow-[inset_0_1px_0_color-mix(in_oklab,var(--foreground)_9%,transparent)] transition-[translate,rotate,border-color] group-hover/card:border-foreground/[0.2]`;
 const FAN_POSES = [
-  "-translate-x-[6.5rem] translate-y-2 -rotate-[8deg] rtl:translate-x-[6.5rem] rtl:rotate-[8deg]",
-  "-translate-x-[3.25rem] translate-y-1 -rotate-[4deg] rtl:translate-x-[3.25rem] rtl:rotate-[4deg]",
-  "",
+  "-translate-x-[6.5rem] translate-y-2 -rotate-[8deg] rtl:translate-x-[6.5rem] rtl:rotate-[8deg] group-hover:-translate-x-[7.25rem] group-hover:-rotate-[10deg] group-focus-visible:-translate-x-[7.25rem] group-focus-visible:-rotate-[10deg]",
+  "-translate-x-[3.25rem] translate-y-1 -rotate-[4deg] rtl:translate-x-[3.25rem] rtl:rotate-[4deg] group-hover:-translate-x-[3.75rem] group-hover:-rotate-[5deg] group-focus-visible:-translate-x-[3.75rem] group-focus-visible:-rotate-[5deg]",
+  "motion-safe:group-hover:-translate-y-1 motion-safe:group-focus-visible:-translate-y-1",
 ];
 const FAN_IMAGE =
-  "size-full object-cover opacity-80 grayscale transition-[filter,opacity,scale] duration-300 ease-out motion-reduce:transition-none group-hover:opacity-100 group-hover:grayscale-0 group-focus-visible:opacity-100 group-focus-visible:grayscale-0";
+  "size-full object-cover opacity-80 grayscale transition-[filter,opacity,scale] duration-300 ease-out motion-reduce:transition-none group-hover:opacity-100 group-hover:grayscale-0 group-focus-visible:opacity-100 group-focus-visible:grayscale-0 motion-safe:group-focus-visible:scale-[1.04] motion-safe:group-hover:scale-[1.04]";
 
 /** Three small cards fanned out in the tile's corner (shadcn.io's block tiles), each a little drawing. */
 function Fan({ cards }: { cards: ReactNode[] }) {
@@ -250,7 +250,7 @@ function IconSquare({ icon }: { icon: ReactNode }) {
     <span
       aria-hidden="true"
       className={cn(
-        "pointer-events-none absolute flex -end-5 -bottom-7 size-28 overflow-hidden rounded-[1.75rem] transition-[translate,border-color]",
+        "pointer-events-none absolute flex -end-5 -bottom-7 size-28 overflow-hidden rounded-[1.75rem] transition-[translate,border-color] motion-safe:group-focus-visible:-translate-y-1 motion-safe:group-hover:-translate-y-1",
         PANEL,
       )}
     >
@@ -268,7 +268,7 @@ function IconCircle({ icon }: { icon: ReactNode }) {
     <span
       aria-hidden="true"
       className={cn(
-        "pointer-events-none absolute flex -end-4 -bottom-4 size-28 overflow-hidden rounded-full transition-[translate,border-color]",
+        "pointer-events-none absolute flex -end-4 -bottom-4 size-28 overflow-hidden rounded-full transition-[translate,border-color] motion-safe:group-focus-visible:-translate-y-1 motion-safe:group-hover:-translate-y-1",
         PANEL,
       )}
     >
@@ -290,17 +290,17 @@ function Stack({ icons }: { icons: ReactNode[] }) {
     <span
       aria-hidden="true"
       className={cn(
-        "pointer-events-none absolute flex transition-[translate] duration-300 ease-out inset-0",
+        "pointer-events-none absolute flex transition-[translate] duration-300 ease-out inset-0 motion-safe:group-focus-visible:-translate-y-1 motion-safe:group-hover:-translate-y-1",
         STACK_CARD,
       )}
     >
-      <span className="end-[6.25rem] -bottom-4 -rotate-[14deg] max-sm:end-[4.25rem]">
+      <span className="end-[6.25rem] -bottom-4 -rotate-[14deg] max-sm:end-[4.25rem] group-hover:-translate-x-2 group-hover:-rotate-[18deg] group-focus-visible:-translate-x-2 group-focus-visible:-rotate-[18deg]">
         {icons[0]}
       </span>
-      <span className="end-[3.25rem] -bottom-5 -rotate-[4deg] max-sm:end-[2.25rem]">
+      <span className="end-[3.25rem] -bottom-5 -rotate-[4deg] max-sm:end-[2.25rem] group-hover:-translate-x-1 group-focus-visible:-translate-x-1">
         {icons[1]}
       </span>
-      <span className="end-1 -bottom-6 rotate-[7deg]">
+      <span className="end-1 -bottom-6 rotate-[7deg] group-hover:rotate-[10deg] group-focus-visible:rotate-[10deg]">
         {icons[2]}
       </span>
     </span>
