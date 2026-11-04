@@ -3,6 +3,7 @@ import { IntentLink as Link } from "@/components/intent-link";
 import { ArrowRight } from "lucide-react";
 import { SectionTitle } from "@/components/section-title";
 import { cn } from "@/lib/utils";
+import { Guides as ShadcnGuides } from "@/components/ui/guides";
 
 /*
  * The pieces shadcn.io's homepage is built from, with their exact classes
@@ -50,48 +51,23 @@ export function PillLink({
   );
 }
 
-/** The line across the window between two sections, with a + where it meets the column
-    (at the top of the box, or under it as on their page heads). */
+/**
+ * The line across the window between two sections, with a + where it meets the column
+ * (at the top of the box, or under it as on their page heads): shadcn.io's Guides as their
+ * "Stacking sections" spine (bleed, one rule per boundary, marks on its crossings). No side
+ * lines: the page column's own border draws those.
+ */
 export function Guides({ at = "top" }: { at?: "top" | "bottom" }) {
-  const mark = (side: "start" | "end") => (
-    <svg
-      aria-hidden="true"
-      className={cn(
-        "absolute size-3.5 text-muted-foreground",
-        at === "top" ? "top-0 -translate-y-[calc(50%-0.5px)]" : "bottom-0 translate-y-[calc(50%+0.5px)]",
-        side === "start"
-          ? "start-0 -translate-x-[calc(50%+0.5px)] rtl:translate-x-[calc(50%+0.5px)]"
-          : "end-0 translate-x-[calc(50%+0.5px)] rtl:-translate-x-[calc(50%+0.5px)]",
-      )}
-      data-slot="guides-mark"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="1"
-      viewBox="0 0 14 14"
-    >
-      <path d="M7 0v14M0 7h14" />
-    </svg>
-  );
   return (
-    <div
-      aria-hidden="true"
-      className={cn(
-        // Above the section before it: Safari on iPhones drew the hero's moving letters (a
-        // canvas) over the line, which sits on the hero's bottom edge, leaving only the + marks.
-        // The top line sits inside this box (the box starts 1px higher): Safari on Macs left
-        // out a line drawn above its box when the hero's letters were on the page.
-        "pointer-events-none absolute inset-0 z-[1] border-0 [--guides-inset:1rem] sm:[--guides-inset:2rem]",
-        at === "top" && "-top-px only:hidden",
-      )}
-      data-slot="guides"
-    >
-      <div
-        className={cn("absolute h-px border-t -inset-x-[100vw]", at === "top" ? "top-0" : "-bottom-px")}
-        data-slot="guides-line"
-      />
-      {mark("start")}
-      {mark("end")}
-    </div>
+    <ShadcnGuides
+      bleed
+      // Above the section before it: Safari on iPhones drew the hero's moving letters (a
+      // canvas) over the line, which sits on the hero's bottom edge, leaving only the + marks.
+      className={cn("z-[1]", at === "top" && "only:hidden")}
+      marks={at}
+      rules={at}
+      sides={false}
+    />
   );
 }
 
