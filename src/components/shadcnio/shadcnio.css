@@ -375,7 +375,10 @@ html[data-auth="in"] .globalnav-account-trigger { display: flex; }
    on the desktop, and hide the last three while the menu or a panel is open. */
 @media (max-width: 1023.98px) {
   .globalnav-with-flyout-open :is(.globalnav-bell, .globalnav-dashboard, .globalnav-avatar-item) > * { visibility: hidden; opacity: 0; transition: opacity .24s var(--gn-ease), visibility .24s step-end; }
-  .globalnav-end-list > .globalnav-item:is(.globalnav-search, .globalnav-bell, .globalnav-avatar-item, .globalnav-dashboard) { width: auto; padding-inline: 0; }
+  .globalnav-end-list > .globalnav-item:is(.globalnav-search, .globalnav-bell, .globalnav-avatar-item, .globalnav-dashboard) { width: auto; }
+  .globalnav-end-list > .globalnav-item:is(.globalnav-search, .globalnav-bell, .globalnav-avatar-item) { padding-inline: 0; }
+  /* Same 8px the pill has on the desktop, or it sits on the avatar. */
+  .globalnav-end-list > .globalnav-item.globalnav-dashboard { padding-inline: 8px; }
 }
 @media (min-width: 1024px) { .globalnav-account .globalnav-flyout-content { padding-top: 40px; padding-bottom: 80px; } }
 .globalnav-account-caption { color: var(--gn-color-tertiary); letter-spacing: -0.01em; margin: 0px; font-size: 12px; font-weight: 400; line-height: 1.33337; display: block; }
