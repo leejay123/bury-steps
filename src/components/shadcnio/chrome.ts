@@ -64,8 +64,8 @@ export function siteChrome(theme: SiteTheme) {
         title: "Help",
         links: [
           { href: "/#faq", label: "Questions people ask" },
-          { href: "/#home-how-heading", label: "How it works" },
-          { href: "/about#rules", label: "Group rules" },
+          { href: "/how-it-works", label: "How it works" },
+          { href: "/group-rules", label: "Group rules" },
         ],
       },
     ],

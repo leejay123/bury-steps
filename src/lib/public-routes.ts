@@ -20,6 +20,11 @@ export const PUBLIC_ROUTE_PATTERNS = [
   "/apps",
   // The About page (homepage Read more), public like Terms and Privacy.
   "/about",
+  // The guide pages (How it works, What to expect, Group rules, Walk essentials).
+  "/how-it-works",
+  "/what-to-expect",
+  "/group-rules",
+  "/walk-essentials",
   // Saved page the service worker shows when a walk page can't be reached.
   "/offline",
   // The service worker itself (phone alerts and offline walk pages).
@@ -99,8 +104,10 @@ export const APP_TOP_LEVEL_SEGMENTS = [
   "contact",
   "dashboard",
   "email-preferences",
+  "group-rules",
   "history",
   "home",
+  "how-it-works",
   "icon",
   "manifest.webmanifest",
   "notices",
@@ -119,7 +126,9 @@ export const APP_TOP_LEVEL_SEGMENTS = [
   "sitemap.xml",
   "terms-of-service",
   "w",
+  "walk-essentials",
   "walks",
+  "what-to-expect",
   "_next",
   "__clerk",
 ] as const;

@@ -11,8 +11,8 @@ const HELP: NavGroup = {
   title: "Help",
   links: [
     { href: "/#faq", label: "Questions people ask" },
-    { href: "/#home-how-heading", label: "How it works" },
-    { href: "/#home-rules-heading", label: "Group rules" },
+    { href: "/how-it-works", label: "How it works" },
+    { href: "/group-rules", label: "Group rules" },
     { href: "/contact", label: "Contact us" },
   ],
 };
@@ -25,17 +25,17 @@ const GROUPS: Record<string, NavGroup[]> = {
       links: [
         { href: "/", label: "Home" },
         { href: "/#home-walks-heading", label: "Walks coming up" },
-        { href: "/#home-how-heading", label: "How it works" },
-        { href: "/#home-rules-heading", label: "Group rules" },
+        { href: "/how-it-works", label: "How it works" },
+        { href: "/group-rules", label: "Group rules" },
         { href: "/#faq", label: "Questions" },
       ],
     },
     {
       title: "The group",
       links: [
-        { href: "/#home-expect-heading", label: "What to expect" },
+        { href: "/what-to-expect", label: "What to expect" },
         { href: "/#home-goals-heading", label: "Why people walk" },
-        { href: "/#home-essentials-heading", label: "Walk essentials" },
+        { href: "/walk-essentials", label: "Walk essentials" },
         { href: "/#home-reviews-heading", label: "What members say" },
       ],
     },
@@ -56,8 +56,8 @@ const GROUPS: Record<string, NavGroup[]> = {
       links: [
         { href: "/#faq", label: "What to bring" },
         { href: "/#faq", label: "How clock-in works" },
-        { href: "/#home-essentials-heading", label: "Walk essentials" },
-        { href: "/#home-rules-heading", label: "Group rules" },
+        { href: "/walk-essentials", label: "Walk essentials" },
+        { href: "/group-rules", label: "Group rules" },
       ],
     },
     { title: "More", links: [{ href: "/apps", label: "Walking apps" }, { href: "/contact", label: "Ask a question" }] },
@@ -158,10 +158,10 @@ const HOW: NavGroup[] = [
     title: "Getting started",
     elevated: true,
     links: [
-      { href: "/#home-how-heading", label: "How it works" },
-      { href: "/#home-expect-heading", label: "What to expect" },
-      { href: "/#home-rules-heading", label: "Group rules" },
-      { href: "/#home-essentials-heading", label: "Walk essentials" },
+      { href: "/how-it-works", label: "How it works" },
+      { href: "/what-to-expect", label: "What to expect" },
+      { href: "/group-rules", label: "Group rules" },
+      { href: "/walk-essentials", label: "Walk essentials" },
     ],
   },
   {
@@ -252,7 +252,7 @@ export function shortMenu(links: { href: string; label: string }[], facebookUrl:
       HOME,
       { ...navSection({ href: "/", label: "About" }), id: "about", href: "/#home-about-heading" },
       walks,
-      { id: "how", href: "/#home-how-heading", label: "How it works", groups: HOW },
+      { id: "how", href: "/how-it-works", label: "How it works", groups: HOW },
       { ...help, id: "questions", href: "/#faq", label: "Questions" },
       apps,
       contact,

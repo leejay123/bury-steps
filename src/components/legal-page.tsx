@@ -3,7 +3,7 @@ import Link from "next/link";
 import { FullWidthDivider } from "@/components/full-width-divider";
 import { PAGE_X_BLEED } from "@/lib/page-x";
 import { typesetFont } from "@/app/typeset-font";
-import { ShadcnLegal, type ShadcnLegalIcon } from "@/components/shadcnio/legal";
+import { ShadcnLegal, type ShadcnLegalDocs, type ShadcnLegalIcon } from "@/components/shadcnio/legal";
 import { getSiteTheme } from "@/lib/site-theme";
 
 export const LEGAL_LAST_UPDATED = "28 August 2026";
@@ -19,8 +19,10 @@ export type LegalShadcnProps = {
   icon: ShadcnLegalIcon;
   lead: string;
   rest: string;
-  updated?: string;
+  /** Null hides "Last updated" (the guide pages); left out, the policies' date. */
+  updated?: string | null;
   closing?: string;
+  docs?: ShadcnLegalDocs;
 };
 
 function LegalBody({ children }: { children: ReactNode }) {
@@ -58,12 +60,13 @@ export async function LegalPage({
       <ShadcnLegal
         closing={props.closing}
         current={props.current}
+        docs={props.docs}
         icon={props.icon}
         lead={props.lead}
         rest={props.rest}
         sections={sections}
         title={title}
-        updated={props.updated ?? LEGAL_LAST_UPDATED}
+        updated={props.updated === undefined ? LEGAL_LAST_UPDATED : props.updated}
       />
     );
   }

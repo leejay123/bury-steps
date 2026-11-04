@@ -254,7 +254,8 @@ function ExpectSection({ expect }: { expect: string[] }) {
   );
 }
 
-const STEPS = [
+/** The steps, here and on the How it works page. */
+export const STEPS = [
   { title: "Create an account", sub: "Email or Google, one minute", icon: <UserPlus /> },
   { title: "See the walks", sub: "Time, meeting point and map", icon: <CalendarDays /> },
   { title: "Clock in on the day", sub: "So the leader knows you're there", icon: <LogIn /> },

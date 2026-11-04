@@ -1,13 +1,16 @@
 import type { ReactNode } from "react";
 import Link from "next/link";
-import { ArrowRight, ChevronRight, Footprints, Mail, Scale, ShieldCheck } from "lucide-react";
+import { ArrowRight, Backpack, ChevronRight, Footprints, ListChecks, Mail, Route, Scale, ShieldCheck, Smile } from "lucide-react";
 import { BUTTON_OUTLINE, Guides, Section, Tile } from "./parts";
 import { HeroField } from "./ascii-field";
 import { PageKindMark } from "./page-kind";
 
 export type ShadcnLegalSection = { id: string; title: string; content: ReactNode };
 
-export type ShadcnLegalIcon = "terms" | "privacy" | "about";
+export type ShadcnLegalIcon = "terms" | "privacy" | "about" | "how" | "expect" | "rules" | "essentials";
+
+/** Which row of tiles sits under the hero: the policies, or the guide pages. */
+export type ShadcnLegalDocs = "legal" | "guide";
 
 const DOCS: { href: string; title: string; sub: string; icon: ReactNode }[] = [
   { href: "/about", title: "About", sub: "How the group started", icon: <Footprints /> },
@@ -16,16 +19,32 @@ const DOCS: { href: string; title: string; sub: string; icon: ReactNode }[] = [
   { href: "/contact", title: "Contact", sub: "Questions about either", icon: <Mail /> },
 ];
 
+/** The four guide pages (How it works, What to expect, Group rules, Walk essentials). */
+const GUIDE_DOCS: typeof DOCS = [
+  { href: "/how-it-works", title: "How it works", sub: "From sign-up to clock-out", icon: <Route /> },
+  { href: "/what-to-expect", title: "What to expect", sub: "A friendly group, every pace", icon: <Smile /> },
+  { href: "/group-rules", title: "Group rules", sub: "What keeps the group kind", icon: <ListChecks /> },
+  { href: "/walk-essentials", title: "Walk essentials", sub: "What each walk page tells you", icon: <Backpack /> },
+];
+
 const ICON = {
   terms: Scale,
   privacy: ShieldCheck,
   about: Footprints,
+  how: Route,
+  expect: Smile,
+  rules: ListChecks,
+  essentials: Backpack,
 } as const;
 
 const HERO_WORD = {
   terms: "TERMS",
   privacy: "PRIVACY",
   about: "ABOUT",
+  how: "STEPS",
+  expect: "WELCOME",
+  rules: "RULES",
+  essentials: "ESSENTIALS",
 } as const;
 
 /**
@@ -40,15 +59,18 @@ export function ShadcnLegal({
   sections,
   icon,
   current,
+  docs = "legal",
   closing = `By using Bury Steps, you agree to this ${title}.`,
 }: {
   title: string;
   lead: string;
   rest: string;
-  updated: string;
+  /** Null: no "Last updated" (the guide pages). */
+  updated: string | null;
   sections: ShadcnLegalSection[];
   icon: ShadcnLegalIcon;
   current: string;
+  docs?: ShadcnLegalDocs;
   /** Line above the Ask a question button. */
   closing?: string;
 }) {
@@ -104,10 +126,14 @@ export function ShadcnLegal({
           </div>
           <div className="flex flex-wrap justify-center gap-2">
             <p className="flex flex-wrap items-center justify-center gap-x-3 gap-y-1 text-muted-foreground text-sm">
-              <span>
-                Last updated <time className="font-medium text-foreground">{updated}</time>
-              </span>
-              <span aria-hidden="true">·</span>
+              {updated ? (
+                <>
+                  <span>
+                    Last updated <time className="font-medium text-foreground">{updated}</time>
+                  </span>
+                  <span aria-hidden="true">·</span>
+                </>
+              ) : null}
               <Link
                 className="inline-flex items-center gap-1 rounded-sm font-medium text-foreground underline-offset-4 outline-none hover:underline focus-visible:ring-2 focus-visible:ring-ring"
                 href="/contact"
@@ -125,7 +151,7 @@ export function ShadcnLegal({
         <Guides />
         <nav aria-label="Related pages">
           <ul className="grid grid-cols-2 sm:grid-cols-4 [clip-path:inset(0_0_0_1px)] *:border-l max-sm:[&>li:nth-child(n+3)]:border-t">
-            {DOCS.map((doc) => (
+            {(docs === "guide" ? GUIDE_DOCS : DOCS).map((doc) => (
               <Tile
                 current={doc.href === current}
                 href={doc.href}
