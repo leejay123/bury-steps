@@ -40,7 +40,7 @@ function toRow(
   };
 }
 
-const WALKS_INTRO = "Upcoming walks first. Finished and cancelled walks are under History.";
+const WALKS_INTRO = "Every walk in one list: upcoming first, then finished and cancelled. Filter to narrow it down.";
 
 /**
  * The organiser's Walks page, as a private saved copy: kept in this browser

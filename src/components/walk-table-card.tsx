@@ -117,7 +117,9 @@ export function WalkTableCard<S extends string, O extends string>({
     >
       {/* Edge to edge (design D, as History): the search fills the strip, Filter and Show 10
           split off by a line; on phones they take a row under the search, half each. */}
-      <div className="flex flex-wrap items-stretch border-b">
+      {/* data-edge-top: right under the page top (no tabs above it, as on organisers' Walks)
+          it butts onto its line, with no gap. */}
+      <div className="flex flex-wrap items-stretch border-b" data-edge-top="">
         <EdgeSearch label={searchLabel} onChange={onQuery} placeholder="Search by walk or meeting point…" stack value={query} />
         <EdgeFilters stack>
         <Popover>
@@ -325,7 +327,7 @@ export function WalkTableCardSkeleton({
 }) {
   return (
     <div aria-busy="true" className="overflow-hidden rounded-xl border bg-background" data-walk-table="">
-      <div className="flex flex-wrap items-stretch border-b">
+      <div className="flex flex-wrap items-stretch border-b" data-edge-top="">
         <EdgeSearch label="Search walks" placeholder="Search by walk or meeting point…" readOnly stack />
         <EdgeFilters stack>
         <span className={cn(TOOL, EDGE_FILTER, "sm:px-4")}>
