@@ -1,6 +1,6 @@
 "use client";
 
-import { usePathname } from "next/navigation";
+import { useClientPathname } from "@/components/client-pathname";
 import { createElement, type ReactNode } from "react";
 import {
   BookOpen,
@@ -34,8 +34,8 @@ const PAGE_ICONS: [string, LucideIcon][] = [
   ["/email-preferences", MailCheck],
 ];
 
-function iconFor(path: string | null): LucideIcon {
-  if (!path) return BookOpen;
+function iconFor(path: string | null): LucideIcon | null {
+  if (!path) return null;
   const settings = Object.entries(SETTINGS_PAGE_ICONS).find(([href]) => path === href || path.startsWith(`${href}/`));
   if (settings) return settings[1];
   return PAGE_ICONS.find(([href]) => path === href || path.startsWith(href.endsWith("/") ? href : `${href}/`))?.[1] ?? BookOpen;
@@ -46,14 +46,17 @@ function iconFor(path: string | null): LucideIcon {
  * Privacy and the other plain pages (legal.tsx PlainHero). Icon and first word never part.
  */
 export function PageTopTitle({ children }: { children: ReactNode }) {
-  const icon_ = iconFor(usePathname());
+  // The site's own path reader (client-pathname.tsx): usePathname() here stopped pages
+  // being built ahead (Cache Components). Until the path is known (a moment, in the
+  // browser) the box shows empty, so it never flashes a wrong icon and nothing moves.
+  const icon_ = iconFor(useClientPathname());
   const icon = (
     <span
       aria-hidden="true"
       className="me-[0.18em] size-[0.82em] -translate-y-[0.05em] border border-foreground/[0.12] align-middle inline-flex items-center justify-center rounded-[0.24em] bg-background [&_svg]:size-[0.5em] [&_svg]:stroke-[1.5]"
       data-page-top-icon=""
     >
-      {createElement(icon_)}
+      {icon_ ? createElement(icon_) : null}
     </span>
   );
   if (typeof children !== "string") {
