@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { SettingsBackLink, SettingsSubPageTabs } from "./settings-page-nav";
 import { PageTopTitle } from "@/components/page-top-icon";
+import { SaveBar } from "@/components/save-bar";
 
 /** Same width for every settings page, header and body alike, so every
  * page's left edge lines up with the next — full width, matching the
@@ -72,6 +73,7 @@ export function SettingsPage({
       <div className="px-4 py-6 md:px-6" data-settings-body="">
         <div className={cn(SETTINGS_WIDTH, "flex flex-col gap-8", contentClassName)}>{children}</div>
       </div>
+      <SaveBar />
     </div>
   );
 }

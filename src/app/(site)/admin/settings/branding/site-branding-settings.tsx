@@ -1,27 +1,17 @@
 "use client";
 
 import { useState } from "react";
-import { useFormStatus } from "react-dom";
 import { updateSiteBranding } from "@/server/actions";
 import { useActionToast } from "@/hooks/use-action-toast";
 import { useResetOnChange } from "@/hooks/use-reset-on-change";
 import { useSafeActionState } from "@/hooks/use-safe-action-state";
 import { FormError } from "@/components/form-error";
-import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { MAX_SITE_NAME, MAX_SITE_TAGLINE } from "@/lib/site-branding";
 import { SettingsSection } from "../settings-page";
-
-function Submit({ disabled }: { disabled: boolean }) {
-  const { pending } = useFormStatus();
-  return (
-    <Button disabled={disabled || pending} type="submit">
-      {pending ? "Saving…" : "Save"}
-    </Button>
-  );
-}
+import { useSaveBar } from "@/components/save-bar";
 
 export function SiteBrandingSettings({
   siteName,
@@ -32,7 +22,7 @@ export function SiteBrandingSettings({
 }) {
   const [name, setName] = useState(siteName);
   const [tagline, setTagline] = useState(siteTagline);
-  const [state, action, , clearError] = useSafeActionState(updateSiteBranding);
+  const [state, action, pending, clearError] = useSafeActionState(updateSiteBranding);
   useActionToast(state);
 
   useResetOnChange([siteName, siteTagline], () => {
@@ -41,13 +31,18 @@ export function SiteBrandingSettings({
   });
 
   const dirty = name !== siteName || tagline !== siteTagline;
+  const form = useSaveBar(dirty, pending, () => {
+    setName(siteName);
+    setTagline(siteTagline);
+    clearError();
+  });
 
   return (
     <SettingsSection
       description="Used on the homepage hero, the logo’s name for screen readers, browser tab titles, and link previews when someone shares the site."
       title="Site name and tagline"
     >
-      <form action={action} className="flex w-full flex-col gap-4">
+      <form action={action} ref={form} className="flex w-full flex-col gap-4">
         <div className="flex flex-col gap-2">
           <Label htmlFor="siteName">Site name</Label>
           <Input
@@ -75,22 +70,6 @@ export function SiteBrandingSettings({
           </p>
         </div>
         <FormError message={state && !state.ok ? state.error : null} />
-        <div className="flex flex-wrap gap-2">
-          <Submit disabled={!dirty} />
-          {dirty ? (
-            <Button
-              onClick={() => {
-                setName(siteName);
-                setTagline(siteTagline);
-                clearError();
-              }}
-              type="button"
-              variant="outline"
-            >
-              Discard
-            </Button>
-          ) : null}
-        </div>
       </form>
     </SettingsSection>
   );

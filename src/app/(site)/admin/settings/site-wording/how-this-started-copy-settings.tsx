@@ -1,7 +1,6 @@
 "use client";
 
 import { useState } from "react";
-import { useFormStatus } from "react-dom";
 import { ChevronRight } from "lucide-react";
 import { updateHowThisStartedCopy } from "@/server/actions";
 import { useActionToast, useNotifyActionState } from "@/hooks/use-action-toast";
@@ -9,7 +8,6 @@ import { useControlledDrawerDismissGuard } from "@/hooks/use-controlled-drawer";
 import { useResetOnChange } from "@/hooks/use-reset-on-change";
 import { useSafeActionState } from "@/hooks/use-safe-action-state";
 import { FormError } from "@/components/form-error";
-import { Button } from "@/components/ui/button";
 import {
   Drawer,
   DrawerContent,
@@ -29,15 +27,7 @@ import {
 } from "@/lib/homepage-copy";
 import { SettingsSection } from "../settings-page";
 import { DrawerFormFooter } from "@/components/drawer-form";
-
-function Submit({ disabled, label = "Save" }: { disabled: boolean; label?: string }) {
-  const { pending } = useFormStatus();
-  return (
-    <Button disabled={disabled || pending} type="submit">
-      {pending ? "Saving…" : label}
-    </Button>
-  );
-}
+import { useSaveBar } from "@/components/save-bar";
 
 function bodyPreview(body: string) {
   const trimmed = body.trim();
@@ -144,7 +134,7 @@ export function HowThisStartedCopySettings({
   const [body, setBody] = useState(howThisStartedBody);
   const [bodyDrawerOpen, setBodyDrawerOpen] = useState(false);
   const { openSoon, onPointerDownOutside } = useControlledDrawerDismissGuard();
-  const [state, action, , clearError] = useSafeActionState(updateHowThisStartedCopy);
+  const [state, action, pending, clearError] = useSafeActionState(updateHowThisStartedCopy);
   useActionToast(state);
 
   useResetOnChange(
@@ -161,6 +151,12 @@ export function HowThisStartedCopySettings({
     title !== howThisStartedTitle ||
     eyebrow !== howThisStartedEyebrow ||
     teaser !== howThisStartedTeaser;
+  const form = useSaveBar(inlineDirty, pending, () => {
+    setTitle(howThisStartedTitle);
+    setEyebrow(howThisStartedEyebrow);
+    setTeaser(howThisStartedTeaser);
+    clearError();
+  });
 
   const closeBodyDrawer = () => {
     setBodyDrawerOpen(false);
@@ -173,7 +169,7 @@ export function HowThisStartedCopySettings({
       title="How this started"
     >
       <div className="flex w-full flex-col gap-4">
-        <form action={action} className="flex w-full flex-col gap-4">
+        <form action={action} className="flex w-full flex-col gap-4" ref={form}>
           <input name="howThisStartedBody" type="hidden" value={body} />
           <div className="flex flex-col gap-2">
             <Label htmlFor="howThisStartedTitle">Heading</Label>
@@ -209,23 +205,6 @@ export function HowThisStartedCopySettings({
             />
           </div>
           <FormError message={state && !state.ok ? state.error : null} />
-          <div className="flex flex-wrap gap-2">
-            <Submit disabled={!inlineDirty} />
-            {inlineDirty ? (
-              <Button
-                onClick={() => {
-                  setTitle(howThisStartedTitle);
-                  setEyebrow(howThisStartedEyebrow);
-                  setTeaser(howThisStartedTeaser);
-                  clearError();
-                }}
-                type="button"
-                variant="outline"
-              >
-                Discard
-              </Button>
-            ) : null}
-          </div>
         </form>
 
         <DataList data-edge-panel-foot="">

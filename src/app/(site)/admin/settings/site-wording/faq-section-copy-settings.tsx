@@ -1,27 +1,17 @@
 "use client";
 
 import { useState } from "react";
-import { useFormStatus } from "react-dom";
 import { updateFaqSectionCopy } from "@/server/actions";
 import { useActionToast } from "@/hooks/use-action-toast";
 import { useResetOnChange } from "@/hooks/use-reset-on-change";
 import { useSafeActionState } from "@/hooks/use-safe-action-state";
 import { FormError } from "@/components/form-error";
-import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { MAX_FAQ_SECTION_INTRO, MAX_FAQ_SECTION_TITLE } from "@/lib/faqs";
 import { SettingsSection } from "../settings-page";
-
-function Submit({ disabled }: { disabled: boolean }) {
-  const { pending } = useFormStatus();
-  return (
-    <Button disabled={disabled || pending} type="submit">
-      {pending ? "Saving…" : "Save"}
-    </Button>
-  );
-}
+import { useSaveBar } from "@/components/save-bar";
 
 export function FaqSectionCopySettings({
   faqSectionIntro,
@@ -32,7 +22,7 @@ export function FaqSectionCopySettings({
 }) {
   const [title, setTitle] = useState(faqSectionTitle);
   const [intro, setIntro] = useState(faqSectionIntro);
-  const [state, action, , clearError] = useSafeActionState(updateFaqSectionCopy);
+  const [state, action, pending, clearError] = useSafeActionState(updateFaqSectionCopy);
   useActionToast(state);
 
   useResetOnChange([faqSectionTitle, faqSectionIntro], () => {
@@ -41,13 +31,18 @@ export function FaqSectionCopySettings({
   });
 
   const dirty = title !== faqSectionTitle || intro !== faqSectionIntro;
+  const form = useSaveBar(dirty, pending, () => {
+    setTitle(faqSectionTitle);
+    setIntro(faqSectionIntro);
+    clearError();
+  });
 
   return (
     <SettingsSection
       description="Heading and short intro above the question list on the homepage."
       title="FAQs"
     >
-      <form action={action} className="flex w-full flex-col gap-4">
+      <form action={action} ref={form} className="flex w-full flex-col gap-4">
         <div className="flex flex-col gap-2">
           <Label htmlFor="faqSectionTitle">Heading</Label>
           <Input
@@ -72,22 +67,6 @@ export function FaqSectionCopySettings({
           />
         </div>
         <FormError message={state && !state.ok ? state.error : null} />
-        <div className="flex flex-wrap gap-2">
-          <Submit disabled={!dirty} />
-          {dirty ? (
-            <Button
-              onClick={() => {
-                setTitle(faqSectionTitle);
-                setIntro(faqSectionIntro);
-                clearError();
-              }}
-              type="button"
-              variant="outline"
-            >
-              Discard
-            </Button>
-          ) : null}
-        </div>
       </form>
     </SettingsSection>
   );

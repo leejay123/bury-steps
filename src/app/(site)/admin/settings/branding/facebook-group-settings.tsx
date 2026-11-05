@@ -1,42 +1,36 @@
 "use client";
 
 import { useState } from "react";
-import { useFormStatus } from "react-dom";
 import { updateFacebookGroupUrl } from "@/server/actions";
 import { useActionToast } from "@/hooks/use-action-toast";
 import { useResetOnChange } from "@/hooks/use-reset-on-change";
 import { useSafeActionState } from "@/hooks/use-safe-action-state";
 import { FormError } from "@/components/form-error";
-import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { MAX_FACEBOOK_GROUP_URL } from "@/lib/site-branding";
+import { useSaveBar } from "@/components/save-bar";
 import { SettingsSection } from "../settings-page";
-
-function Submit({ disabled }: { disabled: boolean }) {
-  const { pending } = useFormStatus();
-  return (
-    <Button disabled={disabled || pending} type="submit">
-      {pending ? "Saving…" : "Save"}
-    </Button>
-  );
-}
 
 export function FacebookGroupSettings({ facebookGroupUrl }: { facebookGroupUrl: string }) {
   const [url, setUrl] = useState(facebookGroupUrl);
-  const [state, action, , clearError] = useSafeActionState(updateFacebookGroupUrl);
+  const [state, action, pending, clearError] = useSafeActionState(updateFacebookGroupUrl);
   useActionToast(state);
 
   useResetOnChange([facebookGroupUrl], () => setUrl(facebookGroupUrl));
 
   const dirty = url !== facebookGroupUrl;
+  const form = useSaveBar(dirty, pending, () => {
+    setUrl(facebookGroupUrl);
+    clearError();
+  });
 
   return (
     <SettingsSection
       description="Shown in the site footer, FAQ empty state, and About drawer. Leave blank to hide Facebook links everywhere."
       title="Facebook group"
     >
-      <form action={action} className="flex w-full flex-col gap-4">
+      <form action={action} ref={form} className="flex w-full flex-col gap-4">
         <div className="flex flex-col gap-2">
           <Label htmlFor="facebookGroupUrl">Group link</Label>
           <Input
@@ -51,21 +45,6 @@ export function FacebookGroupSettings({ facebookGroupUrl }: { facebookGroupUrl: 
           />
         </div>
         <FormError message={state && !state.ok ? state.error : null} />
-        <div className="flex flex-wrap gap-2">
-          <Submit disabled={!dirty} />
-          {dirty ? (
-            <Button
-              onClick={() => {
-                setUrl(facebookGroupUrl);
-                clearError();
-              }}
-              type="button"
-              variant="outline"
-            >
-              Discard
-            </Button>
-          ) : null}
-        </div>
       </form>
     </SettingsSection>
   );

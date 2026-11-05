@@ -1,17 +1,16 @@
 "use client";
 
 import { useState } from "react";
-import { useFormStatus } from "react-dom";
 import { updateMonthlyClockInGoal } from "@/server/actions";
 import { useActionToast } from "@/hooks/use-action-toast";
 import { useResetOnChange } from "@/hooks/use-reset-on-change";
 import { useSafeActionState } from "@/hooks/use-safe-action-state";
 import { FormError } from "@/components/form-error";
-import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { MAX_MONTHLY_CLOCK_IN_GOAL } from "@/lib/walk-game";
 import { SettingsSection } from "../settings-page";
+import { useSaveBar } from "@/components/save-bar";
 
 function goalToInput(value: number | null): string {
   return value && value > 0 ? String(value) : "";
@@ -23,15 +22,6 @@ function asSaved(value: string): string {
   return value.trim() !== "" && Number(value) === 0 ? "" : value;
 }
 
-function Submit({ disabled }: { disabled: boolean }) {
-  const { pending } = useFormStatus();
-  return (
-    <Button disabled={disabled || pending} type="submit">
-      {pending ? "Saving…" : "Save"}
-    </Button>
-  );
-}
-
 export function ProgressSettingsForm({
   monthlyClockInGoal,
 }: {
@@ -39,19 +29,23 @@ export function ProgressSettingsForm({
 }) {
   const saved = goalToInput(monthlyClockInGoal);
   const [value, setValue] = useState(saved);
-  const [state, action, , clearError] = useSafeActionState(updateMonthlyClockInGoal);
+  const [state, action, pending, clearError] = useSafeActionState(updateMonthlyClockInGoal);
   useActionToast(state);
 
   useResetOnChange([saved], () => setValue(saved));
 
   const dirty = asSaved(value) !== saved;
+  const form = useSaveBar(dirty, pending, () => {
+    setValue(saved);
+    clearError();
+  });
 
   return (
     <SettingsSection
       description={`Total clock-ins for the group this month — not a personal target. Leave blank for none. Up to ${MAX_MONTHLY_CLOCK_IN_GOAL.toLocaleString("en-GB")}.`}
       title="Monthly together goal"
     >
-      <form action={action} className="flex max-w-sm flex-col gap-4">
+      <form action={action} ref={form} className="flex max-w-sm flex-col gap-4">
         <div className="flex flex-col gap-2">
           <Label htmlFor="monthlyClockInGoal">Goal</Label>
           <Input
@@ -67,21 +61,6 @@ export function ProgressSettingsForm({
           />
         </div>
         <FormError message={state && !state.ok ? state.error : null} />
-        <div className="flex flex-wrap gap-2">
-          <Submit disabled={!dirty} />
-          {dirty ? (
-            <Button
-              onClick={() => {
-                setValue(saved);
-                clearError();
-              }}
-              type="button"
-              variant="outline"
-            >
-              Discard
-            </Button>
-          ) : null}
-        </div>
       </form>
     </SettingsSection>
   );

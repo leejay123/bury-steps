@@ -1,7 +1,6 @@
 "use client";
 
-import { useRef, useState } from "react";
-import { useFormStatus } from "react-dom";
+import { useState } from "react";
 import { updateSiteFavicon } from "@/server/actions";
 import { useActionToast } from "@/hooks/use-action-toast";
 import { useResetOnChange } from "@/hooks/use-reset-on-change";
@@ -9,17 +8,8 @@ import { useSafeActionState } from "@/hooks/use-safe-action-state";
 import { FormError } from "@/components/form-error";
 import { ImageDropzone } from "@/components/image-dropzone";
 import { Label } from "@/components/ui/label";
-import { Button } from "@/components/ui/button";
+import { useSaveBar } from "@/components/save-bar";
 import { SettingsSection } from "../settings-page";
-
-function Submit({ disabled }: { disabled: boolean }) {
-  const { pending } = useFormStatus();
-  return (
-    <Button disabled={disabled || pending} type="submit">
-      {pending ? "Saving…" : "Save"}
-    </Button>
-  );
-}
 
 export function SiteFaviconSettings({
   faviconSrc,
@@ -28,9 +18,14 @@ export function SiteFaviconSettings({
   faviconSrc: string;
   hasCustomFavicon: boolean;
 }) {
-  const [state, action] = useSafeActionState(updateSiteFavicon);
-  const formRef = useRef<HTMLFormElement>(null);
+  const [state, action, pending] = useSafeActionState(updateSiteFavicon);
   const [dirty, setDirty] = useState(false);
+  // Discard (save bar) starts the dropzone afresh, back to the saved picture.
+  const [fresh, setFresh] = useState(0);
+  const formRef = useSaveBar(dirty, pending, () => {
+    setFresh((count) => count + 1);
+    setDirty(false);
+  });
   useActionToast(state, () => formRef.current?.reset());
 
   // A successful save lands here as a fresh `faviconSrc` (Next re-renders
@@ -54,15 +49,12 @@ export function SiteFaviconSettings({
               existingSrc={faviconSrc}
               hint="JPEG, PNG or WebP, under 4 MB. Must be square — equal width and height."
               id="favicon-image"
-              key={faviconSrc}
+              key={`${faviconSrc}:${fresh}`}
               onDirtyChange={setDirty}
             />
           </div>
         </div>
         <FormError message={state && !state.ok ? state.error : null} />
-        <div className="flex flex-wrap gap-2">
-          <Submit disabled={!dirty} />
-        </div>
       </form>
     </SettingsSection>
   );

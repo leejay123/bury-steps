@@ -1,7 +1,6 @@
 "use client";
 
-import { useRef, useState } from "react";
-import { useFormStatus } from "react-dom";
+import { useState } from "react";
 import { updateReportBanner } from "@/server/actions";
 import { useActionToast } from "@/hooks/use-action-toast";
 import { useResetOnChange } from "@/hooks/use-reset-on-change";
@@ -9,22 +8,18 @@ import { useSafeActionState } from "@/hooks/use-safe-action-state";
 import { FormError } from "@/components/form-error";
 import { ImageDropzone } from "@/components/image-dropzone";
 import { Label } from "@/components/ui/label";
-import { Button } from "@/components/ui/button";
+import { useSaveBar } from "@/components/save-bar";
 import { SettingsSection } from "../settings-page";
 
-function Submit({ disabled }: { disabled: boolean }) {
-  const { pending } = useFormStatus();
-  return (
-    <Button disabled={disabled || pending} type="submit">
-      {pending ? "Saving…" : "Save"}
-    </Button>
-  );
-}
-
 export function ReportBannerSettings({ reportBannerSrc }: { reportBannerSrc: string | null }) {
-  const [state, action] = useSafeActionState(updateReportBanner);
-  const formRef = useRef<HTMLFormElement>(null);
+  const [state, action, pending] = useSafeActionState(updateReportBanner);
   const [dirty, setDirty] = useState(false);
+  // Discard (save bar) starts the dropzone afresh, back to the saved picture.
+  const [fresh, setFresh] = useState(0);
+  const formRef = useSaveBar(dirty, pending, () => {
+    setFresh((count) => count + 1);
+    setDirty(false);
+  });
   useActionToast(state, () => formRef.current?.reset());
 
   // A successful save lands here as a fresh `reportBannerSrc` — reset the
@@ -47,15 +42,12 @@ export function ReportBannerSettings({ reportBannerSrc }: { reportBannerSrc: str
               existingSrc={reportBannerSrc ?? undefined}
               hint="JPEG, PNG or WebP, under 4 MB. Wide and thin — around 1500×250px (roughly 6:1) prints best."
               id="report-banner-image"
-              key={reportBannerSrc}
+              key={`${reportBannerSrc}:${fresh}`}
               onDirtyChange={setDirty}
             />
           </div>
         </div>
         <FormError message={state && !state.ok ? state.error : null} />
-        <div className="flex flex-wrap gap-2">
-          <Submit disabled={!dirty} />
-        </div>
       </form>
     </SettingsSection>
   );
