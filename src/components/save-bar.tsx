@@ -129,16 +129,18 @@ export function SaveBar() {
   const found = shown ? document.querySelector<HTMLElement>('[data-slot="efferd-header"]') : null;
   const header = found?.getClientRects().length ? found : null;
   // A light bar over the top bar (Shopify's save bar, in the dashboard's colours), from just
-  // after the sidebar button to the right edge, so that button stays usable. Its left edge
-  // is the top bar's own padding (wider beside an iPhone's camera) + the button + its gap.
+  // after the sidebar button to the right edge, so that button stays usable. It has no
+  // background of its own: the top bar's frosted glass shows through, and what it covers
+  // is hidden meanwhile (shadcnio.css). Its left edge is the top bar's own padding (wider
+  // beside an iPhone's camera) + the button + its gap.
   const bar = (
     <div
       aria-label="Unsaved changes"
       className={cn(
-        "z-50 flex animate-in items-center justify-between gap-3 bg-background pe-[max(1rem,env(safe-area-inset-right))] ps-3 duration-150 fade-in md:pe-[max(1.5rem,env(safe-area-inset-right))]",
+        "z-50 flex animate-in items-center justify-between gap-3 pe-[max(1rem,env(safe-area-inset-right))] ps-3 duration-150 fade-in md:pe-[max(1.5rem,env(safe-area-inset-right))]",
         header
           ? "absolute inset-y-0 right-0 left-[calc(max(1rem,env(safe-area-inset-left))+2.5rem)] border-s md:left-[calc(max(1.5rem,env(safe-area-inset-left))+2.5rem)]"
-          : "fixed inset-x-0 top-0 h-14 border-b",
+          : "fixed inset-x-0 top-0 h-14 border-b bg-background",
       )}
       data-save-bar=""
       role="region"
