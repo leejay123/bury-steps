@@ -1,3 +1,4 @@
+import { PageTopTitle } from "@/components/page-top-icon";
 import { PageTopField } from "@/components/shadcnio/page-top-field";
 
 export function AdminPageIntro({
@@ -37,7 +38,7 @@ export function AdminPageIntro({
           </p>
         ) : null}
         <Heading className="font-semibold text-lg tracking-tight" data-page-top-title={band ? "" : undefined}>
-          {title}
+          {band ? <PageTopTitle>{title}</PageTopTitle> : title}
         </Heading>
         <p className="text-sm text-muted-foreground" data-page-top-intro={band ? "" : undefined}>
           {description}

@@ -17,7 +17,7 @@ import {
 
 /** Icon per Settings page (see src/lib/settings-pages.ts), for the
  * Settings home's card table. */
-const SETTINGS_PAGE_ICONS: Record<string, LucideIcon> = {
+export const SETTINGS_PAGE_ICONS: Record<string, LucideIcon> = {
   "/admin/settings/branding": LayoutGrid,
   "/admin/settings/hero-photos": ImageIcon,
   "/admin/settings/homepage-layout": SlidersHorizontal,

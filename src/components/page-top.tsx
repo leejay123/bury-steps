@@ -1,5 +1,6 @@
 import type { ReactNode } from "react";
 import { PageTopField } from "@/components/shadcnio/page-top-field";
+import { PageTopTitle } from "@/components/page-top-icon";
 
 /**
  * A page's own title and intro line. The usual look is unchanged (a small
@@ -41,7 +42,7 @@ export function PageTop({
           {eyebrow}
         </p>
         <h1 className="text-lg font-semibold tracking-tight" data-page-top-title="">
-          {title}
+          <PageTopTitle>{title}</PageTopTitle>
         </h1>
         {intro ? (
           <p className="text-sm text-muted-foreground" data-page-top-intro="">

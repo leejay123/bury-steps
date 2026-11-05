@@ -7,6 +7,7 @@ import { FullWidthDivider } from "@/components/full-width-divider";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { SettingsBackLink, SettingsSubPageTabs } from "./settings-page-nav";
+import { PageTopTitle } from "@/components/page-top-icon";
 
 /** Same width for every settings page, header and body alike, so every
  * page's left edge lines up with the next — full width, matching the
@@ -49,7 +50,7 @@ export function SettingsPage({
                 Organisers
               </p>
               <h1 className="text-lg font-semibold tracking-tight" data-page-top-title="">
-                {title}
+                <PageTopTitle>{title}</PageTopTitle>
               </h1>
               <p className="text-sm text-muted-foreground" data-page-top-intro="">
                 {description}
