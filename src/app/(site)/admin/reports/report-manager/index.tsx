@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo, useRef, useState } from "react";
+import { useRouter } from "next/navigation";
 import { ChevronRight, ClipboardList, Printer, Search } from "lucide-react";
 import { formatWalkDay, formatTime } from "@/lib/dates";
 import { EmptyState } from "@/components/empty-state";
@@ -70,6 +71,7 @@ export function AccidentReportManager({
   /** permMembersView — involved-member badges link to member pages. */
   canViewMembers?: boolean;
 }) {
+  const router = useRouter();
   const [mode, setMode] = useState<DrawerMode | null>(null);
   const [isPending, setIsPending] = useState(false);
   const viewing =
@@ -158,7 +160,7 @@ export function AccidentReportManager({
                   className={dataListItemStackClassName}
                   data-stagger-item=""
                   key={report.id}
-                  onClick={() => setMode({ type: "view", report })}
+                  onClick={() => router.push(`/admin/reports/${report.id}`)}
                 >
                   <DataListItemMain>
                     <DataListBody>

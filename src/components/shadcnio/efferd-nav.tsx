@@ -4,6 +4,7 @@ import { Suspense, useState } from "react";
 import { IntentLink as Link } from "@/components/intent-link";
 import { usePathname, useRouter } from "next/navigation";
 import { ChevronRight } from "lucide-react";
+import { cn } from "@/lib/utils";
 import { FoldedTip } from "./folded-tip";
 import { SIDEBAR_ICONS, type SidebarGroup } from "./sidebar-nav";
 
@@ -13,8 +14,6 @@ import { SIDEBAR_ICONS, type SidebarGroup } from "./sidebar-nav";
  * it keeps only the icons; shadcnio.css does that, so it is right before the first paint.
  */
 const GROUP = "relative flex w-full min-w-0 flex-col p-2";
-const GROUP_LABEL =
-  "flex h-8 shrink-0 items-center rounded-md px-2 font-medium text-muted-foreground text-xs transition-[margin,opacity] duration-200 ease-linear";
 const BUTTON =
   "flex h-8 w-full items-center gap-2 overflow-hidden rounded-md p-2 text-left text-sm outline-hidden transition-[width,height,padding] hover:bg-muted hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring [&>svg]:size-4 [&>svg]:shrink-0 [&>span]:truncate";
 
@@ -46,11 +45,11 @@ function CurrentNav(props: NavProps) {
 function NavList({ groups, onNavigate, path }: NavProps & { path: string }) {
   return (
     <nav aria-label="Dashboard" className="flex min-h-0 flex-1 flex-col overflow-y-auto overscroll-contain" data-slot="efferd-nav">
-      {groups.map((group) => (
-        <div className={GROUP} data-sb-only={group.only} key={group.title}>
-          <p className={GROUP_LABEL} data-efferd-label="">
-            {group.title}
-          </p>
+      {groups.map((group, index) => (
+        // No visible group names (Dashboard, Organisers, Settings): a line between groups
+        // instead. The name stays for screen readers.
+        <div className={cn(GROUP, index > 0 && "border-t")} data-sb-only={group.only} key={group.title}>
+          <p className="sr-only">{group.title}</p>
           <ul className="flex w-full min-w-0 flex-col gap-1">
             {group.links.map((link) => {
               const Icon = SIDEBAR_ICONS[link.icon];

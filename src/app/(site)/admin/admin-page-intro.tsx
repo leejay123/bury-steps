@@ -8,7 +8,8 @@ export function AdminPageIntro({
   as: Heading = "h1",
 }: {
   title: string;
-  description: string;
+  /** Words, or words with a live part (Members: the count, counting up). */
+  description: React.ReactNode;
   /** An optional button/link alongside the title — e.g. "Create a walk". */
   action?: React.ReactNode;
   /** h1 for the page's own title; h2 for a later section that looks the same. */

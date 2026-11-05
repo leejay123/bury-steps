@@ -988,6 +988,9 @@ html:is([data-remembered-in], [data-guest-dash]):not([data-page-kind="home"], [d
 /* List headings and group headings share the main Settings table's grey header strip. */
   html:is([data-remembered-in], [data-guest-dash]):not([data-page-kind="home"], [data-page-kind="plain"]) [data-slot="docs-page"] [data-edge-head] { padding: 0.625rem 1.5rem !important; background: color-mix(in oklab, var(--muted) 50%, transparent); }
   html:is([data-remembered-in], [data-guest-dash]):not([data-page-kind="home"], [data-page-kind="plain"]) [data-slot="docs-page"] :has(> [data-edge-head]:first-child) { row-gap: 0 !important; }
+  /* Rows that fill a section edge to edge (Walk essentials): straight under its heading, out
+     to its sides and down to its bottom. */
+  html:is([data-remembered-in], [data-guest-dash]):not([data-page-kind="home"], [data-page-kind="plain"]) [data-slot="docs-page"] [data-edge-panel] [data-edge-rows] { margin: -1.5rem !important; }
   /* A row that ends a section (How this started: Full story) runs to its bottom edge, with a line above it, so no empty band is left under it. */
   html:is([data-remembered-in], [data-guest-dash]):not([data-page-kind="home"], [data-page-kind="plain"]) [data-slot="docs-page"] [data-edge-panel] [data-edge-panel-foot] { margin: 0.5rem -1.5rem -1.5rem !important; border-width: 1px 0 0 !important; border-top: 1px solid var(--border) !important; border-radius: 0 !important; }
   html:is([data-remembered-in], [data-guest-dash]):not([data-page-kind="home"], [data-page-kind="plain"]) [data-slot="docs-page"] [data-edge-panel] [data-edge-panel-foot] > li { padding-inline: 1.5rem; }

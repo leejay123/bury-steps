@@ -29,7 +29,18 @@ const newKey = () => `c${Date.now().toString(36)}${Math.random().toString(36).sl
 
 /** Every icon as a labelled tile in a searchable grid — easier to scan
  * than a narrow list, and you see the icon you're picking. */
-export function IconPicker({ label, onChange, value }: { label: string; onChange: (icon: string) => void; value: string }) {
+export function IconPicker({
+  className,
+  label,
+  onChange,
+  value,
+}: {
+  /** Extra classes for the button that opens it (the essentials rows draw it as a cell). */
+  className?: string;
+  label: string;
+  onChange: (icon: string) => void;
+  value: string;
+}) {
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState("");
   // The whole free library's names, loaded the first time the picker opens.
@@ -71,7 +82,7 @@ export function IconPicker({ label, onChange, value }: { label: string; onChange
       open={open}
     >
       <PopoverTrigger asChild>
-        <Button aria-label={`Icon for ${label || "this item"}`} className="shrink-0 gap-1.5" type="button" variant="outline">
+        <Button aria-label={`Icon for ${label || "this item"}`} className={cn("shrink-0 gap-1.5", className)} type="button" variant="outline">
           {createElement(essentialIcon(value), { "aria-hidden": true, className: "size-4" })}
           <ChevronDown aria-hidden className="size-3.5 text-muted-foreground" />
         </Button>
@@ -171,79 +182,80 @@ export function WalkEssentialsEditor({ items: saved }: { items: EssentialItem[] 
       description="Each item is a tick box on the walk form, and ticked ones show as small labels on the walk's page."
       title="Essentials list"
     >
-      <form action={action} className="flex flex-col gap-4" ref={form}>
+      {/* Edge to edge (design A): each essential a row across the box, its icon, name and
+          buttons as cells with lines between; Add an essential the last row. */}
+      <form action={action} className="flex flex-col" data-edge-rows="" ref={form}>
         <input name="items" type="hidden" value={JSON.stringify(items)} />
         {items.length === 0 ? (
-          <p className="text-sm text-muted-foreground">No essentials. Add one below, or walks won&apos;t show an Essentials list.</p>
+          <p className="border-b px-6 py-4 text-sm text-muted-foreground">
+            No essentials. Add one below, or walks won&apos;t show an Essentials list.
+          </p>
         ) : (
-          <ul className="flex flex-col gap-2">
-            {items.map((item, index) => {
-              return (
-                <li className="flex flex-wrap items-center gap-2 rounded-lg border p-2 sm:flex-nowrap" key={item.key}>
-                  <IconPicker
-                    label={item.label}
-                    onChange={(icon) => update(index, { icon })}
-                    value={item.icon}
-                  />
-                  {/* At least 12rem, so on a phone the arrows and Remove wrap
-                      onto their own line instead of squeezing the name. */}
-                  <Input
-                    aria-label="Name"
-                    className="min-w-[12rem] flex-1"
-                    maxLength={MAX_WALK_ESSENTIAL_LABEL}
-                    onChange={(event) => update(index, { label: event.target.value })}
-                    placeholder="e.g. Toilets available"
-                    value={item.label}
-                  />
-                  <div className="ml-auto flex shrink-0 gap-1">
-                    <Button
-                      aria-label="Move up"
-                      disabled={index === 0}
-                      onClick={() => move(index, -1)}
-                      size="icon"
-                      type="button"
-                      variant="ghost"
-                    >
-                      <ArrowUp />
-                    </Button>
-                    <Button
-                      aria-label="Move down"
-                      disabled={index === items.length - 1}
-                      onClick={() => move(index, 1)}
-                      size="icon"
-                      type="button"
-                      variant="ghost"
-                    >
-                      <ArrowDown />
-                    </Button>
-                    <Button
-                      aria-label={`Remove ${item.label || "this item"}`}
-                      onClick={() => setItems((list) => list.filter((_, i) => i !== index))}
-                      size="icon"
-                      type="button"
-                      variant="ghost"
-                    >
-                      <Trash2 />
-                    </Button>
-                  </div>
-                </li>
-              );
-            })}
+          <ul className="flex flex-col">
+            {items.map((item, index) => (
+              <li className="flex h-13 items-stretch border-b" key={item.key}>
+                <IconPicker
+                  className="h-auto w-18 rounded-none! border-0! border-e! shadow-none! focus-visible:ring-inset"
+                  label={item.label}
+                  onChange={(icon) => update(index, { icon })}
+                  value={item.icon}
+                />
+                <Input
+                  aria-label="Name"
+                  className="h-auto min-w-0 flex-1 rounded-none border-0 px-5 shadow-none hover:border-0 focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring/50"
+                  maxLength={MAX_WALK_ESSENTIAL_LABEL}
+                  onChange={(event) => update(index, { label: event.target.value })}
+                  placeholder="e.g. Toilets available"
+                  value={item.label}
+                />
+                <Button
+                  aria-label="Move up"
+                  className="h-auto w-13 shrink-0 rounded-none! border-0! border-s! shadow-none! focus-visible:ring-inset"
+                  disabled={index === 0}
+                  onClick={() => move(index, -1)}
+                  type="button"
+                  variant="ghost"
+                >
+                  <ArrowUp />
+                </Button>
+                <Button
+                  aria-label="Move down"
+                  className="h-auto w-13 shrink-0 rounded-none! border-0! border-s! shadow-none! focus-visible:ring-inset"
+                  disabled={index === items.length - 1}
+                  onClick={() => move(index, 1)}
+                  type="button"
+                  variant="ghost"
+                >
+                  <ArrowDown />
+                </Button>
+                <Button
+                  aria-label={`Remove ${item.label || "this item"}`}
+                  className="h-auto w-13 shrink-0 rounded-none! border-0! border-s! shadow-none! text-destructive hover:text-destructive focus-visible:ring-inset"
+                  onClick={() => setItems((list) => list.filter((_, i) => i !== index))}
+                  type="button"
+                  variant="ghost"
+                >
+                  <Trash2 />
+                </Button>
+              </li>
+            ))}
           </ul>
         )}
-        <div>
-          <Button
-            disabled={items.length >= MAX_WALK_ESSENTIALS}
-            onClick={() => setItems((list) => [...list, { key: newKey(), label: "", icon: "info" }])}
-            size="sm"
-            type="button"
-            variant="outline"
-          >
-            <Plus data-icon="inline-start" />
-            Add an essential
-          </Button>
-        </div>
-        <FormError message={state && !state.ok ? state.error : null} />
+        {state && !state.ok ? (
+          <div className="border-b px-6 py-3">
+            <FormError message={state.error} />
+          </div>
+        ) : null}
+        <Button
+          className="h-13 w-full justify-start gap-2 rounded-none! px-6 text-muted-foreground focus-visible:ring-inset"
+          disabled={items.length >= MAX_WALK_ESSENTIALS}
+          onClick={() => setItems((list) => [...list, { key: newKey(), label: "", icon: "info" }])}
+          type="button"
+          variant="ghost"
+        >
+          <Plus />
+          Add an essential
+        </Button>
       </form>
     </SettingsSection>
   );

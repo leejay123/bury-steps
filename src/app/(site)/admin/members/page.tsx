@@ -17,6 +17,8 @@ import { loadMembersPage } from "@/lib/members-search";
 import { MembersTable } from "./members-table";
 import { AdminPageIntro } from "../admin-page-intro";
 import { EmptyState } from "@/components/empty-state";
+import { Skeleton } from "@/components/ui/skeleton";
+import { CountingNumber } from "@/components/ui/counting-number";
 
 function parseRoleFilter(raw: string | undefined): MemberRoleFilter {
   if (raw === "ADMIN" || raw === "MEMBER") return raw;
@@ -38,7 +40,15 @@ export default function MembersPage({
   return (
     <div className="flex flex-col gap-6 px-4 py-6 md:px-6">
       <AdminPageIntro
-        description="Everyone who has signed up. Filter, search, or open someone for their walk history."
+        description={
+          <>
+            {/* How many have signed up, counting up as on the homepage; a grey shape until it's known. */}
+            <Suspense fallback={<Skeleton className="inline-block h-[1em] w-8 align-middle" />}>
+              <MemberCount />
+            </Suspense>{" "}
+            signed up. Filter, search, or open someone for their walk history.
+          </>
+        }
         title="Members"
       />
       {/* The heading shows straight away; only the list waits for data. */}
@@ -87,6 +97,25 @@ async function getMembersView(role: MemberRoleFilter) {
     // reading the clock while the rows are drawn (see MembersNow).
     now: new Date().toISOString(),
   };
+}
+
+/** Everyone signed up, as a private saved copy like the list's (organisers only). */
+async function memberTotal() {
+  "use cache: private";
+  cacheLife({ stale: 300, revalidate: 300, expire: 3600 });
+  const admin = await getOptionalAdmin();
+  if (!admin?.permMembersView) return null;
+  return prisma.user.count();
+}
+
+async function MemberCount() {
+  const total = await memberTotal();
+  if (total === null) return null;
+  return (
+    <>
+      <CountingNumber className="font-medium text-foreground" grouping value={total} /> {total === 1 ? "member has" : "members have"}
+    </>
+  );
 }
 
 async function MembersForViewer({ searchParams }: { searchParams: Promise<{ role?: string }> }) {
