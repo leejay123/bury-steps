@@ -78,6 +78,7 @@ export function HomepageFaqManager({
               disabled={atLimit || noCategories}
               onClick={() => setMode({ type: "add" })}
               size="sm"
+              variant="outline"
             >
               Add FAQ
             </Button>

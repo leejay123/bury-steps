@@ -26,9 +26,12 @@ async function thisDeviceSubscription(): Promise<PushSubscription | null> {
 export function PhoneAlertsSwitch({
   initiallyOn,
   vapidPublicKey,
+  row = false,
 }: {
   initiallyOn: boolean;
   vapidPublicKey: string | null;
+  /** As a row of a list that has its own Phone heading (the Email preferences page). */
+  row?: boolean;
 }) {
   const switchId = useId();
   const [on, setOn] = useState(initiallyOn);
@@ -112,9 +115,9 @@ export function PhoneAlertsSwitch({
   }
 
   return (
-    <div className="space-y-3">
-      <p className="text-base font-medium">Phone</p>
-      <div className="flex items-start justify-between gap-4">
+    <div className={row ? undefined : "space-y-3"}>
+      {row ? null : <p className="text-base font-medium">Phone</p>}
+      <div className={row ? "flex items-start justify-between gap-4 px-4 py-3.5" : "flex items-start justify-between gap-4"}>
         <span className="flex flex-col gap-0.5">
           <span className="text-sm font-medium">Walk starting soon</span>
           <span className="text-sm text-muted-foreground">

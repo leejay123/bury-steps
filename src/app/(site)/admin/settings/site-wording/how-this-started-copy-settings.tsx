@@ -228,7 +228,7 @@ export function HowThisStartedCopySettings({
           </div>
         </form>
 
-        <DataList>
+        <DataList data-edge-panel-foot="">
           <DataListItem onClick={() => openSoon(() => setBodyDrawerOpen(true))}>
             <DataListItemMain className="items-center">
               <DataListBody>

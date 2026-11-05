@@ -30,8 +30,8 @@ export default async function MyEmailPreferencesPage() {
         emailProgress={user.emailProgress}
         emailWalkAnnouncements={user.emailWalkAnnouncements}
         isAdmin={user.role === "ADMIN"}
+        phone={<PhoneAlertsSwitch initiallyOn={pushOn} row vapidPublicKey={vapidConfig()?.publicKey ?? null} />}
       />
-      <PhoneAlertsSwitch initiallyOn={pushOn} vapidPublicKey={vapidConfig()?.publicKey ?? null} />
     </div>
   );
 }

@@ -81,7 +81,7 @@ function SettingsView({
   return (
     <>
       <section className="flex flex-col gap-3" id="sending">
-        <p className="max-w-2xl text-sm leading-relaxed text-muted-foreground">
+        <p className="max-w-2xl py-4 text-sm leading-relaxed text-muted-foreground">
           {owner
             ? "The switch beside each email turns it on or off for everyone. \"Send test to me\" still works for emails that are off."
             : "Only the site owner can switch emails on or off."}

@@ -122,25 +122,27 @@ export function SettingsSubPageTabs() {
   return (
     <nav
       aria-label="Pages in this section"
-      className="-mx-1 overflow-x-auto overscroll-x-contain px-1 pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+      className="overflow-x-auto overscroll-x-contain [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
       data-edge-bar=""
+      data-edge-flush=""
       data-edge-top=""
       ref={scrollerRef}
     >
-      {/* Styled after shadcn studio's Tabs 27: a spring-animated pill slides
-          to the tapped tab (these are page links, so no sliding content). */}
+      {/* Edge to edge like the other tabs (design D): plain cells with a line
+          between them, and an underline that slides to the tapped tab (these
+          are page links, so no sliding content). */}
       {/* Scoped per page: the pill slides on tap, and the next page's strip
           starts with it already in place instead of replaying the slide. */}
       <LayoutGroup id={`settings-subpage-tabs:${pathname}`}>
-      <ul className="inline-flex h-10 min-w-max items-center rounded-lg bg-muted p-1">
+      <ul className="flex h-13 min-w-max items-stretch">
         {siblings.map((child) => {
           const active = child.href === currentHref;
           return (
-            <li className="relative h-full" key={child.href}>
+            <li className="relative border-e" key={child.href}>
               {active ? (
                 <motion.span
                   aria-hidden
-                  className="absolute inset-0 rounded-sm bg-background shadow-sm"
+                  className="absolute inset-x-0 bottom-0 z-2 h-0.5 bg-foreground"
                   layoutId="settings-subpage-tab"
                   transition={{ type: "spring", stiffness: 200, damping: 30 }}
                 />
@@ -148,7 +150,7 @@ export function SettingsSubPageTabs() {
               <Link
                 aria-current={child.href === pathname ? "page" : undefined}
                 className={cn(
-                  "relative z-1 flex h-full touch-manipulation items-center rounded-sm px-3 text-sm font-medium whitespace-nowrap transition-colors",
+                  "relative z-1 flex h-full touch-manipulation items-center px-4 text-sm font-medium whitespace-nowrap transition-colors",
                   active ? "text-foreground" : "text-muted-foreground hover:text-foreground",
                 )}
                 href={child.href}
