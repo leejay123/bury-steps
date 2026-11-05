@@ -3,7 +3,7 @@
 /**
  * The save bar (after Shopify's: polaris.shopify.com/components/contextual-save-bar).
  * Settings forms don't show their own Save button: once something on the page is
- * changed, one bar slides up at the bottom with "Unsaved changes", Discard and
+ * changed, a dark bar covers the top bar with "Unsaved changes", Discard and
  * Save. Save sends every changed form on the page; Discard puts them all back.
  * Following a link away while something is unsaved asks first.
  *
@@ -11,7 +11,9 @@
  * ref on its <form>. The page shows the bar with <SaveBar />.
  */
 import { useEffect, useId, useLayoutEffect, useRef, useState, useSyncExternalStore } from "react";
+import { createPortal } from "react-dom";
 import { useRouter } from "next/navigation";
+import { CircleAlert } from "lucide-react";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -23,6 +25,7 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
 
 type Entry = {
   form: { current: HTMLFormElement | null };
@@ -122,31 +125,51 @@ export function SaveBar() {
     };
   }, [shown]);
 
+  // Shopify's look: a dark bar over the page's top bar (polaris.shopify.com/components/contextual-save-bar).
+  // Without the dashboard's top bar it sits fixed at the top of the window instead.
+  const found = shown ? document.querySelector<HTMLElement>('[data-slot="efferd-header"]') : null;
+  const header = found?.getClientRects().length ? found : null;
+  const bar = (
+    <div
+      aria-label="Unsaved changes"
+      className={cn(
+        "z-50 flex animate-in items-center justify-between gap-3 bg-neutral-900 px-4 text-white duration-150 fade-in md:px-6 dark:bg-neutral-800",
+        header ? "absolute inset-0" : "fixed inset-x-0 top-0 h-14",
+      )}
+      data-save-bar=""
+      role="region"
+    >
+      <p aria-live="polite" className="flex min-w-0 items-center gap-2 text-sm font-medium">
+        <CircleAlert aria-hidden className="size-4 shrink-0" />
+        <span className="truncate">Unsaved changes</span>
+      </p>
+      <div className="flex shrink-0 gap-2">
+        <Button
+          className="border-0 bg-white/10 text-white shadow-none hover:bg-white/20 hover:text-white"
+          disabled={pending}
+          onClick={discardAll}
+          size="sm"
+          type="button"
+          variant="ghost"
+        >
+          Discard
+        </Button>
+        <Button
+          className="bg-white text-neutral-900 hover:bg-white/90"
+          disabled={pending}
+          onClick={saveAll}
+          size="sm"
+          type="button"
+        >
+          {pending ? "Saving…" : "Save"}
+        </Button>
+      </div>
+    </div>
+  );
+
   return (
     <>
-      {shown ? (
-        <div
-          className="pointer-events-none sticky bottom-0 z-30 -mt-px flex justify-center px-4 pt-4 pb-[max(1rem,env(safe-area-inset-bottom))] md:px-6"
-          data-save-bar=""
-        >
-          <div
-            aria-live="polite"
-            className="pointer-events-auto flex w-full max-w-2xl animate-in items-center justify-between gap-3 rounded-xl border bg-background py-2.5 ps-4 pe-2.5 shadow-lg duration-200 fade-in slide-in-from-bottom-4"
-            role="region"
-            aria-label="Unsaved changes"
-          >
-            <p className="text-sm font-medium">Unsaved changes</p>
-            <div className="flex shrink-0 gap-2">
-              <Button disabled={pending} onClick={discardAll} size="sm" type="button" variant="outline">
-                Discard
-              </Button>
-              <Button disabled={pending} onClick={saveAll} size="sm" type="button">
-                {pending ? "Saving…" : "Save"}
-              </Button>
-            </div>
-          </div>
-        </div>
-      ) : null}
+      {shown ? createPortal(bar, header ?? document.body) : null}
       <AlertDialog onOpenChange={(open) => !open && setLeaving(null)} open={leaving !== null}>
         <AlertDialogContent>
           <AlertDialogHeader>
