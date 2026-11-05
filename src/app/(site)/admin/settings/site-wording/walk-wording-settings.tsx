@@ -75,6 +75,7 @@ const STATUS_BOXES: { title: string; hint: string; name: WalkWordingKey; rest: W
   { title: "Cancelled", hint: "When the walk is called off.", name: "cancelledLabel", rest: "cancelledLine" },
 ];
 import { SettingsSection } from "../settings-page";
+import { useSaveBar } from "@/components/save-bar";
 
 /**
  * The words a walk page uses for where the walk is up to: one box per
@@ -94,13 +95,18 @@ export function WalkWordingSettings({ wording }: { wording: WalkWording }) {
 
   const keys = Object.keys(WALK_WORDING_DEFAULTS) as (keyof WalkWording)[];
   const dirty = keys.some((key) => draft[key] !== wording[key]);
+  const form = useSaveBar(dirty, isPending, () => {
+    setDraft(wording);
+    setTyped({});
+    clearError();
+  });
 
   return (
     <SettingsSection
       description="One line for each stage of a walk (shown in the Status band and on every walk page layout), then the walk's messages. Keep the · between a stage's name and the rest. Words in braces, like {opens}, are filled in for each walk."
       title="Walk status wording"
     >
-      <form action={action} className="flex flex-col gap-8">
+      <form action={action} className="flex flex-col gap-8" ref={form}>
         <input name="wording" type="hidden" value={JSON.stringify(draft)} />
         <div className="flex flex-col gap-5">
           {STATUS_BOXES.map(({ title, hint, name, rest }) => {
@@ -207,25 +213,6 @@ export function WalkWordingSettings({ wording }: { wording: WalkWording }) {
           })}
         </fieldset>
         <FormError message={state && !state.ok ? state.error : null} />
-        <div className="flex flex-wrap gap-2">
-          <Button disabled={!dirty || isPending} type="submit">
-            {isPending ? "Saving…" : "Save"}
-          </Button>
-          {dirty ? (
-            <Button
-              disabled={isPending}
-              onClick={() => {
-                setDraft(wording);
-                setTyped({});
-                clearError();
-              }}
-              type="button"
-              variant="outline"
-            >
-              Discard
-            </Button>
-          ) : null}
-        </div>
       </form>
     </SettingsSection>
   );

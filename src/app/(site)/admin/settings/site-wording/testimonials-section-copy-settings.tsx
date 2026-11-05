@@ -1,13 +1,11 @@
 "use client";
 
 import { useState } from "react";
-import { useFormStatus } from "react-dom";
 import { updateTestimonialsSectionCopy } from "@/server/actions";
 import { useActionToast } from "@/hooks/use-action-toast";
 import { useResetOnChange } from "@/hooks/use-reset-on-change";
 import { useSafeActionState } from "@/hooks/use-safe-action-state";
 import { FormError } from "@/components/form-error";
-import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
@@ -16,16 +14,8 @@ import {
   MAX_TESTIMONIALS_SECTION_INTRO,
   MAX_TESTIMONIALS_SECTION_TITLE,
 } from "@/lib/testimonials";
+import { useSaveBar } from "@/components/save-bar";
 import { SettingsSection } from "../settings-page";
-
-function Submit({ disabled }: { disabled: boolean }) {
-  const { pending } = useFormStatus();
-  return (
-    <Button disabled={disabled || pending} type="submit">
-      {pending ? "Saving…" : "Save"}
-    </Button>
-  );
-}
 
 export function TestimonialsSectionCopySettings({
   testimonialsSectionEyebrow,
@@ -39,7 +29,7 @@ export function TestimonialsSectionCopySettings({
   const [eyebrow, setEyebrow] = useState(testimonialsSectionEyebrow);
   const [title, setTitle] = useState(testimonialsSectionTitle);
   const [intro, setIntro] = useState(testimonialsSectionIntro);
-  const [state, action, , clearError] = useSafeActionState(updateTestimonialsSectionCopy);
+  const [state, action, pending, clearError] = useSafeActionState(updateTestimonialsSectionCopy);
   useActionToast(state);
 
   useResetOnChange(
@@ -55,13 +45,19 @@ export function TestimonialsSectionCopySettings({
     eyebrow !== testimonialsSectionEyebrow ||
     title !== testimonialsSectionTitle ||
     intro !== testimonialsSectionIntro;
+  const form = useSaveBar(dirty, pending, () => {
+    setEyebrow(testimonialsSectionEyebrow);
+    setTitle(testimonialsSectionTitle);
+    setIntro(testimonialsSectionIntro);
+    clearError();
+  });
 
   return (
     <SettingsSection
       description="Heading and short intro above the quote grid on the homepage."
       title="Testimonials"
     >
-      <form action={action} className="flex w-full flex-col gap-4">
+      <form action={action} ref={form} className="flex w-full flex-col gap-4">
         <div className="flex flex-col gap-2">
           <Label htmlFor="testimonialsSectionEyebrow">Small line above the heading (optional)</Label>
           <Input
@@ -96,23 +92,6 @@ export function TestimonialsSectionCopySettings({
           />
         </div>
         <FormError message={state && !state.ok ? state.error : null} />
-        <div className="flex flex-wrap gap-2">
-          <Submit disabled={!dirty} />
-          {dirty ? (
-            <Button
-              onClick={() => {
-                setEyebrow(testimonialsSectionEyebrow);
-                setTitle(testimonialsSectionTitle);
-                setIntro(testimonialsSectionIntro);
-                clearError();
-              }}
-              type="button"
-              variant="outline"
-            >
-              Discard
-            </Button>
-          ) : null}
-        </div>
       </form>
     </SettingsSection>
   );

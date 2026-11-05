@@ -5,11 +5,11 @@ import { updateWalkPageCopy } from "@/server/actions";
 import { useNotifyActionState } from "@/hooks/use-action-toast";
 import { useResetOnChange } from "@/hooks/use-reset-on-change";
 import { FormError } from "@/components/form-error";
-import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { MAX_ABOUT_LIST_ITEM, MAX_ABOUT_LIST_ITEMS, MAX_ABOUT_RULES } from "@/lib/homepage-copy";
 import { SettingsSection } from "../settings-page";
+import { useSaveBar } from "@/components/save-bar";
 
 /**
  * The two fixed cards shown on a walk's own share page (/w/[token]) — see
@@ -33,13 +33,18 @@ export function WalkPageCopySettings({
   });
 
   const dirty = tips !== beforeYouSetOffTipsText || steps !== howWalksWorkStepsText;
+  const form = useSaveBar(dirty, isPending, () => {
+    setTips(beforeYouSetOffTipsText);
+    setSteps(howWalksWorkStepsText);
+    clearError();
+  });
 
   return (
     <SettingsSection
       description="How this group works sits under the walk details. Before you set off shows while clock-in is still closed. Not shown on the homepage."
       title="Walk page cards"
     >
-      <form action={action} className="flex flex-col gap-6">
+      <form action={action} className="flex flex-col gap-6" ref={form}>
         <div className="flex flex-col gap-2">
           <Label htmlFor="before-you-set-off-tips">Before you set off</Label>
           <Textarea
@@ -73,24 +78,6 @@ export function WalkPageCopySettings({
           </p>
         </div>
         <FormError message={state && !state.ok ? state.error : null} />
-        <div className="flex flex-wrap gap-2">
-          <Button disabled={!dirty || isPending} type="submit">
-            {isPending ? "Saving…" : "Save"}
-          </Button>
-          {dirty ? (
-            <Button
-              onClick={() => {
-                setTips(beforeYouSetOffTipsText);
-                setSteps(howWalksWorkStepsText);
-                clearError();
-              }}
-              type="button"
-              variant="outline"
-            >
-              Discard
-            </Button>
-          ) : null}
-        </div>
       </form>
     </SettingsSection>
   );

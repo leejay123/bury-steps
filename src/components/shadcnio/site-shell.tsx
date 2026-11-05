@@ -105,14 +105,24 @@ export function ShadcnSiteShell({
         const after = main?.getBoundingClientRect().left ?? 0;
         const sideAfter = side?.getBoundingClientRect().width ?? 0;
         if (!window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
-          // Both start here, in the same frame, so the page's edge keeps up with the sidebar's
-          // (the sidebar's own CSS transition began a frame later and the page ran ahead).
-          const timing = { duration: 200, easing: "linear" } as const;
-          if (main && before !== after) {
-            main.animate([{ transform: `translateX(${before - after}px)` }, { transform: "none" }], timing);
-          }
+          // The sidebar animates its width; the page's edge follows the sidebar's actual edge
+          // every frame. (Moving the page by its own animation let the two drift apart by up
+          // to 50px mid-way: the page glided on the graphics side while the sidebar's width
+          // stepped along with the page's own work, then they snapped together at the end.)
+          const timing = { duration: 200, easing: "ease-out" } as const;
           if (side && sideBefore !== sideAfter) {
-            side.animate([{ width: `${sideBefore}px` }, { width: `${sideAfter}px` }], timing);
+            const grow = side.animate([{ width: `${sideBefore}px` }, { width: `${sideAfter}px` }], timing);
+            if (main && before !== after) {
+              const follow = () => {
+                const width = side.getBoundingClientRect().width;
+                main.style.transform = `translateX(${Math.round(width - sideAfter)}px)`;
+                if (grow.playState === "running") requestAnimationFrame(follow);
+                else main.style.transform = "";
+              };
+              follow();
+              grow.addEventListener("finish", () => (main.style.transform = ""), { once: true });
+              grow.addEventListener("cancel", () => (main.style.transform = ""), { once: true });
+            }
           }
         }
         try {

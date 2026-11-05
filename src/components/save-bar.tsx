@@ -3,8 +3,8 @@
 /**
  * The save bar (after Shopify's: polaris.shopify.com/components/contextual-save-bar).
  * Settings forms don't show their own Save button: once something on the page is
- * changed, a dark bar covers the top bar with "Unsaved changes", Discard and
- * Save. Save sends every changed form on the page; Discard puts them all back.
+ * changed, a small bar shows under the top bar with "Unsaved changes", Discard
+ * and Save. Save sends every changed form on the page; Discard puts them all back.
  * Following a link away while something is unsaved asks first.
  *
  * A form joins with `useSaveBar(dirty, pending, discard)` and puts the returned
@@ -125,44 +125,36 @@ export function SaveBar() {
     };
   }, [shown]);
 
-  // Shopify's look: a dark bar over the page's top bar (polaris.shopify.com/components/contextual-save-bar).
-  // Without the dashboard's top bar it sits fixed at the top of the window instead.
+  // Without the dashboard's top bar it sits at the top of the window instead.
   const found = shown ? document.querySelector<HTMLElement>('[data-slot="efferd-header"]') : null;
   const header = found?.getClientRects().length ? found : null;
+  // A small light bar just under the top bar, in the dashboard's own style (border, card
+  // colour, small buttons). It hangs below the bar, so the sidebar button stays usable.
   const bar = (
     <div
-      aria-label="Unsaved changes"
       className={cn(
-        "z-50 flex animate-in items-center justify-between gap-3 bg-neutral-900 px-4 text-white duration-150 fade-in md:px-6 dark:bg-neutral-800",
-        header ? "absolute inset-0" : "fixed inset-x-0 top-0 h-14",
+        "pointer-events-none z-50 flex justify-center px-4",
+        header ? "absolute inset-x-0 top-full mt-2" : "fixed inset-x-0 top-2",
       )}
       data-save-bar=""
-      role="region"
     >
-      <p aria-live="polite" className="flex min-w-0 items-center gap-2 text-sm font-medium">
-        <CircleAlert aria-hidden className="size-4 shrink-0" />
-        <span className="truncate">Unsaved changes</span>
-      </p>
-      <div className="flex shrink-0 gap-2">
-        <Button
-          className="border-0 bg-white/10 text-white shadow-none hover:bg-white/20 hover:text-white"
-          disabled={pending}
-          onClick={discardAll}
-          size="sm"
-          type="button"
-          variant="ghost"
-        >
-          Discard
-        </Button>
-        <Button
-          className="bg-white text-neutral-900 hover:bg-white/90"
-          disabled={pending}
-          onClick={saveAll}
-          size="sm"
-          type="button"
-        >
-          {pending ? "Saving…" : "Save"}
-        </Button>
+      <div
+        aria-label="Unsaved changes"
+        className="pointer-events-auto flex animate-in items-center gap-3 rounded-lg border bg-background py-1 ps-3 pe-1 shadow-md duration-150 fade-in slide-in-from-top-1"
+        role="region"
+      >
+        <p aria-live="polite" className="flex min-w-0 items-center gap-1.5 text-xs font-medium text-muted-foreground">
+          <CircleAlert aria-hidden className="size-3.5 shrink-0" />
+          <span className="truncate">Unsaved changes</span>
+        </p>
+        <div className="flex shrink-0 gap-1">
+          <Button disabled={pending} onClick={discardAll} size="xs" type="button" variant="ghost">
+            Discard
+          </Button>
+          <Button disabled={pending} onClick={saveAll} size="xs" type="button">
+            {pending ? "Saving…" : "Save"}
+          </Button>
+        </div>
       </div>
     </div>
   );

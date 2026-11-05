@@ -804,17 +804,21 @@ html:is([data-remembered-in], [data-guest-dash]):not([data-page-kind="home"], [d
 html:is([data-remembered-in], [data-guest-dash]):not([data-page-kind="home"], [data-page-kind="plain"]) [data-slot="docs-column"] { border-inline: 0 !important; }
 html:is([data-remembered-in], [data-guest-dash]):not([data-page-kind="home"], [data-page-kind="plain"]) [data-slot="docs-page"] { padding: 0 !important; }
 @media (min-width: 64rem) {
-  html:is([data-remembered-in], [data-guest-dash]):not([data-page-kind="home"], [data-page-kind="plain"]) [data-slot="docs-shell"] { --sidebar-width: 16rem; grid-template-columns: var(--sidebar-width) minmax(0, 1fr); }
+  html:is([data-remembered-in], [data-guest-dash]):not([data-page-kind="home"], [data-page-kind="plain"]) [data-slot="docs-shell"] { --sidebar-width: 16rem; grid-template-columns: var(--sidebar-width) minmax(0, 1fr); transition: none; }
   /* The sidebar sits over its column and only it changes width when folded, so the page
      beside it isn't laid out again at every step (it glides across instead, site-shell.tsx). */
   html:is([data-remembered-in], [data-guest-dash]):not([data-page-kind="home"], [data-page-kind="plain"]) [data-slot="docs-sidebar"] { position: fixed; inset-block: 0; inset-inline-start: 0; width: var(--sidebar-width); margin-top: 0; height: 100svh; background: var(--background); }
-  html:is([data-remembered-in], [data-guest-dash]):not([data-page-kind="home"], [data-page-kind="plain"]) [data-slot="docs-main"] { padding-top: 0; }
+  /* No glide of their own (the docs pages' 0.2s column and margin glides): site-shell.tsx moves
+     the page with the sidebar's edge, and a second glide made the two drift apart. */
+  html:is([data-remembered-in], [data-guest-dash]):not([data-page-kind="home"], [data-page-kind="plain"]) [data-slot="docs-main"] { padding-top: 0; transition: none; }
   html:is([data-remembered-in], [data-guest-dash])[data-docs-sidebar="collapsed"]:not([data-page-kind="home"], [data-page-kind="plain"]) [data-slot="docs-shell"] { --sidebar-width: 3rem; grid-template-columns: 3rem minmax(0, 1fr); }
   html:is([data-remembered-in], [data-guest-dash])[data-docs-sidebar="collapsed"]:not([data-page-kind="home"], [data-page-kind="plain"]) [data-slot="docs-sidebar"] { visibility: visible; pointer-events: auto; transition: none; }
   /* While it narrows (site-shell.tsx animates the width, both ways) the labels stay: the
      sidebar's edge covers them, as shadcn.io's; they fold away once it has. */
   html:is([data-remembered-in], [data-guest-dash])[data-docs-sidebar="collapsed"]:not([data-sidebar-animating]):not([data-page-kind="home"], [data-page-kind="plain"]) [data-slot="docs-sidebar"] [data-efferd-button] { width: 2rem; height: 2rem; padding: 0.5rem; }
   html:is([data-remembered-in], [data-guest-dash])[data-docs-sidebar="collapsed"]:not([data-sidebar-animating]):not([data-page-kind="home"], [data-page-kind="plain"]) [data-slot="docs-sidebar"] [data-efferd-button] > :not(:first-child) { display: none; }
+  /* The logo keeps its size when the sidebar folds (the buttons' 0.5rem inset squeezed it to 16px). */
+  html:is([data-remembered-in], [data-guest-dash])[data-docs-sidebar="collapsed"]:not([data-sidebar-animating]):not([data-page-kind="home"], [data-page-kind="plain"]) [data-slot="docs-sidebar"] [data-efferd-logo] { padding: 0.125rem; }
   html:is([data-remembered-in], [data-guest-dash])[data-docs-sidebar="collapsed"]:not([data-sidebar-animating]):not([data-page-kind="home"], [data-page-kind="plain"]) [data-slot="docs-sidebar"] [data-slot="efferd-nav"] > div > [data-efferd-label] { margin-top: -2rem; opacity: 0; pointer-events: none; }
   html:is([data-remembered-in], [data-guest-dash])[data-docs-sidebar="collapsed"]:not([data-sidebar-animating]):not([data-page-kind="home"], [data-page-kind="plain"]) [data-slot="docs-sidebar"] [data-efferd-foot] > [data-efferd-label] { display: none; }
   html:is([data-remembered-in], [data-guest-dash])[data-docs-sidebar="collapsed"]:not([data-sidebar-animating]):not([data-page-kind="home"], [data-page-kind="plain"]) [data-slot="docs-sidebar"] [data-slot="efferd-nav"] { overflow: hidden; }

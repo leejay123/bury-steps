@@ -22,6 +22,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { SettingsSection } from "../settings-page";
+import { useSaveBar } from "@/components/save-bar";
 
 /** A fresh key for an item someone adds — never reused, so an old walk's
  * tick can't land on a different, newer item. */
@@ -152,6 +153,10 @@ export function WalkEssentialsEditor({ items: saved }: { items: EssentialItem[] 
   useActionToast(state);
 
   const dirty = JSON.stringify(items) !== JSON.stringify(saved);
+  const form = useSaveBar(dirty, pending, () => {
+    setItems(saved);
+    clearError();
+  });
   const update = (index: number, change: Partial<EssentialItem>) =>
     setItems((list) => list.map((item, i) => (i === index ? { ...item, ...change } : item)));
   const move = (index: number, by: -1 | 1) =>
@@ -167,7 +172,7 @@ export function WalkEssentialsEditor({ items: saved }: { items: EssentialItem[] 
       description="Each item is a tick box on the walk form, and ticked ones show as small labels on the walk's page."
       title="Essentials list"
     >
-      <form action={action} className="flex flex-col gap-4">
+      <form action={action} className="flex flex-col gap-4" ref={form}>
         <input name="items" type="hidden" value={JSON.stringify(items)} />
         {items.length === 0 ? (
           <p className="text-sm text-muted-foreground">No essentials. Add one below, or walks won&apos;t show an Essentials list.</p>
@@ -241,24 +246,7 @@ export function WalkEssentialsEditor({ items: saved }: { items: EssentialItem[] 
         </div>
         <FormError message={state && !state.ok ? state.error : null} />
         <div className="flex flex-wrap gap-2 border-t pt-4">
-          <Button disabled={!dirty || pending} size="sm" type="submit">
-            {pending ? "Saving…" : "Save"}
-          </Button>
-          {dirty ? (
-            <Button
-              onClick={() => {
-                setItems(saved);
-                clearError();
-              }}
-              size="sm"
-              type="button"
-              variant="outline"
-            >
-              Discard
-            </Button>
-          ) : null}
           <Button
-            className="ml-auto"
             onClick={() => setItems(DEFAULT_WALK_ESSENTIALS)}
             size="sm"
             type="button"
