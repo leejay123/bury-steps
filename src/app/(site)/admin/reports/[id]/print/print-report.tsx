@@ -9,7 +9,6 @@ export function PrintReport({
   happenedAt,
   logoSrc,
   organiserNotes,
-  reportBannerSrc,
   walkLabel,
   whatHappened,
   whatWeDid,
@@ -19,18 +18,17 @@ export function PrintReport({
   happenedAt: string;
   logoSrc: string;
   organiserNotes: string | null;
-  reportBannerSrc: string | null;
   walkLabel: string | null;
   whatHappened: string;
   whatWeDid: string;
   whoInvolved: string;
 }) {
+  // Print once the logo has loaded (or failed), so it isn't missing from the page; a
+  // short fallback in case it never reports back.
   useEffect(() => {
     let printed = false;
-    let remaining = reportBannerSrc ? 2 : 1;
     const run = () => {
-      remaining -= 1;
-      if (printed || remaining > 0) return;
+      if (printed) return;
       printed = true;
       window.print();
     };
@@ -40,25 +38,12 @@ export function PrintReport({
     logo.onerror = run;
     logo.src = logoSrc;
 
-    let banner: HTMLImageElement | null = null;
-    if (reportBannerSrc) {
-      banner = new Image();
-      banner.onload = run;
-      banner.onerror = run;
-      banner.src = reportBannerSrc;
-    }
-
-    const fallback = window.setTimeout(() => {
-      if (!printed) {
-        printed = true;
-        window.print();
-      }
-    }, 800);
+    const fallback = window.setTimeout(run, 800);
     return () => {
       printed = true;
       window.clearTimeout(fallback);
     };
-  }, [logoSrc, reportBannerSrc]);
+  }, [logoSrc]);
 
   return (
     <div
@@ -117,23 +102,6 @@ export function PrintReport({
         </section>
       ) : null}
 
-      {/* Full-width letterhead-style banner at the foot of the page — a
-          separate uploaded image from the header logo, shown only once an
-          admin has set one under Settings > Display > Report banner. */}
-      {reportBannerSrc ? (
-        <div className="mt-4 h-32 border-t border-black pt-4 break-inside-avoid">
-          {/* A plain <img>, not next/image: this is a printed page, not a
-              served-and-cached web view, so the optimizer buys nothing here.
-              object-contain inside a capped-height box shows the full
-              banner uncropped, however wide it is, rather than stretching
-              it across the whole page at whatever height that implies —
-              a wide/thin letterhead came out sensible either way, but a
-              banner closer to square was printing far taller than the
-              rest of the page warranted. */}
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img alt="" className="h-full w-full object-contain" src={reportBannerSrc} />
-        </div>
-      ) : null}
     </div>
   );
 }

@@ -133,7 +133,6 @@ export {
   updateMonthlyClockInGoal,
   updateSiteLogo,
   updateSiteFavicon,
-  updateReportBanner,
   updateWalkEssentials,
 } from "./actions/site-settings";
 

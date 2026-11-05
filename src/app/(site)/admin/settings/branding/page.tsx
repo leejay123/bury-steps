@@ -10,7 +10,6 @@ import { PlaceholderPreview } from "@/components/placeholder-preview";
 import { SiteBrandingSettings } from "./site-branding-settings";
 import { SiteLogoSettings } from "./site-logo-settings";
 import { SiteFaviconSettings } from "./site-favicon-settings";
-import { ReportBannerSettings } from "./report-banner-settings";
 import { FacebookGroupSettings } from "./facebook-group-settings";
 import { SiteDesignSettings } from "./site-design-settings";
 
@@ -63,7 +62,6 @@ function SettingsView({ theme }: { theme: SiteTheme }) {
           faviconSrc={theme.faviconSrc}
           hasCustomFavicon={theme.hasCustomFavicon}
         />
-        <ReportBannerSettings reportBannerSrc={theme.reportBannerSrc} />
         <FacebookGroupSettings facebookGroupUrl={theme.facebookGroupUrl} />
       </SettingsSectionGroup>
     </>

@@ -1123,3 +1123,17 @@ html:is([data-remembered-in], [data-guest-dash]):not([data-page-kind="home"], [d
    line sat on the card's own bottom edge, a double line (Notices). Rows beyond last time's
    count are hidden, so "last" is the last one not hidden. */
 html:is([data-remembered-in], [data-guest-dash]):not([data-page-kind="home"], [data-page-kind="plain"]) [data-slot="docs-page"] [data-reveal-list] > [data-sk-row]:not([hidden]):not(:has(~ [data-sk-row]:not([hidden]))) { border-bottom-width: 0 !important; }
+
+/* ---- The cookie notice lines up with the page: on the public pages its card's left edge is
+   the guide line the logo sits on (the column: max-w-3xl, then max-w-6xl from lg; px-4,
+   sm:px-5, lg:px-6), and in the dashboard it is the page box's edge, clear of the sidebar
+   (16rem, folded 3rem; then the page's 1rem / md 1.5rem margin). ---- */
+:root[data-design="shadcnio"] [data-slot="cookie-consent"] { max-width: 48rem !important; padding-inline: calc(1rem + env(safe-area-inset-left)) calc(1rem + env(safe-area-inset-right)) !important; }
+@media (min-width: 40rem) { :root[data-design="shadcnio"] [data-slot="cookie-consent"] { padding-inline: calc(1.25rem + env(safe-area-inset-left)) calc(1.25rem + env(safe-area-inset-right)) !important; } }
+@media (min-width: 64rem) { :root[data-design="shadcnio"] [data-slot="cookie-consent"] { max-width: 72rem !important; padding-inline: calc(1.5rem + env(safe-area-inset-left)) calc(1.5rem + env(safe-area-inset-right)) !important; } }
+html:is([data-remembered-in], [data-guest-dash]):not([data-page-kind="home"], [data-page-kind="plain"])[data-design="shadcnio"] [data-slot="cookie-consent"] { max-width: none !important; margin: 0 !important; padding-inline: calc(1rem + env(safe-area-inset-left)) calc(1rem + env(safe-area-inset-right)) !important; }
+@media (min-width: 48rem) { html:is([data-remembered-in], [data-guest-dash]):not([data-page-kind="home"], [data-page-kind="plain"])[data-design="shadcnio"] [data-slot="cookie-consent"] { padding-inline: calc(1.5rem + env(safe-area-inset-left)) calc(1.5rem + env(safe-area-inset-right)) !important; } }
+@media (min-width: 64rem) {
+  html:is([data-remembered-in], [data-guest-dash]):not([data-page-kind="home"], [data-page-kind="plain"])[data-design="shadcnio"] [data-slot="cookie-consent"] { left: 16rem !important; }
+  html:is([data-remembered-in], [data-guest-dash])[data-docs-sidebar="collapsed"]:not([data-page-kind="home"], [data-page-kind="plain"])[data-design="shadcnio"] [data-slot="cookie-consent"] { left: 3rem !important; }
+}

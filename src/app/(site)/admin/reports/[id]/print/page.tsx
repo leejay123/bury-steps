@@ -48,7 +48,6 @@ async function PrintAccidentReportPageContent({
       createdBy={displayName(report.createdBy)}
       happenedAt={formatLongDateTime(report.happenedAt)}
       logoSrc={theme.logoSrc}
-      reportBannerSrc={theme.reportBannerSrc}
       organiserNotes={report.organiserNotes}
       walkLabel={
         report.walk

@@ -1525,43 +1525,6 @@ async function updateSiteFaviconWork(
   };
 }
 
-async function updateReportBannerWork(
-  _prev: ActionResult | null,
-  formData: FormData,
-): Promise<ActionResult> {
-  const admin = await requireAdmin();
-  if (!admin.permDisplay) return permissionDenied("permDisplay");
-  const image = await readOptionalImage(formData);
-  if (image && "error" in image) return { ok: false, error: image.error };
-  const removing = !image && formData.get("removeImage") === "on";
-  if (!image && !removing) return { ok: false, error: "Choose a banner to upload." };
-
-  try {
-    await prisma.siteSetting.upsert({
-      where: { id: SITE_SETTING_ID },
-      create: {
-        id: SITE_SETTING_ID,
-        primaryColor: DEFAULT_PRIMARY_COLOR,
-        carouselEnabled: true,
-        ...(image
-          ? { reportBannerMime: image.mime, reportBannerData: image.data, reportBannerBlur: image.blur }
-          : {}),
-      },
-      update: image
-        ? { reportBannerMime: image.mime, reportBannerData: image.data, reportBannerBlur: image.blur }
-        : { reportBannerMime: null, reportBannerData: null, reportBannerBlur: null },
-    });
-  } catch (err) {
-    return logActionError("updateReportBanner", err, "Could not save that banner. Try again.");
-  }
-
-  revalidatePath("/admin/reports");
-  return {
-    ok: true,
-    message: removing ? "Report banner removed." : "Report banner updated.",
-  };
-}
-
 /**
  * Settings → Walk essentials: the whole tick-box list at once, as JSON
  * [{ key, label, icon }]. Removing an item takes it off every walk's page;
@@ -2208,7 +2171,6 @@ export const updateMonthlyClockInGoal = guardForm(
 );
 export const updateSiteLogo = guardForm("organiser", pass, readPass, updateSiteLogoWork);
 export const updateSiteFavicon = guardForm("organiser", pass, readPass, updateSiteFaviconWork);
-export const updateReportBanner = guardForm("organiser", pass, readPass, updateReportBannerWork);
 export const updateWalkWording = guardForm(
   "organiser",
   z.object({ wording: z.string() }),
