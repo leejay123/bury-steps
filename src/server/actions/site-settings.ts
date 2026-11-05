@@ -1062,7 +1062,7 @@ async function updateFaqSectionCopyWork(
   revalidateTag(HOMEPAGE_CACHE_TAG, { expire: 0 });
   revalidatePath("/");
   revalidatePath("/admin/settings");
-  revalidatePath("/admin/settings/site-wording/faqs");
+  revalidatePath("/admin/settings/faqs");
   return { ok: true, message: "FAQ heading and intro saved." };
 }
 
@@ -1117,7 +1117,7 @@ async function updateTestimonialsSectionCopyWork(
   revalidateTag(HOMEPAGE_CACHE_TAG, { expire: 0 });
   revalidatePath("/");
   revalidatePath("/admin/settings");
-  revalidatePath("/admin/settings/site-wording/testimonials");
+  revalidatePath("/admin/settings/testimonials");
   return { ok: true, message: "Testimonials heading and intro saved." };
 }
 

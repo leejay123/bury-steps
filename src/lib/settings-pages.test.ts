@@ -1,7 +1,7 @@
 import { existsSync } from "fs";
 import path from "path";
 import { describe, expect, it } from "vitest";
-import { findSettingsPage, SETTINGS_PAGE_GROUPS, SITE_WORDING_PAGES, settingsHeaderTrail } from "./settings-pages";
+import { findSettingsPage, SETTINGS_PAGE_GROUPS, settingsHeaderTrail } from "./settings-pages";
 
 const allLinks = SETTINGS_PAGE_GROUPS.flatMap((group) =>
   group.pages.flatMap((page) => [page, ...(page.children ?? [])]),
@@ -33,9 +33,9 @@ describe("settings page registry", () => {
     expect(danger[0].pages.every((page) => page.danger)).toBe(true);
   });
 
-  it("finds a sub-page's parent and group", () => {
-    const found = findSettingsPage(SITE_WORDING_PAGES[2].href);
-    expect(found?.page.title).toBe("Site wording");
+  it("finds a page's group", () => {
+    const found = findSettingsPage("/admin/settings/site-wording/about-lists");
+    expect(found?.page.title).toBe("About lists");
     expect(found?.group.label).toBe("Homepage");
     expect(findSettingsPage("/admin/walks")).toBeNull();
   });
@@ -47,9 +47,9 @@ describe("settings page registry", () => {
       title: "Data retention",
       danger: false,
     });
-    expect(settingsHeaderTrail(SITE_WORDING_PAGES[0].href)).toEqual({
+    expect(settingsHeaderTrail("/admin/settings/site-wording/how-this-started")).toEqual({
       group: "Homepage",
-      title: SITE_WORDING_PAGES[0].title,
+      title: "How this started",
       danger: false,
     });
     expect(settingsHeaderTrail("/admin/settings/reset")?.danger).toBe(true);

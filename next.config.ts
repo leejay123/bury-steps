@@ -88,9 +88,13 @@ const nextConfig: NextConfig = {
       // permissions as usual.
       { source: "/admin", destination: "/admin/walks", permanent: false },
       { source: "/admin/homepage", destination: "/admin/settings", permanent: false },
+      // Site wording's pages became their own Settings rows; the two headings moved onto
+      // the pages of what they label.
+      { source: "/admin/settings/site-wording", destination: "/admin/settings", permanent: false },
+      { source: "/admin/settings/site-wording/faqs", destination: "/admin/settings/faqs", permanent: false },
       {
-        source: "/admin/settings/site-wording",
-        destination: "/admin/settings/site-wording/how-this-started",
+        source: "/admin/settings/site-wording/testimonials",
+        destination: "/admin/settings/testimonials",
         permanent: false,
       },
     ];

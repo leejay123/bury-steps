@@ -31,39 +31,6 @@ export type SettingsPageEntry = SettingsPageLink & {
 
 export type SettingsPageGroup = { label: string; pages: SettingsPageEntry[] };
 
-export const SITE_WORDING_PAGES: SettingsPageLink[] = [
-  {
-    href: "/admin/settings/site-wording/how-this-started",
-    title: "How this started",
-    description: "The heading, short blurb and full story for the homepage's How this started section.",
-    keywords: "story about eyebrow teaser",
-  },
-  {
-    href: "/admin/settings/site-wording/about-lists",
-    title: "About lists",
-    description: "The goals, places, what to expect and group rules in the homepage's About drawer.",
-    keywords: "rules goals places expect drawer",
-  },
-  {
-    href: "/admin/settings/site-wording/testimonials",
-    title: "Testimonials heading",
-    description: "The heading and intro above the quotes on the homepage.",
-    keywords: "quotes eyebrow",
-  },
-  {
-    href: "/admin/settings/site-wording/faqs",
-    title: "FAQ heading",
-    description: "The heading and intro above the questions on the homepage.",
-    keywords: "questions",
-  },
-  {
-    href: "/admin/settings/site-wording/walk-page-cards",
-    title: "Walk page cards",
-    description: "Edit the shared wording on walk pages. Layout and which blocks show are set in the walk page designer.",
-    keywords: "tips steps before you set off how walks work walk page design wording",
-  },
-];
-
 export const SETTINGS_PAGE_GROUPS: SettingsPageGroup[] = [
   {
     label: "Homepage",
@@ -93,23 +60,38 @@ export const SETTINGS_PAGE_GROUPS: SettingsPageGroup[] = [
         href: "/admin/settings/testimonials",
         title: "Testimonials",
         description: "Quotes from members shown on the homepage.",
-        keywords: "quotes reviews",
+        keywords: "quotes reviews heading intro",
         permission: "permHomepage",
       },
       {
         href: "/admin/settings/faqs",
         title: "FAQs",
         description: "The questions and answers on the homepage, grouped into categories.",
-        keywords: "questions answers help",
+        keywords: "questions answers help heading intro",
         permission: "permHomepage",
       },
+      // Each homepage heading is edited on the page of the thing it labels (FAQs, Testimonials);
+      // the rest of the wording has its own pages here (once "Site wording", under tabs).
       {
-        href: SITE_WORDING_PAGES[0].href,
-        title: "Site wording",
-        description: "Change the wording of the homepage sections and shared walk-page copy.",
-        keywords: "text copy words",
+        href: "/admin/settings/site-wording/how-this-started",
+        title: "How this started",
+        description: "The heading, short blurb and full story for the homepage's How this started section.",
+        keywords: "story about eyebrow teaser wording text copy",
         permission: "permDisplay",
-        children: SITE_WORDING_PAGES,
+      },
+      {
+        href: "/admin/settings/site-wording/about-lists",
+        title: "About lists",
+        description: "The goals, places, what to expect and group rules in the homepage's About drawer.",
+        keywords: "rules goals places expect drawer wording text copy",
+        permission: "permDisplay",
+      },
+      {
+        href: "/admin/settings/site-wording/walk-page-cards",
+        title: "Walk page cards",
+        description: "Edit the shared wording on walk pages. Layout and which blocks show are set in the walk page designer.",
+        keywords: "tips steps before you set off how walks work walk page design wording status",
+        permission: "permDisplay",
       },
     ],
   },
@@ -180,7 +162,7 @@ export const SETTINGS_PAGE_GROUPS: SettingsPageGroup[] = [
   },
 ];
 
-/** The group and page a settings URL belongs to — a Site wording sub-page
+/** The group and page a settings URL belongs to — a sub-page (none now)
  * resolves to its parent entry. Null for anything outside the registry. */
 export function findSettingsPage(
   pathname: string,

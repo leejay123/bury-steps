@@ -10,7 +10,7 @@ import { MAX_HOMEPAGE_TESTIMONIALS } from "@/lib/testimonials";
 import { MAX_HOMEPAGE_FAQS } from "@/lib/faqs";
 import { EMAIL_TEMPLATES } from "@/lib/email/registry";
 import { DEFAULT_CANCELLED_WALK_RETENTION_DAYS } from "@/lib/walk-retention";
-import { SETTINGS_PAGE_GROUPS, SITE_WORDING_PAGES } from "@/lib/settings-pages";
+import { SETTINGS_PAGE_GROUPS } from "@/lib/settings-pages";
 import { SettingsPage } from "./settings-page";
 import { PlaceholderPreview } from "@/components/placeholder-preview";
 import { SettingsHub, SettingsHubSkeleton, type SettingsHubGroup, type SettingsRowState } from "./settings-hub";
@@ -125,7 +125,6 @@ async function AdminSettingsPageContent() {
       status: `${testimonialCount} of ${MAX_HOMEPAGE_TESTIMONIALS} quotes`,
     },
     "/admin/settings/faqs": { status: `${faqCount} of ${MAX_HOMEPAGE_FAQS} questions` },
-    [SITE_WORDING_PAGES[0].href]: { status: plural(SITE_WORDING_PAGES.length, "page") },
     "/admin/settings/notices": { status: plural(noticeCount, "notice") },
     "/admin/settings/emails": {
       status:

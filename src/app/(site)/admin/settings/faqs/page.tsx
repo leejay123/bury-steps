@@ -1,7 +1,9 @@
 import { Suspense } from "react";
 import { cacheLife } from "next/cache";
 import { PRIVATE_SAVED_COPY } from "@/lib/private-saved-copy";
-import { requirePermission } from "@/lib/auth";
+import { getOptionalAdmin, requirePermission } from "@/lib/auth";
+import { getSiteTheme } from "@/lib/site-theme";
+import { FaqSectionCopySettings } from "../site-wording/faq-section-copy-settings";
 import { ensureDefaultFaqCategories, getHomepageFaqData, loadHomepageFaqData } from "@/lib/homepage-faqs";
 import { MAX_FAQ_CATEGORIES, MAX_HOMEPAGE_FAQS } from "@/lib/faqs";
 import { HomepageFaqManager } from "../../homepage/faq-manager";
@@ -18,7 +20,7 @@ export default function FaqsSettingsPage() {
   // themselves (and the access check) fill in just after.
   return (
     <SettingsPage
-      description={`Up to ${MAX_HOMEPAGE_FAQS} questions on the public homepage, in up to ${MAX_FAQ_CATEGORIES} categories. The heading is under Site wording.`}
+      description={`Up to ${MAX_HOMEPAGE_FAQS} questions on the public homepage, in up to ${MAX_FAQ_CATEGORIES} categories, and the heading above them.`}
       previewHref="/"
       title="FAQs"
     >
@@ -37,11 +39,19 @@ async function FaqsSettingsPageContent() {
   "use cache: private";
   cacheLife(PRIVATE_SAVED_COPY);
   await requirePermission("permHomepage");
+  // The homepage heading above them is site wording (permDisplay): shown to those who may change it.
+  const [admin, theme] = await Promise.all([getOptionalAdmin(), getSiteTheme()]);
   await ensureDefaultFaqCategories();
   const { faqs, categories } = await loadHomepageFaqData();
 
   return (
     <>
+      {admin?.permDisplay ? (
+        <FaqSectionCopySettings
+          faqSectionIntro={theme.faqSectionIntro}
+          faqSectionTitle={theme.faqSectionTitle}
+        />
+      ) : null}
       <HomepageFaqManager
         categories={categories}
         faqs={faqs}
@@ -58,13 +68,16 @@ async function FaqsSettingsPageContent() {
  * shows them at once instead of an empty space.
  */
 async function SettingsFallback() {
-  const { faqs, categories } = await getHomepageFaqData();
+  const [{ faqs, categories }, theme] = await Promise.all([getHomepageFaqData(), getSiteTheme()]);
   return (
-    <HomepageFaqManager
-      categories={categories}
-      faqs={faqs}
-      maxCategories={MAX_FAQ_CATEGORIES}
-      maxFaqs={MAX_HOMEPAGE_FAQS}
-    />
+    <>
+      <FaqSectionCopySettings faqSectionIntro={theme.faqSectionIntro} faqSectionTitle={theme.faqSectionTitle} />
+      <HomepageFaqManager
+        categories={categories}
+        faqs={faqs}
+        maxCategories={MAX_FAQ_CATEGORIES}
+        maxFaqs={MAX_HOMEPAGE_FAQS}
+      />
+    </>
   );
 }

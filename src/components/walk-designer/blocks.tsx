@@ -3455,7 +3455,7 @@ export function HowItWorksBlock({
     return <>{p.howItWorks}</>;
   if (steps.length === 0)
     return editing ? (
-      <Placeholder label="How this group works: no steps yet (Settings → Site wording → Walk page cards)" />
+      <Placeholder label="How this group works: no steps yet (Settings → Walk page cards)" />
     ) : null;
   const drawn = (
     <StepsLooks

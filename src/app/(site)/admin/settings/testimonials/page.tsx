@@ -1,7 +1,9 @@
 import { Suspense } from "react";
 import { cacheLife } from "next/cache";
 import { PRIVATE_SAVED_COPY } from "@/lib/private-saved-copy";
-import { requirePermission } from "@/lib/auth";
+import { getOptionalAdmin, requirePermission } from "@/lib/auth";
+import { getSiteTheme } from "@/lib/site-theme";
+import { TestimonialsSectionCopySettings } from "../site-wording/testimonials-section-copy-settings";
 import { getHomepageTestimonials } from "@/lib/homepage-testimonials";
 import { MAX_HOMEPAGE_TESTIMONIALS } from "@/lib/testimonials";
 import { HomepageTestimonialManager } from "../../homepage/testimonial-manager";
@@ -18,7 +20,7 @@ export default function TestimonialsSettingsPage() {
   // themselves (and the access check) fill in just after.
   return (
     <SettingsPage
-      description={`Up to ${MAX_HOMEPAGE_TESTIMONIALS} quotes on the homepage. Change the name, the line under it, the quote and an optional photo.`}
+      description={`Up to ${MAX_HOMEPAGE_TESTIMONIALS} quotes on the homepage. Change the name, the line under it, the quote and an optional photo, and the heading above them.`}
       previewHref="/"
       title="Testimonials"
     >
@@ -37,10 +39,19 @@ async function TestimonialsSettingsPageContent() {
   "use cache: private";
   cacheLife(PRIVATE_SAVED_COPY);
   await requirePermission("permHomepage");
+  // The homepage heading above them is site wording (permDisplay): shown to those who may change it.
+  const [admin, theme] = await Promise.all([getOptionalAdmin(), getSiteTheme()]);
   const testimonials = await getHomepageTestimonials();
 
   return (
     <>
+      {admin?.permDisplay ? (
+        <TestimonialsSectionCopySettings
+          testimonialsSectionEyebrow={theme.testimonialsSectionEyebrow}
+          testimonialsSectionIntro={theme.testimonialsSectionIntro}
+          testimonialsSectionTitle={theme.testimonialsSectionTitle}
+        />
+      ) : null}
       <HomepageTestimonialManager
         maxTestimonials={MAX_HOMEPAGE_TESTIMONIALS}
         testimonials={testimonials}
@@ -55,6 +66,15 @@ async function TestimonialsSettingsPageContent() {
  * shows them at once instead of an empty space.
  */
 async function SettingsFallback() {
-  const testimonials = await getHomepageTestimonials();
-  return <HomepageTestimonialManager maxTestimonials={MAX_HOMEPAGE_TESTIMONIALS} testimonials={testimonials} />;
+  const [testimonials, theme] = await Promise.all([getHomepageTestimonials(), getSiteTheme()]);
+  return (
+    <>
+      <TestimonialsSectionCopySettings
+        testimonialsSectionEyebrow={theme.testimonialsSectionEyebrow}
+        testimonialsSectionIntro={theme.testimonialsSectionIntro}
+        testimonialsSectionTitle={theme.testimonialsSectionTitle}
+      />
+      <HomepageTestimonialManager maxTestimonials={MAX_HOMEPAGE_TESTIMONIALS} testimonials={testimonials} />
+    </>
+  );
 }
