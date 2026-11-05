@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { LayoutGroup, motion } from "motion/react";
@@ -98,6 +98,12 @@ export function SettingsSubPageTabs() {
   // A tap highlights its tab at once; the highlight falls back to the real
   // URL as soon as navigation lands (or if it never leaves this page).
   const currentHref = pending && pending.from === pathname ? pending.href : pathname;
+
+  // Next keeps recently visited pages alive but hidden, with their state. Forget
+  // the tapped tab when this page is put away, or coming back here later would
+  // still underline the tab tapped to leave it.
+  // https://nextjs.org/docs/app/guides/preserving-ui-state
+  useLayoutEffect(() => () => setPending(null), []);
 
   useEffect(() => {
     const scroller = scrollerRef.current;
