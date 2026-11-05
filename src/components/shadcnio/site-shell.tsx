@@ -140,9 +140,6 @@ export function ShadcnSiteShell({
   // the + marks where it meets the column's side lines go in the frame's own layer
   // (docs-marks), which React leaves empty, so nothing on the page itself is touched
   // (writing onto a page's head before React had finished setting it up confused it).
-  // On the dashboard (shadcn.io's Guides, shadcn.io/ui/guides) the layer draws the lines
-  // too: the page box's top and bottom edges and its head's line, each run out across the
-  // margins to the sides of the window, with a + where each crosses the box's sides.
   useEffect(() => {
     const column = document.querySelector<HTMLElement>('[data-slot="docs-column"]');
     const page = column?.querySelector<HTMLElement>('[data-slot="docs-page"]');
@@ -152,26 +149,15 @@ export function ShadcnSiteShell({
     const place = () => {
       frame = 0;
       const top = column.getBoundingClientRect().top;
-      const dashboard = document.documentElement.matches(DASHBOARD);
       const ys: number[] = [];
-      // On the dashboard the head's line is its own bottom border (inside its box).
-      const inset = dashboard ? 1 : 0;
       for (const head of page.querySelectorAll<HTMLElement>("[data-shadcn-top]")) {
         const box = head.getBoundingClientRect();
-        if (box.width) ys.push(Math.round(box.bottom - top) - inset);
+        if (box.width) ys.push(Math.round(box.bottom - top));
       }
-      if (dashboard) {
-        const box = page.getBoundingClientRect();
-        ys.unshift(Math.round(box.top - top));
-        ys.push(Math.round(box.bottom - top) - 1);
-      }
-      const key = `${dashboard ? "dashboard:" : ""}${ys.join(",")}`;
+      const key = ys.join(",");
       if (layer.dataset.key === key) return;
       layer.dataset.key = key;
-      layer.replaceChildren(
-        ...(dashboard ? ys.map(guideLine) : []),
-        ...ys.flatMap((y) => [plusMark(y, "start"), plusMark(y, "end")]),
-      );
+      layer.replaceChildren(...ys.flatMap((y) => [plusMark(y, "start"), plusMark(y, "end")]));
     };
     const soon = () => {
       if (!frame) frame = requestAnimationFrame(place);
@@ -181,16 +167,10 @@ export function ShadcnSiteShell({
     resize.observe(column);
     const changes = new MutationObserver(soon);
     changes.observe(page, { attributeFilter: ["hidden", "style"], childList: true, subtree: true });
-    // Signed in or not, and the page's kind, are set on <html> (and can land after this).
-    const mode = new MutationObserver(soon);
-    mode.observe(document.documentElement, {
-      attributeFilter: ["data-remembered-in", "data-guest-dash", "data-page-kind"],
-    });
     return () => {
       cancelAnimationFrame(frame);
       resize.disconnect();
       changes.disconnect();
-      mode.disconnect();
     };
   }, [path]);
 
@@ -384,17 +364,6 @@ export function ShadcnSiteShell({
 }
 
 /** One of their + marks, centred where a 1px line crosses the column's side line. */
-/** The signed-in dashboard (shadcnio.css's html[...] condition for it). */
-const DASHBOARD =
-  ':is([data-remembered-in], [data-guest-dash]):not([data-page-kind="home"], [data-page-kind="plain"])';
-
-/** A guide line across the window at `y`; the page's scroll area clips it at its sides. */
-function guideLine(y: number) {
-  const line = document.createElement("div");
-  line.style.cssText = `position:absolute;left:-100vw;right:-100vw;top:${y}px;border-top:1px solid var(--border)`;
-  return line;
-}
-
 function plusMark(y: number, side: "start" | "end") {
   const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
   svg.setAttribute("viewBox", "0 0 14 14");

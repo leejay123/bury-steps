@@ -780,8 +780,7 @@ html:is([data-remembered-in], [data-guest-dash]):not([data-page-kind="home"], [d
    (site-shell.tsx, efferd-sidebar.tsx). ---- */
 html:is([data-remembered-in], [data-guest-dash]):not([data-page-kind="home"], [data-page-kind="plain"]) [data-slot="docs-header"] { display: none !important; }
 html:is([data-remembered-in], [data-guest-dash]):not([data-page-kind="home"], [data-page-kind="plain"]) [data-slot="efferd-header"] { display: flex; }
-html:is([data-remembered-in], [data-guest-dash]):not([data-page-kind="home"], [data-page-kind="plain"]) :is([data-slot="docs-end"], [data-slot="guides"], [data-slot="docs-sidebar-edge"]) { display: none !important; }
-/* docs-marks stays: on the dashboard it draws the page box's guide lines and + marks (site-shell.tsx). */
+html:is([data-remembered-in], [data-guest-dash]):not([data-page-kind="home"], [data-page-kind="plain"]) :is([data-slot="docs-end"], [data-slot="docs-marks"], [data-slot="guides"], [data-slot="docs-sidebar-edge"]) { display: none !important; }
 html:is([data-remembered-in], [data-guest-dash]):not([data-page-kind="home"], [data-page-kind="plain"]) [data-slot="docs-sidebar-drawer"] aside { background: var(--background); }
 /* The dashboard page fills the room beside the sidebar, open or folded (a cap left wide
    empty gutters once the sidebar folded away). */
