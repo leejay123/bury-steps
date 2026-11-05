@@ -9,7 +9,6 @@ import { useActionToast } from "@/hooks/use-action-toast";
 import { useResetOnChange } from "@/hooks/use-reset-on-change";
 import { useSafeActionState } from "@/hooks/use-safe-action-state";
 import {
-  DEFAULT_WALK_ESSENTIALS,
   ESSENTIAL_ICONS,
   LIBRARY_ICON_PREFIX,
   essentialIcon,
@@ -245,16 +244,6 @@ export function WalkEssentialsEditor({ items: saved }: { items: EssentialItem[] 
           </Button>
         </div>
         <FormError message={state && !state.ok ? state.error : null} />
-        <div className="flex flex-wrap gap-2 border-t pt-4">
-          <Button
-            onClick={() => setItems(DEFAULT_WALK_ESSENTIALS)}
-            size="sm"
-            type="button"
-            variant="ghost"
-          >
-            Back to the original list
-          </Button>
-        </div>
       </form>
     </SettingsSection>
   );

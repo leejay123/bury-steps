@@ -373,7 +373,7 @@ export function AboutListsSettings({
     <SettingsSection
       description="Headings and lists in the Read more About drawer. Tap a row to edit."
       flush
-      title="About lists"
+      title="Lists in the About drawer"
     >
       <DataList>
         {ABOUT_LISTS.map((item) => (

@@ -1030,10 +1030,10 @@ html:is([data-remembered-in], [data-guest-dash]):not([data-page-kind="home"], [d
   /* A setting's own title is the grey strip, full width, with the fields under it. */
   html:is([data-remembered-in], [data-guest-dash]):not([data-page-kind="home"], [data-page-kind="plain"]) [data-slot="docs-page"] [data-edge-panel]:has(> [data-edge-group-head]) { padding-top: 0 !important; gap: 1.5rem !important; }
   html:is([data-remembered-in], [data-guest-dash]):not([data-page-kind="home"], [data-page-kind="plain"]) [data-slot="docs-page"] [data-edge-panel] > [data-edge-group-head] { margin-inline: -1.5rem; }
-  /* One grey band at a time: each box's heading inside a group is grey (Site logo, Favicon…),
-     so the group's own heading above them (Identity) is plain — two grey strips stacked read
-     as two grey boxes. A group without box headings keeps its grey heading. */
-  html:is([data-remembered-in], [data-guest-dash]):not([data-page-kind="home"], [data-page-kind="plain"]) [data-slot="docs-page"] [data-edge-group]:has(> [data-edge-group-body] :is([data-edge-group-head], [data-edge-head])) > [data-edge-group-head] { background: transparent !important; }
+  /* One heading level: where a group's first box has its own grey heading (Branding: Site name
+     and tagline under Identity), the group's heading above it is left out — two headings stacked
+     read as clutter, and often said the same thing twice (Contact messages over Contact messages). */
+  html:is([data-remembered-in], [data-guest-dash]):not([data-page-kind="home"], [data-page-kind="plain"]) [data-slot="docs-page"] [data-edge-group]:has(> [data-edge-group-body] > [data-edge-panel]:first-child > [data-edge-group-head]) > [data-edge-group-head] { display: none !important; }
   html:is([data-remembered-in], [data-guest-dash]):not([data-page-kind="home"], [data-page-kind="plain"]) [data-slot="docs-page"] [data-edge-stats] { margin-inline: -1.5rem; margin-block: 0 !important; padding: 0 !important; gap: 0 !important; border-bottom: 1px solid var(--border); border-radius: 0 !important; }
   html:is([data-remembered-in], [data-guest-dash]):not([data-page-kind="home"], [data-page-kind="plain"]) [data-slot="docs-page"] [data-edge-stats] > * { border: 0 !important; border-radius: 0 !important; border-inline-end: 1px solid var(--border) !important; box-shadow: none !important; background: transparent !important; padding: 1.5rem !important; gap: 0.25rem !important; }
   html:is([data-remembered-in], [data-guest-dash]):not([data-page-kind="home"], [data-page-kind="plain"]) [data-slot="docs-page"] [data-edge-stats] > *:last-child { border-inline-end: 0 !important; }

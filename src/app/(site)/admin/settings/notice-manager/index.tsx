@@ -58,12 +58,12 @@ export function SiteNoticeManager({
       <div className="flex flex-col gap-4" ref={listRef}>
         <SettingsListHeader
           action={
-            <Button onClick={() => setMode({ type: "add" })} size="sm">
+            <Button onClick={() => setMode({ type: "add" })} size="sm" variant="outline">
               Add notice
             </Button>
           }
           description={`The member bell shows the welcome (if on) plus the ${BELL_NOTICE_LIMIT} newest others. Full-page notices stay on the Notices page for good.`}
-          title={`Notices (${notices.length})`}
+          title={`Posted (${notices.length})`}
         />
         {noCategories ? (
           <p className="text-sm text-muted-foreground">

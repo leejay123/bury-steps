@@ -264,7 +264,7 @@ export function EmailList({
           <div className="group/email-group flex flex-col" key={group.category}>
             {/* A grey band per group, like the section heads on the other settings pages. */}
             <h2 className="border-b bg-muted/50 group-first/email-group:border-t px-5 py-2.5 text-base font-medium md:px-6">{group.category}</h2>
-            <ul className="flex flex-col">
+            <ul className="flex flex-col divide-y">
               {group.templates.map((meta) => (
                 <EmailRow
                   canSwitch={canSwitch}

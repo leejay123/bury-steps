@@ -166,7 +166,7 @@ export function HowThisStartedCopySettings({
   return (
     <SettingsSection
       description="Homepage blurb and the full story in the Read more drawer."
-      title="How this started"
+      title="Heading and story"
     >
       <div className="flex w-full flex-col gap-4">
         <form action={action} className="flex w-full flex-col gap-4" ref={form}>
