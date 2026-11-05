@@ -9,7 +9,8 @@ export function PrintReport({
   happenedAt,
   logoSrc,
   organiserNotes,
-  walkLabel,
+  walkLocation,
+  walkTitle,
   whatHappened,
   whatWeDid,
   whoInvolved,
@@ -18,7 +19,8 @@ export function PrintReport({
   happenedAt: string;
   logoSrc: string;
   organiserNotes: string | null;
-  walkLabel: string | null;
+  walkLocation: string | null;
+  walkTitle: string | null;
   whatHappened: string;
   whatWeDid: string;
   whoInvolved: string;
@@ -45,9 +47,18 @@ export function PrintReport({
     };
   }, [logoSrc]);
 
+  const sections: [string, string | null][] = [
+    ["What happened", whatHappened],
+    ["Who was involved", whoInvolved],
+    ["What we did", whatWeDid],
+    ["Organiser notes", organiserNotes],
+  ];
+
+  // Print A (the ruled form): one black frame, the title beside the logo, the details as three
+  // cells, then a row per part of the write-up with its name in a grey column on the left.
   return (
     <div
-      className="flex flex-col gap-6 bg-white px-4 py-8 text-black md:px-6 print:px-0 print:py-0"
+      className="flex flex-col gap-6 bg-white px-4 py-8 text-black [print-color-adjust:exact] md:px-6 print:px-0 print:py-0"
       data-print-document=""
     >
       <div className="flex items-start justify-between gap-4 print:hidden">
@@ -60,48 +71,51 @@ export function PrintReport({
         </Button>
       </div>
 
-      {/*
-        A plain div, not a <header> — the sitewide print CSS hides every
-        `header`/`footer` tag on the page to drop the site's own nav when
-        printing, and that was silently taking this block (the report's
-        own logo + title) out along with it.
-      */}
-      <div className="flex items-start justify-between gap-4 border-b border-black pb-4">
-        <div className="flex min-w-0 flex-col gap-1">
-          <p className="text-xs tracking-[0.18em] uppercase">Bury Steps Walking Group</p>
-          <h1 className="text-2xl font-semibold">Accident report</h1>
+      <div className="mx-auto flex w-full max-w-[794px] flex-col border border-black">
+        {/*
+          A plain div, not a <header> — the sitewide print CSS hides every
+          `header`/`footer` tag on the page to drop the site's own nav when
+          printing, and that was silently taking this block (the report's
+          own logo + title) out along with it.
+        */}
+        <div className="flex items-stretch border-b border-black">
+          <div className="flex min-w-0 flex-1 flex-col gap-1 px-6 py-5">
+            <p className="text-xs tracking-[0.16em] uppercase">Bury Steps Walking Group</p>
+            <h1 className="text-[2rem] leading-tight font-bold">Accident report</h1>
+          </div>
+          <div className="flex w-[150px] shrink-0 items-center justify-center border-l border-black p-3">
+            <SiteLogo className="h-14 w-auto" sizes="160px" src={logoSrc} />
+          </div>
         </div>
-        <SiteLogo className="h-12 w-auto shrink-0 print:h-14" sizes="160px" src={logoSrc} />
+
+        <div className="grid grid-cols-3 border-b border-black">
+          <div className="flex flex-col gap-1 border-r border-black px-4 py-3">
+            <span className="text-xs text-neutral-600">When</span>
+            <span className="text-[0.9375rem] font-semibold">{happenedAt}</span>
+          </div>
+          <div className="flex flex-col gap-1 border-r border-black px-4 py-3">
+            <span className="text-xs text-neutral-600">Walk</span>
+            <span className="text-[0.9375rem] font-semibold">{walkTitle || "Not linked to a walk"}</span>
+            {walkLocation ? <span className="text-xs text-neutral-600">{walkLocation}</span> : null}
+          </div>
+          <div className="flex flex-col gap-1 px-4 py-3">
+            <span className="text-xs text-neutral-600">Recorded by</span>
+            <span className="text-[0.9375rem] font-semibold">{createdBy}</span>
+          </div>
+        </div>
+
+        {sections
+          .filter(([, text]) => text)
+          .map(([title, text], index, shown) => (
+            <section
+              className={`grid grid-cols-[150px_minmax(0,1fr)] break-inside-avoid${index < shown.length - 1 ? " border-b border-black" : ""}`}
+              key={title}
+            >
+              <h2 className="border-r border-black bg-neutral-100 px-4 py-3.5 text-[0.8125rem] font-bold">{title}</h2>
+              <p className="px-4 py-3.5 text-[0.9375rem] leading-relaxed whitespace-pre-wrap">{text}</p>
+            </section>
+          ))}
       </div>
-
-      <dl className="grid grid-cols-[7.5rem_1fr] gap-x-4 gap-y-1.5 text-sm">
-        <dt className="text-neutral-600">When</dt>
-        <dd>{happenedAt}</dd>
-        <dt className="text-neutral-600">Walk</dt>
-        <dd>{walkLabel || "Not linked to a walk"}</dd>
-        <dt className="text-neutral-600">Recorded by</dt>
-        <dd>{createdBy}</dd>
-      </dl>
-
-      <section className="flex flex-col gap-2 break-inside-avoid">
-        <h2 className="text-sm font-semibold">What happened</h2>
-        <p className="whitespace-pre-wrap text-sm leading-relaxed">{whatHappened}</p>
-      </section>
-      <section className="flex flex-col gap-2 break-inside-avoid">
-        <h2 className="text-sm font-semibold">Who was involved</h2>
-        <p className="whitespace-pre-wrap text-sm leading-relaxed">{whoInvolved}</p>
-      </section>
-      <section className="flex flex-col gap-2 break-inside-avoid">
-        <h2 className="text-sm font-semibold">What we did</h2>
-        <p className="whitespace-pre-wrap text-sm leading-relaxed">{whatWeDid}</p>
-      </section>
-      {organiserNotes ? (
-        <section className="flex flex-col gap-2 break-inside-avoid">
-          <h2 className="text-sm font-semibold">Organiser notes</h2>
-          <p className="whitespace-pre-wrap text-sm leading-relaxed">{organiserNotes}</p>
-        </section>
-      ) : null}
-
     </div>
   );
 }

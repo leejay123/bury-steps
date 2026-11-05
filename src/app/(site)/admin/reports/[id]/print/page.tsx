@@ -49,11 +49,8 @@ async function PrintAccidentReportPageContent({
       happenedAt={formatLongDateTime(report.happenedAt)}
       logoSrc={theme.logoSrc}
       organiserNotes={report.organiserNotes}
-      walkLabel={
-        report.walk
-          ? `${report.walk.title}${report.walk.location ? ` · ${report.walk.location}` : ""}`
-          : null
-      }
+      walkLocation={report.walk?.location ?? null}
+      walkTitle={report.walk?.title ?? null}
       whatHappened={report.whatHappened}
       whatWeDid={report.whatWeDid}
       whoInvolved={involvedSummaryText(report.whoInvolved, report.involvedMembers)}

@@ -1137,3 +1137,9 @@ html:is([data-remembered-in], [data-guest-dash]):not([data-page-kind="home"], [d
   html:is([data-remembered-in], [data-guest-dash]):not([data-page-kind="home"], [data-page-kind="plain"])[data-design="shadcnio"] [data-slot="cookie-consent"] { left: 16rem !important; }
   html:is([data-remembered-in], [data-guest-dash])[data-docs-sidebar="collapsed"]:not([data-page-kind="home"], [data-page-kind="plain"])[data-design="shadcnio"] [data-slot="cookie-consent"] { left: 3rem !important; }
 }
+
+/* Printing (an accident report): the page box's own frame and corners stay off the paper; the
+   report draws its own. */
+@media print {
+  [data-slot="docs-page"] { border: 0 !important; border-radius: 0 !important; box-shadow: none !important; }
+}
