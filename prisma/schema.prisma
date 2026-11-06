@@ -516,6 +516,8 @@ model SiteSetting {
 /// Organiser-only accident reports. Printed from the report page.
 model AccidentReport {
   id              String   @id @default(cuid())
+  /// TR001, CB002 — initials of whoever submitted, then a 3-digit sequence.
+  reportNumber    String?  @unique
   happenedAt      DateTime
   walkId          String?
   whatHappened    String

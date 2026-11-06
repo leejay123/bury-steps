@@ -48,7 +48,10 @@ export function ReportPage({
 
   return (
     <>
-      <AdminPageIntro description={`${report.walkTitle || "Not linked to a walk"} · ${when}`} title="Accident report" />
+      <AdminPageIntro
+        description={`${report.walkTitle || "Not linked to a walk"} · ${when}`}
+        title={report.reportNumber ? `Accident report ${report.reportNumber}` : "Accident report"}
+      />
       {/* One block under the page top, so the strip and bands sit right under it, edge to edge. */}
       <div className="flex flex-col">
       <EdgeBar edgeTop>

@@ -8,7 +8,7 @@ import { isOwner, actorStillOwner } from "@/lib/site-owner";
 import { prisma } from "@/lib/db";
 import { formatDateTime, londonWallClockToUtc } from "@/lib/dates";
 import { sendAccidentReportAlertEmail } from "@/lib/email/mailer";
-import { involvedSummaryText } from "@/lib/accident-reports";
+import { involvedSummaryText, nextAccidentReportNumber, reportNumberPrefix } from "@/lib/accident-reports";
 import { getWalkAttendeesForReport } from "@/lib/walk-members";
 import { walkStatus } from "@/lib/walk-window";
 import { type ActionResult, isPrismaCode, logActionError, ownerDenied, permissionDenied } from "./shared";
@@ -138,33 +138,50 @@ async function addAccidentReportWork(
   const onWalk = await assertInvolvedMembersOnWalk(parsed.data.walkId, involvedMemberIds);
   if (!onWalk.ok) return onWalk;
 
-  let walkTitle: string | null;
-  let involvedSummary: string;
-  try {
-    const created = await prisma.accidentReport.create({
-      data: {
-        happenedAt,
-        walkId: parsed.data.walkId ?? null,
-        whatHappened: parsed.data.whatHappened,
-        whoInvolved: parsed.data.whoInvolved ?? "",
-        whatWeDid: parsed.data.whatWeDid,
-        organiserNotes: parsed.data.organiserNotes ?? null,
-        createdById: admin.id,
-        involvedMembers: { create: involvedMemberIds.map((userId) => ({ userId })) },
-      },
-      select: {
-        walk: { select: { title: true } },
-        involvedMembers: { select: { user: { select: { firstName: true, lastName: true } } } },
-      },
-    });
-    walkTitle = created.walk?.title ?? null;
-    involvedSummary = involvedSummaryText(parsed.data.whoInvolved, created.involvedMembers);
-  } catch (err) {
-    // An invalid/stale walkId (e.g. the walk was deleted between loading
-    // the form and submitting it) fails the foreign key here rather than
-    // earlier, since it's optional and not re-checked above.
-    return logActionError("addAccidentReport", err, "Could not save that report. Try again.");
+  const prefix = reportNumberPrefix(displayName(admin));
+  let created: {
+    walk: { title: string } | null;
+    involvedMembers: { user: { firstName: string | null; lastName: string | null } }[];
+  } | null = null;
+  for (let attempt = 0; attempt < 5; attempt++) {
+    try {
+      const taken = await prisma.accidentReport.findMany({
+        where: { reportNumber: { startsWith: prefix } },
+        select: { reportNumber: true },
+      });
+      const reportNumber = nextAccidentReportNumber(
+        prefix,
+        taken.map((row) => row.reportNumber).filter((value): value is string => Boolean(value)),
+      );
+      created = await prisma.accidentReport.create({
+        data: {
+          happenedAt,
+          walkId: parsed.data.walkId ?? null,
+          whatHappened: parsed.data.whatHappened,
+          whoInvolved: parsed.data.whoInvolved ?? "",
+          whatWeDid: parsed.data.whatWeDid,
+          organiserNotes: parsed.data.organiserNotes ?? null,
+          createdById: admin.id,
+          reportNumber,
+          involvedMembers: { create: involvedMemberIds.map((userId) => ({ userId })) },
+        },
+        select: {
+          walk: { select: { title: true } },
+          involvedMembers: { select: { user: { select: { firstName: true, lastName: true } } } },
+        },
+      });
+      break;
+    } catch (err) {
+      if (isPrismaCode(err, "P2002") && attempt < 4) continue;
+      // An invalid/stale walkId (e.g. the walk was deleted between loading
+      // the form and submitting it) fails the foreign key here rather than
+      // earlier, since it's optional and not re-checked above.
+      return logActionError("addAccidentReport", err, "Could not save that report. Try again.");
+    }
   }
+  if (!created) return { ok: false, error: "Could not save that report. Try again." };
+  const walkTitle = created.walk?.title ?? null;
+  const involvedSummary = involvedSummaryText(parsed.data.whoInvolved, created.involvedMembers);
 
   revalidatePath("/admin/reports");
 

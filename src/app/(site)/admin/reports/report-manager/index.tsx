@@ -165,6 +165,7 @@ export function AccidentReportManager({
                   <DataListItemMain>
                     <DataListBody>
                       <p className="font-medium">
+                        {report.reportNumber ? `${report.reportNumber} · ` : ""}
                         {formatWalkDay(at)} · {formatTime(at)}
                       </p>
                       <p className="text-sm text-muted-foreground">

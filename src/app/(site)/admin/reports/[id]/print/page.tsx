@@ -18,8 +18,12 @@ export async function generateMetadata({ params }: { params: Promise<{ id: strin
   const user = await getOptionalUser();
   if (user?.role !== "ADMIN") return {};
   const { id } = await params;
-  const exists = await prisma.accidentReport.count({ where: { id } });
-  return exists ? { title: "Accident report" } : {};
+  const report = await prisma.accidentReport.findUnique({
+    where: { id },
+    select: { reportNumber: true },
+  });
+  if (!report) return {};
+  return { title: report.reportNumber ? `Accident report ${report.reportNumber}` : "Accident report" };
 }
 
 async function PrintAccidentReportPageContent({
@@ -47,6 +51,7 @@ async function PrintAccidentReportPageContent({
     <PrintReport
       createdBy={displayName(report.createdBy)}
       happenedAt={formatLongDateTime(report.happenedAt)}
+      reportNumber={report.reportNumber}
       logoSrc={theme.logoSrc}
       organiserNotes={report.organiserNotes}
       walkLocation={report.walk?.location ?? null}

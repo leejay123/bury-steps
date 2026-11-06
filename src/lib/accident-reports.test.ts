@@ -1,5 +1,9 @@
 import { describe, expect, it } from "vitest";
-import { involvedSummaryText } from "./accident-reports";
+import {
+  involvedSummaryText,
+  nextAccidentReportNumber,
+  reportNumberPrefix,
+} from "./accident-reports";
 
 describe("involvedSummaryText", () => {
   it("returns just the free text when no members are tagged", () => {
@@ -28,5 +32,23 @@ describe("involvedSummaryText", () => {
   it("returns an empty string when there's nothing at all", () => {
     expect(involvedSummaryText("", [])).toBe("");
     expect(involvedSummaryText(null, [])).toBe("");
+  });
+});
+
+describe("accident report numbers", () => {
+  it("takes the submitter's initials as the prefix", () => {
+    expect(reportNumberPrefix("Tom Robert")).toBe("TR");
+    expect(reportNumberPrefix("Chris Berman")).toBe("CB");
+    expect(reportNumberPrefix("John Smith")).toBe("JS");
+  });
+
+  it("starts at 001 for that person's first report", () => {
+    expect(nextAccidentReportNumber("TR", [])).toBe("TR001");
+    expect(nextAccidentReportNumber("CB", [])).toBe("CB001");
+  });
+
+  it("adds one to the highest number already used for those initials", () => {
+    expect(nextAccidentReportNumber("TR", ["TR001"])).toBe("TR002");
+    expect(nextAccidentReportNumber("TR", ["TR001", "TR002", "CB001"])).toBe("TR003");
   });
 });

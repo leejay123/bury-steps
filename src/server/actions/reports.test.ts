@@ -3,7 +3,7 @@ import { describe, expect, it, vi, beforeEach } from "vitest";
 const { requireAdmin, prismaMock, sendAccidentReportAlertEmail, isOwner, actorStillOwner } = vi.hoisted(() => ({
   requireAdmin: vi.fn(),
   prismaMock: {
-    accidentReport: { create: vi.fn(), update: vi.fn(), delete: vi.fn() },
+    accidentReport: { create: vi.fn(), update: vi.fn(), delete: vi.fn(), findMany: vi.fn() },
     walk: { findUnique: vi.fn() },
     attendance: { findMany: vi.fn(async () => []) },
     user: { findMany: vi.fn(async (): Promise<{ email: string }[]> => []) },
@@ -37,6 +37,9 @@ import {
 // see the "permission guard" tests below for the false cases.
 const ADMIN = {
   id: "admin-1",
+  firstName: "Tom",
+  lastName: "Robert",
+  email: "tom.robert@example.com",
   permWalksView: true,
   permWalksCreate: true,
   permWalksEdit: true,
@@ -71,6 +74,7 @@ function reportForm(fields: Record<string, string> = {}): FormData {
 beforeEach(() => {
   vi.clearAllMocks();
   requireAdmin.mockResolvedValue(ADMIN);
+  prismaMock.accidentReport.findMany.mockResolvedValue([]);
   isOwner.mockImplementation(async (userId: string) => userId === "admin-1");
   actorStillOwner.mockImplementation(async (userId: string) => userId === "admin-1");
 });
@@ -108,6 +112,21 @@ describe("addAccidentReport", () => {
       expect.objectContaining({ data: expect.objectContaining({ createdById: ADMIN.id }) }),
     );
     expect(result).toEqual({ ok: true, message: "Accident report saved." });
+  });
+
+  it("numbers the report from the submitter's initials, counting up", async () => {
+    prismaMock.accidentReport.create.mockResolvedValueOnce({ involvedMembers: [] });
+    await addAccidentReport(null, reportForm());
+    expect(prismaMock.accidentReport.create).toHaveBeenCalledWith(
+      expect.objectContaining({ data: expect.objectContaining({ reportNumber: "TR001" }) }),
+    );
+
+    prismaMock.accidentReport.findMany.mockResolvedValueOnce([{ reportNumber: "TR001" }]);
+    prismaMock.accidentReport.create.mockResolvedValueOnce({ involvedMembers: [] });
+    await addAccidentReport(null, reportForm());
+    expect(prismaMock.accidentReport.create).toHaveBeenLastCalledWith(
+      expect.objectContaining({ data: expect.objectContaining({ reportNumber: "TR002" }) }),
+    );
   });
 
   it("alerts every other organiser, excluding whoever logged it", async () => {

@@ -63,6 +63,7 @@ async function getReportsView(link: LinkFilter, sort: ReturnType<typeof parseSor
       take: REPORTS_FETCH_LIMIT,
       select: {
         id: true,
+        reportNumber: true,
         happenedAt: true,
         walkId: true,
         whatHappened: true,
@@ -134,6 +135,7 @@ async function AccidentReportsPageContent({
         linkFilter={link}
         reports={reports.map((report) => ({
           id: report.id,
+          reportNumber: report.reportNumber,
           happenedAt: report.happenedAt.toISOString(),
           walkId: report.walkId,
           walkTitle: report.walk?.title ?? null,

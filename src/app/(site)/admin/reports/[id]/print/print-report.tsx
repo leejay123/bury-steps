@@ -9,6 +9,7 @@ export function PrintReport({
   happenedAt,
   logoSrc,
   organiserNotes,
+  reportNumber,
   walkLocation,
   walkTitle,
   whatHappened,
@@ -19,6 +20,7 @@ export function PrintReport({
   happenedAt: string;
   logoSrc: string;
   organiserNotes: string | null;
+  reportNumber: string | null;
   walkLocation: string | null;
   walkTitle: string | null;
   whatHappened: string;
@@ -81,7 +83,9 @@ export function PrintReport({
         <div className="flex items-stretch border-b border-black">
           <div className="flex min-w-0 flex-1 flex-col gap-1 px-6 py-5">
             <p className="text-xs tracking-[0.16em] uppercase">Bury Steps Walking Group</p>
-            <h1 className="text-[2rem] leading-tight font-bold">Accident report</h1>
+            <h1 className="text-[2rem] leading-tight font-bold">
+              Accident report{reportNumber ? ` ${reportNumber}` : ""}
+            </h1>
           </div>
           <div className="flex w-[150px] shrink-0 items-center justify-center border-l border-black p-3">
             <SiteLogo className="h-14 w-auto" sizes="160px" src={logoSrc} />

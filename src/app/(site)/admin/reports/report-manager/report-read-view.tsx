@@ -22,6 +22,12 @@ export function ReportReadView({
       {canEdit ? (
         <ReportRetentionToggle locked={report.retentionLocked} reportId={report.id} />
       ) : null}
+      {report.reportNumber ? (
+        <div className="flex flex-col gap-1">
+          <p className="text-xs font-medium text-muted-foreground">Report number</p>
+          <p className="text-sm font-medium">{report.reportNumber}</p>
+        </div>
+      ) : null}
       <div className="flex flex-col gap-1">
         <p className="text-xs font-medium text-muted-foreground">When</p>
         <p className="text-sm">

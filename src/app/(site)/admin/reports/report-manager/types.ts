@@ -2,6 +2,7 @@ export type InvolvedMember = { id: string; name: string };
 
 export type ReportView = {
   id: string;
+  reportNumber: string | null;
   happenedAt: string;
   walkId: string | null;
   walkTitle: string | null;
@@ -29,6 +30,7 @@ export function matchesReportQuery(report: ReportView, query: string) {
     report.organiserNotes ?? "",
     report.walkTitle ?? "",
     report.walkLocation ?? "",
+    report.reportNumber ?? "",
   ]
     .join("\n")
     .toLowerCase();
