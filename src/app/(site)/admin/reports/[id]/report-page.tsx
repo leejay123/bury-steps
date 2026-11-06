@@ -79,6 +79,12 @@ export function ReportPage({
       </EdgeBar>
 
       <div className="grid gap-4 sm:grid-cols-3" data-edge-stats="">
+        {report.reportNumber ? (
+          <div className="flex flex-col gap-1">
+            <p className="text-sm text-muted-foreground">Report number</p>
+            <p className="font-medium">{report.reportNumber}</p>
+          </div>
+        ) : null}
         <div className="flex flex-col gap-1">
           <p className="text-sm text-muted-foreground">When</p>
           <p className="font-medium">{when}</p>
