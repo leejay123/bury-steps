@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useLayoutEffect } from "react";
+import { useEffect, useLayoutEffect, useRef } from "react";
 
 const WORD = "BURYSTEPS";
 const load = () => import("./letter-field");
@@ -12,8 +12,10 @@ const load = () => import("./letter-field");
  * PRIVACY). Renders nothing itself; the field adds its canvas.
  */
 export function HeroField({ heading, word = WORD }: { heading: string; word?: string }) {
+  const probe = useRef<HTMLSpanElement>(null);
   useLayoutEffect(() => {
-    const title = document.getElementById(heading);
+    const doc = probe.current?.ownerDocument ?? document;
+    const title = doc.getElementById(heading);
     const host = title?.closest<HTMLElement>('[data-slot="hero"]');
     const text = title?.parentElement;
     if (!(host && text)) return;
@@ -40,13 +42,15 @@ export function HeroField({ heading, word = WORD }: { heading: string; word?: st
       unmount?.();
     };
   }, [heading, word]);
-  return null;
+  return <span aria-hidden="true" hidden ref={probe} />;
 }
 
 /** The same field behind the closing call to action, started as it nears the screen. */
 export function BandField({ heading }: { heading: string }) {
+  const probe = useRef<HTMLSpanElement>(null);
   useEffect(() => {
-    const title = document.getElementById(heading);
+    const doc = probe.current?.ownerDocument ?? document;
+    const title = doc.getElementById(heading);
     const host = title?.closest<HTMLElement>('[data-slot="hero"]');
     const text = title?.parentElement;
     if (!(host && text)) return;
@@ -71,5 +75,5 @@ export function BandField({ heading }: { heading: string }) {
       unmount?.();
     };
   }, [heading]);
-  return null;
+  return <span aria-hidden="true" hidden ref={probe} />;
 }

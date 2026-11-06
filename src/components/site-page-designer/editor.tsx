@@ -7,9 +7,9 @@ import { X } from "lucide-react";
 import { discardSitePageDraft, publishSitePageDesign, saveSitePageDraft } from "@/server/actions";
 import { Button } from "@/components/ui/button";
 import { SITE_PAGES, type PuckData, type SitePageKey } from "@/lib/site-page-designs";
-import { PuckFrameStyles } from "@/components/puck-frame-styles";
 import { configForPage } from "./config";
 import { SitePageLiveProvider, type SitePageLive } from "./live";
+import { SitePagePreviewFrame } from "./preview-frame";
 
 /**
  * The public page designer: the same Puck editor as walk pages, over a
@@ -139,7 +139,9 @@ export function SitePageDesignEditor({
               current.current = next;
             }}
             onPublish={publish}
-            overrides={{ iframe: PuckFrameStyles }}
+            overrides={{
+              iframe: (props) => <SitePagePreviewFrame {...props} page={page} />,
+            }}
           />
         </SitePageLiveProvider>
       </div>
