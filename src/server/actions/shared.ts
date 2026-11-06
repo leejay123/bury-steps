@@ -140,9 +140,7 @@ export function revalidateHomepage() {
   revalidateTag(HOMEPAGE_CACHE_TAG, { expire: 0 });
   revalidatePath("/");
   revalidatePath("/admin/settings");
-  revalidatePath("/admin/settings/hero-photos");
-  revalidatePath("/admin/settings/testimonials");
-  revalidatePath("/admin/settings/faqs");
+  revalidatePath("/admin/settings/page-designs");
 }
 
 /**

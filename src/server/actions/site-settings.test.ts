@@ -19,7 +19,6 @@ vi.mock("@/lib/auth", async () => {
 });
 
 import {
-  reorderHomepageSections,
   updateAboutLists,
   updateAccidentReportRetentionDays,
   updateCancelledWalkRetentionDays,
@@ -210,26 +209,6 @@ describe("updateCookieConsentVariant", () => {
   it("saves a valid layout", async () => {
     const result = await updateCookieConsentVariant(null, form({ cookieConsentVariant: "mini" }));
     expect(result.ok).toBe(true);
-  });
-});
-
-describe("reorderHomepageSections", () => {
-  it("rejects a set of section ids that isn't a valid permutation", async () => {
-    const result = await reorderHomepageSections(["notASection" as never]);
-    expect(result).toEqual({ ok: false, error: "Could not save that order. Try again." });
-    expect(prismaMock.siteSetting.upsert).not.toHaveBeenCalled();
-  });
-
-  it("saves a valid section order", async () => {
-    const result = await reorderHomepageSections([
-      "photos",
-      "howWalksWork",
-      "howThisStarted",
-      "memberNotices",
-      "testimonials",
-      "faqs",
-    ]);
-    expect(result).toEqual({ ok: true, message: "Homepage section order saved." });
   });
 });
 

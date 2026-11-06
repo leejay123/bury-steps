@@ -11,7 +11,6 @@ import { SiteBrandingSettings } from "./site-branding-settings";
 import { SiteLogoSettings } from "./site-logo-settings";
 import { SiteFaviconSettings } from "./site-favicon-settings";
 import { FacebookGroupSettings } from "./facebook-group-settings";
-import { SiteDesignSettings } from "./site-design-settings";
 
 
 
@@ -56,7 +55,6 @@ function SettingsView({ theme }: { theme: SiteTheme }) {
         title="Identity"
       >
         <SiteBrandingSettings siteName={theme.siteName} siteTagline={theme.siteTagline} />
-        <SiteDesignSettings design={theme.siteDesign} />
         <SiteLogoSettings hasCustomLogo={theme.hasCustomLogo} logoSrc={theme.logoSrc} />
         <SiteFaviconSettings
           faviconSrc={theme.faviconSrc}

@@ -181,7 +181,7 @@ export const ORGANISER_PERMISSION_OPTIONS: {
   {
     name: "permHomepage",
     label: "Homepage content",
-    hint: "Edit hero photos, testimonials, and FAQs.",
+    hint: "Homepage content that isn't designed on Page designs.",
     group: "Settings & homepage",
   },
   {
@@ -205,7 +205,7 @@ export const ORGANISER_PERMISSION_OPTIONS: {
   {
     name: "permDisplay",
     label: "Site display & branding",
-    hint: "Site name, logo, colours, homepage copy, cookie notice, and retention settings.",
+    hint: "Site name, logo, colours, public page designs, cookie notice, and retention settings.",
     group: "Settings & homepage",
   },
   {

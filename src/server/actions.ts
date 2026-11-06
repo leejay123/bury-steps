@@ -54,13 +54,6 @@ export {
 
 
 export {
-  addHomepageSlide,
-  replaceHomepageSlideImage,
-  deleteHomepageSlide,
-  reorderHomepageSlides,
-} from "./actions/homepage-slides";
-
-export {
   addHomepageTestimonial,
   updateHomepageTestimonial,
   deleteHomepageTestimonial,
@@ -92,10 +85,6 @@ export {
 } from "./actions/notices";
 
 export {
-  updateHeroStyle,
-  updateSectionBgPattern,
-  updateCarouselEnabled,
-  updateMemberNoticesEnabled,
   updateProgressEnabled,
   updateStoriesEnabled,
   updateAccidentReportRetentionDays,
@@ -107,17 +96,13 @@ export {
   updateFooterWordmarkEnabled,
   updateFooterWordmarkMobile,
   updateAnnouncementBanner,
-  updateHomeFramed,
-  updateSliderHeroWords,
   updateMobileNav,
   updateCookieConsentVariant,
   updateSiteFont,
-  updateSiteDesign,
   updatePageTopStyle,
   updateTextSizes,
   updateSiteBranding,
   updateFacebookGroupUrl,
-  reorderHomepageSections,
   saveWalkPageSections,
   updateWalkPageLayout,
   saveWalkDesign,
@@ -135,6 +120,8 @@ export {
   updateSiteFavicon,
   updateWalkEssentials,
 } from "./actions/site-settings";
+
+export { saveSitePageDraft, publishSitePageDesign } from "./actions/site-page-designs";
 
 export { summarizeWalkDescription } from "./actions/walk-summarize";
 

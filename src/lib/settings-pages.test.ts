@@ -34,8 +34,8 @@ describe("settings page registry", () => {
   });
 
   it("finds a page's group", () => {
-    const found = findSettingsPage("/admin/settings/site-wording/about-lists");
-    expect(found?.page.title).toBe("About lists");
+    const found = findSettingsPage("/admin/settings/page-designs");
+    expect(found?.page.title).toBe("Page designs");
     expect(found?.group.label).toBe("Homepage");
     expect(findSettingsPage("/admin/walks")).toBeNull();
   });
@@ -47,9 +47,9 @@ describe("settings page registry", () => {
       title: "Data retention",
       danger: false,
     });
-    expect(settingsHeaderTrail("/admin/settings/site-wording/how-this-started")).toEqual({
+    expect(settingsHeaderTrail("/admin/settings/site-wording/walk-page-cards")).toEqual({
       group: "Homepage",
-      title: "How this started",
+      title: "Walk page cards",
       danger: false,
     });
     expect(settingsHeaderTrail("/admin/settings/reset")?.danger).toBe(true);

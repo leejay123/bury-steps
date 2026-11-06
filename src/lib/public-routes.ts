@@ -39,7 +39,6 @@ export const PUBLIC_ROUTE_PATTERNS = [
   "/organiser-invite/(.*)",
   "/api/webhooks(.*)",
   "/api/cron(.*)",
-  "/api/slides(.*)",
   "/api/testimonials(.*)",
   // Site logo shows in the header on public pages for signed-out visitors.
   "/api/site-logo(.*)",

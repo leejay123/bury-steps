@@ -1,17 +1,17 @@
 "use client";
 
 import { createContext, useContext, type ReactNode } from "react";
-import type { SiteDesign } from "@/lib/site-theme";
+
+type SiteDesign = "shadcnio" | "original";
 
 /**
- * Which site design is on (Settings → Branding → Site design), for client
- * components that lay themselves out differently in the shadcn.io design
- * (e.g. the Walks table card). Original unless the layout says otherwise.
+ * Always the shadcn.io design now. Kept so existing client components that
+ * branch on design keep compiling; they all take the shadcn.io path.
  */
-const SiteDesignContext = createContext<SiteDesign>("original");
+const SiteDesignContext = createContext<SiteDesign>("shadcnio");
 
-export function SiteDesignProvider({ design, children }: { design: SiteDesign; children: ReactNode }) {
-  return <SiteDesignContext.Provider value={design}>{children}</SiteDesignContext.Provider>;
+export function SiteDesignProvider({ design, children }: { design?: SiteDesign; children: ReactNode }) {
+  return <SiteDesignContext.Provider value={design ?? "shadcnio"}>{children}</SiteDesignContext.Provider>;
 }
 
 export function useSiteDesign() {

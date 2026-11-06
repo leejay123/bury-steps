@@ -61,6 +61,7 @@ export function ShadcnLegal({
   current,
   docs = "legal",
   closing = `By using Bury Steps, you agree to this ${title}.`,
+  heroOnly = false,
 }: {
   title: string;
   lead: string;
@@ -73,6 +74,8 @@ export function ShadcnLegal({
   docs?: ShadcnLegalDocs;
   /** Line above the Ask a question button. */
   closing?: string;
+  /** Hero and related-page tiles only — sections are drawn as their own blocks. */
+  heroOnly?: boolean;
 }) {
   const Icon = ICON[icon];
   return (
@@ -124,42 +127,46 @@ export function ShadcnLegal({
           </ul>
         </nav>
       </div>
-      {sections.map((section, i) => (
-        <Section id={`legal-${section.id}`} key={section.id}>
-          <div
-            className="px-5 md:px-12 grid gap-5 py-12 md:grid-cols-[12rem_minmax(0,1fr)] md:gap-10 md:py-16 lg:grid-cols-[15rem_minmax(0,1fr)] lg:gap-14"
-            id={section.id}
-          >
-            <div className="flex flex-col gap-2 md:sticky md:top-[calc(var(--header-height)+2.5rem)] md:self-start">
-              <span className="font-medium font-mono text-muted-foreground text-xs uppercase leading-4 tracking-widest">
-                {String(i + 1).padStart(2, "0")}
-              </span>
-              <h2
-                className="scroll-mt-(--header-height) text-balance font-semibold text-xl tracking-tight md:text-2xl"
-                id={`legal-${section.id}`}
+      {heroOnly ? null : (
+        <>
+          {sections.map((section, i) => (
+            <Section id={`legal-${section.id}`} key={section.id}>
+              <div
+                className="px-5 md:px-12 grid gap-5 py-12 md:grid-cols-[12rem_minmax(0,1fr)] md:gap-10 md:py-16 lg:grid-cols-[15rem_minmax(0,1fr)] lg:gap-14"
+                id={section.id}
               >
-                {section.title}
-              </h2>
-            </div>
-            <div className="min-w-0 [&_.typeset-docs>:first-child]:mt-0">
-              <div className="typeset typeset-docs w-full flex-1">{section.content}</div>
+                <div className="flex flex-col gap-2 md:sticky md:top-[calc(var(--header-height)+2.5rem)] md:self-start">
+                  <span className="font-medium font-mono text-muted-foreground text-xs uppercase leading-4 tracking-widest">
+                    {String(i + 1).padStart(2, "0")}
+                  </span>
+                  <h2
+                    className="scroll-mt-(--header-height) text-balance font-semibold text-xl tracking-tight md:text-2xl"
+                    id={`legal-${section.id}`}
+                  >
+                    {section.title}
+                  </h2>
+                </div>
+                <div className="min-w-0 [&_.typeset-docs>:first-child]:mt-0">
+                  <div className="typeset typeset-docs w-full flex-1">{section.content}</div>
+                </div>
+              </div>
+            </Section>
+          ))}
+          <div className="relative">
+            <Guides />
+            <div className="px-5 md:px-12 flex flex-col items-center gap-6 py-14 text-center md:py-20">
+              <div className="max-w-2xl text-pretty [&_.typeset-docs>*]:mx-auto [&_.typeset-docs>:first-child]:mt-0 [&_.typeset-docs_p]:text-muted-foreground md:[&_.typeset-docs_p]:text-lg">
+                <div className="typeset typeset-docs w-full flex-1">
+                  <p>{closing}</p>
+                </div>
+              </div>
+              <Link className={BUTTON_OUTLINE} href="/contact">
+                Ask a question
+              </Link>
             </div>
           </div>
-        </Section>
-      ))}
-      <div className="relative">
-        <Guides />
-        <div className="px-5 md:px-12 flex flex-col items-center gap-6 py-14 text-center md:py-20">
-          <div className="max-w-2xl text-pretty [&_.typeset-docs>*]:mx-auto [&_.typeset-docs>:first-child]:mt-0 [&_.typeset-docs_p]:text-muted-foreground md:[&_.typeset-docs_p]:text-lg">
-            <div className="typeset typeset-docs w-full flex-1">
-              <p>{closing}</p>
-            </div>
-          </div>
-          <Link className={BUTTON_OUTLINE} href="/contact">
-            Ask a question
-          </Link>
-        </div>
-      </div>
+        </>
+      )}
     </div>
   );
 }

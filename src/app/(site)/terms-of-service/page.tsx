@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { LEGAL_LAST_UPDATED, LegalPage } from "@/components/legal-page";
+import { DesignedSitePage } from "@/components/site-page-designer/designed-page";
 
 export const metadata: Metadata = {
   title: "Terms of Service",
@@ -8,6 +9,7 @@ export const metadata: Metadata = {
 
 export default function TermsOfServicePage() {
   return (
+    <DesignedSitePage page="terms">
     <LegalPage
       description={`Terms for using this website and taking part in walks. Last updated ${LEGAL_LAST_UPDATED}.`}
       sections={[
@@ -110,5 +112,6 @@ export default function TermsOfServicePage() {
       ]}
       title="Terms of Service"
     />
+    </DesignedSitePage>
   );
 }

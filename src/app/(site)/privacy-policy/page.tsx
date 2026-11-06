@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { LEGAL_LAST_UPDATED, LegalPage } from "@/components/legal-page";
+import { DesignedSitePage } from "@/components/site-page-designer/designed-page";
 
 export const metadata: Metadata = {
   title: "Privacy Policy",
@@ -8,6 +9,7 @@ export const metadata: Metadata = {
 
 export default function PrivacyPolicyPage() {
   return (
+    <DesignedSitePage page="privacy">
     <LegalPage
       description={`How Bury Steps uses personal information. Last updated ${LEGAL_LAST_UPDATED}.`}
       sections={[
@@ -186,5 +188,6 @@ export default function PrivacyPolicyPage() {
       ]}
       title="Privacy Policy"
     />
+    </DesignedSitePage>
   );
 }

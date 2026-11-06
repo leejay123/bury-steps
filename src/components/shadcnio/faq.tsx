@@ -21,10 +21,16 @@ export function ShadcnFaq({
   categories,
   faqs,
   facebookUrl,
+  title = "Frequently asked questions",
+  lead = "How to join, what to bring and how clock-in works,",
+  rest,
 }: {
   categories: FaqCategoryView[];
   faqs: FaqView[];
   facebookUrl: string;
+  title?: string;
+  lead?: string;
+  rest?: string;
 }) {
   const topics = categories.filter((category) => faqs.some((faq) => faq.categoryId === category.id));
   const [active, setActive] = useState(topics[0]?.id ?? "");
@@ -35,13 +41,14 @@ export function ShadcnFaq({
       <div className="scroll-mt-(--header-height)" id="faq" />
       <SectionHead
         id="home-faq-heading"
-        lead="How to join, what to bring and how clock-in works,"
+        lead={lead}
         rest={
-          facebookUrl
+          rest ??
+          (facebookUrl
             ? "and anything else people ask. Still stuck? Ask in the Facebook group."
-            : "and anything else people ask."
+            : "and anything else people ask.")
         }
-        title="Frequently asked questions"
+        title={title}
       />
       <div className={TABS} data-orientation="vertical" data-slot="tabs">
         <div className="border-b lg:flex lg:flex-col lg:border-e lg:border-b-0">

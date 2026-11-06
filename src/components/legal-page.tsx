@@ -1,10 +1,5 @@
 import type { ReactNode } from "react";
-import Link from "next/link";
-import { FullWidthDivider } from "@/components/full-width-divider";
-import { PAGE_X_BLEED } from "@/lib/page-x";
-import { typesetFont } from "@/app/typeset-font";
 import { ShadcnLegal, type ShadcnLegalDocs, type ShadcnLegalIcon } from "@/components/shadcnio/legal";
-import { getSiteTheme } from "@/lib/site-theme";
 
 export const LEGAL_LAST_UPDATED = "28 August 2026";
 
@@ -25,17 +20,8 @@ export type LegalShadcnProps = {
   docs?: ShadcnLegalDocs;
 };
 
-function LegalBody({ children }: { children: ReactNode }) {
-  return (
-    <div className={`typeset typeset-docs max-w-[90ch] ${typesetFont.variable}`}>
-      {children}
-    </div>
-  );
-}
-
 export async function LegalPage({
   title,
-  description,
   sections,
   shadcn,
 }: {
@@ -45,75 +31,27 @@ export async function LegalPage({
   /** When set, used as-is for the shadcn.io layout (About, or overrides). */
   shadcn?: LegalShadcnProps;
 }) {
-  const theme = await getSiteTheme();
-  if (theme.siteDesign === "shadcnio") {
-    const terms = title.toLowerCase().includes("terms");
-    const props: LegalShadcnProps = shadcn ?? {
-      current: terms ? "/terms-of-service" : "/privacy-policy",
-      icon: terms ? "terms" : "privacy",
-      lead: terms ? "The rules for using Bury Steps:" : "How Bury Steps uses your information:",
-      rest: terms
-        ? "your account, walks and your safety, acceptable use, and our responsibilities."
-        : "what we collect, why we need it, who can see it, and your rights.",
-    };
-    return (
-      <ShadcnLegal
-        closing={props.closing}
-        current={props.current}
-        docs={props.docs}
-        icon={props.icon}
-        lead={props.lead}
-        rest={props.rest}
-        sections={sections}
-        title={title}
-        updated={props.updated === undefined ? LEGAL_LAST_UPDATED : props.updated}
-      />
-    );
-  }
+  const terms = title.toLowerCase().includes("terms");
+  const props: LegalShadcnProps = shadcn ?? {
+    current: terms ? "/terms-of-service" : "/privacy-policy",
+    icon: terms ? "terms" : "privacy",
+    lead: terms ? "The rules for using Bury Steps:" : "How Bury Steps uses your information:",
+    rest: terms
+      ? "your account, walks and your safety, acceptable use, and our responsibilities."
+      : "what we collect, why we need it, who can see it, and your rights.",
+  };
   return (
-    <div className={`-mt-6 -mb-6 flex flex-1 flex-col ${PAGE_X_BLEED}`}>
-      <div className="relative px-4 py-6 md:px-6">
-        <div className="flex flex-col gap-1.5">
-          <h1 className="font-semibold text-lg tracking-tight">{title}</h1>
-          <p className="text-sm text-muted-foreground">{description}</p>
-        </div>
-        <FullWidthDivider position="bottom" />
-      </div>
-      {/*
-        Every section is always shown — no accordion. A short, plain-English
-        notice like this one is small enough that hiding most of it behind
-        click-to-expand rows just left the page looking empty on load;
-        showing it all keeps the exact same section styling (heading, the
-        border between rows) without the interactivity.
-      */}
-      <div className="flex flex-1 flex-col">
-        {sections.map((section) => (
-          // scroll-mt clears the sticky header so a footer anchor link
-          // (e.g. /privacy-policy#cookies) lands with the heading visible,
-          // not tucked underneath it — same convention as home-welcome.tsx.
-          <div className="scroll-mt-20 border-b px-4 md:px-6" id={section.id} key={section.id}>
-            <h2 className="pt-6 pb-2 text-base font-medium">{section.title}</h2>
-            <div className="pb-7">
-              <LegalBody>{section.content}</LegalBody>
-            </div>
-          </div>
-        ))}
-      </div>
-      <p className="mt-auto px-4 py-4 md:px-6 text-xs text-muted-foreground">
-        This page is a practical notice for Bury Steps members. It is not legal advice.{" "}
-        <Link className="font-medium text-foreground underline-offset-4 hover:underline" href="/about">
-          About
-        </Link>
-        {" · "}
-        <Link className="font-medium text-foreground underline-offset-4 hover:underline" href="/privacy-policy">
-          Privacy Policy
-        </Link>
-        {" · "}
-        <Link className="font-medium text-foreground underline-offset-4 hover:underline" href="/terms-of-service">
-          Terms of Service
-        </Link>
-      </p>
-    </div>
+    <ShadcnLegal
+      closing={props.closing}
+      current={props.current}
+      docs={props.docs}
+      icon={props.icon}
+      lead={props.lead}
+      rest={props.rest}
+      sections={sections}
+      title={title}
+      updated={props.updated === undefined ? LEGAL_LAST_UPDATED : props.updated}
+    />
   );
 }
 

@@ -28,7 +28,7 @@ const inter = Inter({
   variable: "--font-inter",
 });
 /** The shadcn.io design's face. */
-const hankenGrotesk = Hanken_Grotesk({
+export const hankenGrotesk = Hanken_Grotesk({
   subsets: ["latin"],
   // Swap, not optional: the shadcn.io design must always show shadcn.io's own face.
   display: "swap",

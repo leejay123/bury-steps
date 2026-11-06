@@ -1,11 +1,10 @@
 import type { Metadata } from "next";
-import { Facebook, Mail } from "lucide-react";
-import { Card, CardContent } from "@/components/ui/card";
+import { Mail } from "lucide-react";
 import { getSiteTheme } from "@/lib/site-theme";
-import { ContactForm, ShadcnContactForm } from "./contact-form";
-import { PageTop } from "@/components/page-top";
+import { ShadcnContactForm } from "./contact-form";
 import { BUTTON_OUTLINE, Guides } from "@/components/shadcnio/parts";
 import { PageKindMark } from "@/components/shadcnio/page-kind";
+import { DesignedSitePage } from "@/components/site-page-designer/designed-page";
 
 export const metadata: Metadata = {
   title: "Contact us",
@@ -15,10 +14,8 @@ export default async function ContactPage() {
   const theme = await getSiteTheme();
   const facebookUrl = theme.facebookGroupUrl.trim();
 
-  if (theme.siteDesign === "shadcnio") {
-    // shadcn.io's Contact page (their markup and classes, used with permission): the head
-    // with its line and + marks, then the form edge to edge beneath it.
-    return (
+  return (
+    <DesignedSitePage page="contact">
       <div className="flex flex-1 flex-col" data-shadcn-page="">
         <PageKindMark kind="plain" />
         <section aria-labelledby="contact-heading" className="border-t first-of-type:border-t-0">
@@ -62,56 +59,6 @@ export default async function ContactPage() {
           />
         </section>
       </div>
-    );
-  }
-
-  return (
-    <div className="flex flex-col gap-6">
-      <PageTop
-        className="flex flex-col gap-2"
-        eyebrow="Help"
-        intro="Questions about joining, a walk, or anything else — send us a message and we'll get back to you."
-        title="Contact us"
-      />
-
-      {/* Only the card animates on a page change; the heading stays still. */}
-      <Card className="overflow-hidden p-0" data-page-motion="">
-        <CardContent className="flex flex-col gap-6 p-6 md:p-8">
-          <div className="flex flex-col gap-6">
-            <div className="flex items-start gap-3 rounded-md p-2 -m-2">
-              <div className="flex size-9 shrink-0 items-center justify-center rounded-md border">
-                <Mail aria-hidden className="size-4" />
-              </div>
-              <div>
-                <p className="font-medium">Message us here</p>
-                <p className="text-sm text-muted-foreground">
-                  We usually reply within a few days.
-                </p>
-              </div>
-            </div>
-            {facebookUrl ? (
-              <a
-                className="flex items-start gap-3 rounded-md p-2 -m-2 hover:bg-accent"
-                href={facebookUrl}
-                rel="noopener noreferrer"
-                target="_blank"
-              >
-                <div className="flex size-9 shrink-0 items-center justify-center rounded-md border">
-                  <Facebook aria-hidden className="size-4" />
-                </div>
-                <div>
-                  <p className="font-medium">Facebook group</p>
-                  <p className="text-sm text-muted-foreground">
-                    Chat with the group directly and see the latest updates.
-                  </p>
-                </div>
-              </a>
-            ) : null}
-          </div>
-
-          <ContactForm />
-        </CardContent>
-      </Card>
-    </div>
+    </DesignedSitePage>
   );
 }

@@ -43,47 +43,10 @@ export const SETTINGS_PAGE_GROUPS: SettingsPageGroup[] = [
         permission: "permDisplay",
       },
       {
-        href: "/admin/settings/hero-photos",
-        title: "Hero photos",
-        description: "The photos that rotate at the top of the homepage.",
-        keywords: "carousel slides images pictures",
-        permission: "permHomepage",
-      },
-      {
-        href: "/admin/settings/homepage-layout",
-        title: "Homepage layout",
-        description: "Show or hide homepage sections, and optional background patterns behind them.",
-        keywords: "sections carousel photo slider background patterns animate titles latest notices",
-        permission: "permDisplay",
-      },
-      {
-        href: "/admin/settings/testimonials",
-        title: "Testimonials",
-        description: "Quotes from members shown on the homepage.",
-        keywords: "quotes reviews heading intro",
-        permission: "permHomepage",
-      },
-      {
-        href: "/admin/settings/faqs",
-        title: "FAQs",
-        description: "The questions and answers on the homepage, grouped into categories.",
-        keywords: "questions answers help heading intro",
-        permission: "permHomepage",
-      },
-      // Each homepage heading is edited on the page of the thing it labels (FAQs, Testimonials);
-      // the rest of the wording has its own pages here (once "Site wording", under tabs).
-      {
-        href: "/admin/settings/site-wording/how-this-started",
-        title: "How this started",
-        description: "The heading, short blurb and full story for the homepage's How this started section.",
-        keywords: "story about eyebrow teaser wording text copy",
-        permission: "permDisplay",
-      },
-      {
-        href: "/admin/settings/site-wording/about-lists",
-        title: "About lists",
-        description: "The goals, places, what to expect and group rules in the homepage's About drawer.",
-        keywords: "rules goals places expect drawer wording text copy",
+        href: "/admin/settings/page-designs",
+        title: "Page designs",
+        description: "Design the public pages — home, about, contact, privacy, terms and apps — the same way as a walk page.",
+        keywords: "homepage about contact privacy terms apps quotes faq wording designer puck",
         permission: "permDisplay",
       },
       {

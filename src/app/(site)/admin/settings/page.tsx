@@ -5,9 +5,8 @@ import { requireAnySettingsPermission, displayName } from "@/lib/auth";
 import { prisma } from "@/lib/db";
 import { SITE_SETTING_ID } from "@/lib/theme";
 import { getSiteTheme } from "@/lib/site-theme";
-import { MAX_HOMEPAGE_SLIDES } from "@/lib/slides";
-import { MAX_HOMEPAGE_TESTIMONIALS } from "@/lib/testimonials";
-import { MAX_HOMEPAGE_FAQS } from "@/lib/faqs";
+import { getSitePageDesigns } from "@/lib/site-page-designs-store";
+import { pageHasPublished, SITE_PAGES } from "@/lib/site-page-designs";
 import { EMAIL_TEMPLATES } from "@/lib/email/registry";
 import { DEFAULT_CANCELLED_WALK_RETENTION_DAYS } from "@/lib/walk-retention";
 import { SETTINGS_PAGE_GROUPS } from "@/lib/settings-pages";
@@ -74,9 +73,7 @@ async function AdminSettingsPageContent() {
   const [
     theme,
     settings,
-    slideCount,
-    testimonialCount,
-    faqCount,
+    pageDesigns,
     noticeCount,
     customisedEmailCount,
   ] = await Promise.all([
@@ -91,9 +88,7 @@ async function AdminSettingsPageContent() {
         contactMessagesOwner: { select: { firstName: true, lastName: true, email: true, role: true } },
       },
     }),
-    prisma.homepageSlide.count(),
-    prisma.homepageTestimonial.count(),
-    prisma.homepageFaq.count(),
+    getSitePageDesigns(),
     prisma.siteNotice.count(),
     prisma.emailTemplateOverride.count({
       where: { OR: [{ subject: { not: null } }, { body: { not: null } }] },
@@ -113,18 +108,9 @@ async function AdminSettingsPageContent() {
     "/admin/settings/branding": {
       status: theme.hasCustomLogo ? "Your own logo" : "Default logo",
     },
-    "/admin/settings/hero-photos": {
-      status: `${slideCount} of ${MAX_HOMEPAGE_SLIDES} photos${theme.carouselEnabled ? "" : " · hidden"}`,
-      attention:
-        slideCount === 0 ? "No photos yet — the top of the homepage has no picture." : undefined,
+    "/admin/settings/page-designs": {
+      status: `${SITE_PAGES.filter((page) => pageHasPublished(pageDesigns[page.key])).length} of ${SITE_PAGES.length} published`,
     },
-    "/admin/settings/homepage-layout": {
-      status: `Photos ${theme.carouselEnabled ? "on" : "off"} · Latest notices ${theme.memberNoticesEnabled ? "on" : "off"}`,
-    },
-    "/admin/settings/testimonials": {
-      status: `${testimonialCount} of ${MAX_HOMEPAGE_TESTIMONIALS} quotes`,
-    },
-    "/admin/settings/faqs": { status: `${faqCount} of ${MAX_HOMEPAGE_FAQS} questions` },
     "/admin/settings/notices": { status: plural(noticeCount, "notice") },
     "/admin/settings/emails": {
       status:

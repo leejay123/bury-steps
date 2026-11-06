@@ -9,6 +9,8 @@ import { GlobalNav, type SearchItem } from "./globalnav";
 import { GlobalFooter } from "./globalfooter";
 import { ShadcnHome } from "./home";
 import { getShadcnHomeData } from "./home-data";
+import { getPublishedSitePageDesign } from "@/lib/site-page-designs-store";
+import { SitePageRender } from "@/components/site-page-designer/render";
 import { PromoBar } from "./promo-bar";
 import { ShadcnAccountTools } from "./account-tools";
 import { siteChrome } from "./chrome";
@@ -24,13 +26,14 @@ import { PageKindMark } from "./page-kind";
  * under Settings → Site behaviour.
  */
 export async function ShadcnHomePage({ theme }: { theme: SiteTheme }) {
-  const [data, testimonials, faqData, logo, year, progressEnabled] = await Promise.all([
+  const [data, testimonials, faqData, logo, year, progressEnabled, homeDesign] = await Promise.all([
     getShadcnHomeData(),
     getHomepageTestimonials(),
     getHomepageFaqData(),
     getInlineLogo(),
     copyrightYear(),
     getProgressEnabled(),
+    getPublishedSitePageDesign("home"),
   ]);
   const chrome = siteChrome(theme);
   const { links, columns, joinHref, signInHref, facebookUrl } = chrome;
@@ -79,24 +82,34 @@ export async function ShadcnHomePage({ theme }: { theme: SiteTheme }) {
       <div className="flex w-full flex-1 flex-col overflow-x-clip">
         <div className="mx-auto max-w-3xl px-4 sm:px-5 lg:max-w-6xl lg:px-6 flex w-full flex-1 flex-col">
           <div className="flex flex-1 scroll-mt-(--header-height) flex-col border-x outline-none" id="content" tabIndex={-1}>
-            <ShadcnHome
-              about={{
-                title: theme.howThisStartedTitle,
-                teaser: theme.howThisStartedTeaser,
-              }}
-              data={data}
-              expect={theme.aboutExpect}
-              facebookUrl={facebookUrl}
-              faqCategories={faqData.categories}
-              faqs={faqData.faqs}
-              goals={theme.aboutGoals}
-              joinHref={joinHref}
-              logo={logo}
-              signInHref={signInHref}
-              siteName={theme.siteName}
-              tagline={theme.siteTagline}
-              testimonials={testimonials}
-            />
+            {homeDesign ? (
+              <main aria-label="Home">
+                <SitePageRender
+                  data={homeDesign}
+                  live={{ data, facebookUrl, joinHref, logo }}
+                  page="home"
+                />
+              </main>
+            ) : (
+              <ShadcnHome
+                about={{
+                  title: theme.howThisStartedTitle,
+                  teaser: theme.howThisStartedTeaser,
+                }}
+                data={data}
+                expect={theme.aboutExpect}
+                facebookUrl={facebookUrl}
+                faqCategories={faqData.categories}
+                faqs={faqData.faqs}
+                goals={theme.aboutGoals}
+                joinHref={joinHref}
+                logo={logo}
+                signInHref={signInHref}
+                siteName={theme.siteName}
+                tagline={theme.siteTagline}
+                testimonials={testimonials}
+              />
+            )}
             <GlobalFooter columns={columns} facebookUrl={facebookUrl} siteName={theme.siteName} year={year} />
           </div>
         </div>

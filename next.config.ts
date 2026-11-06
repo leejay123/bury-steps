@@ -30,7 +30,6 @@ const nextConfig: NextConfig = {
     qualities: [70, 75],
     remotePatterns: [{ protocol: "https", hostname: "images.unsplash.com" }],
     localPatterns: [
-      { pathname: "/api/slides/**" },
       { pathname: "/api/site-logo" },
       { pathname: "/api/report-banner" },
       { pathname: "/icon.png" },

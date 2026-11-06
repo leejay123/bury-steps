@@ -1,11 +1,6 @@
 "use server";
 
-import {
-  PAGE_TOP_STYLES,
-  SITE_DESIGNS,
-  type PageTopStyle,
-  type SiteDesign,
-} from "@/lib/site-theme";
+import { PAGE_TOP_STYLES, type PageTopStyle } from "@/lib/site-theme";
 import { changedWalkWording, MAX_WALK_WORDING } from "@/lib/walk-wording";
 import { z } from "zod";
 import { parseTabStyle } from "@/lib/tab-style";
@@ -29,11 +24,6 @@ import {
 } from "@/lib/testimonials";
 import { parseFaqSectionIntro, parseFaqSectionTitle } from "@/lib/faqs";
 import {
-  parseHomepageSectionOrder,
-  serializeHomepageSectionOrder,
-  type HomepageSectionId,
-} from "@/lib/homepage-sections";
-import {
   MAX_ABOUT_LIST_ITEM,
   MAX_ABOUT_LIST_ITEMS,
   MAX_ABOUT_RULES,
@@ -50,20 +40,6 @@ import {
 } from "@/lib/homepage-copy";
 import { SITE_SETTING_ID, DEFAULT_PRIMARY_COLOR } from "@/lib/theme";
 import { parseSiteFont } from "@/lib/site-font";
-import {
-  HERO_VIDEO_OPTIONS,
-  parseHeroOverlayOpacity,
-  parseHeroStyle,
-  parseSliderHeroWords,
-  parseHeroTextColor,
-  parseHeroVideoKey,
-} from "@/lib/hero-style";
-import {
-  SECTION_BG_COLUMNS,
-  SECTION_BG_KEYS,
-  parseSectionBgPattern,
-  type SectionBgKey,
-} from "@/lib/section-background";
 import { HOMEPAGE_CACHE_TAG } from "@/lib/homepage-cache";
 import { CONTACT_MESSAGES_OWNER_TAG } from "@/lib/contact-messages-owner";
 import {
@@ -83,163 +59,6 @@ import {
   readOptionalImage,
   revalidateHomepage,
 } from "./shared";
-
-async function updateCarouselEnabledWork(
-  _prev: ActionResult | null,
-  formData: FormData,
-): Promise<ActionResult> {
-  const admin = await requireAdmin();
-  if (!admin.permDisplay) return permissionDenied("permDisplay");
-  const enabled = String(formData.get("carouselEnabled") ?? "") === "on";
-
-  try {
-    await prisma.siteSetting.upsert({
-      where: { id: SITE_SETTING_ID },
-      create: {
-        id: SITE_SETTING_ID,
-        primaryColor: DEFAULT_PRIMARY_COLOR,
-        carouselEnabled: enabled,
-      },
-      update: { carouselEnabled: enabled },
-    });
-  } catch (err) {
-    return logActionError("updateCarouselEnabled", err, "Could not save that setting. Try again.");
-  }
-
-  revalidateTag(HOMEPAGE_CACHE_TAG, { expire: 0 });
-  revalidatePath("/", "layout");
-  revalidatePath("/admin/settings");
-  revalidatePath("/admin/settings/hero-photos");
-  return { ok: true, message: enabled ? "You have turned the carousel on." : "You have turned the carousel off." };
-}
-
-/** Homepage hero style: the usual light hero, or a full-bleed video hero
- * (see HeroCinematic) using one of the bundled HERO_VIDEO_OPTIONS. */
-async function updateHeroStyleWork(
-  _prev: ActionResult | null,
-  formData: FormData,
-): Promise<ActionResult> {
-  const admin = await requireAdmin();
-  if (!admin.permDisplay) return permissionDenied("permDisplay");
-
-  const heroStyle = parseHeroStyle(String(formData.get("heroStyle") ?? ""));
-  const rawVideoKey = String(formData.get("heroVideoKey") ?? "");
-  if (heroStyle === "cinematic" && !HERO_VIDEO_OPTIONS.some((option) => option.key === rawVideoKey)) {
-    return { ok: false, error: "Choose a video." };
-  }
-  const heroVideoKey = parseHeroVideoKey(rawVideoKey);
-  const heroOverlayOpacity = parseHeroOverlayOpacity(Number(formData.get("heroOverlayOpacity")));
-  const heroTextColor = parseHeroTextColor(String(formData.get("heroTextColor") ?? ""));
-
-  try {
-    await prisma.siteSetting.upsert({
-      where: { id: SITE_SETTING_ID },
-      create: {
-        id: SITE_SETTING_ID,
-        primaryColor: DEFAULT_PRIMARY_COLOR,
-        heroStyle,
-        heroVideoKey,
-        heroOverlayOpacity,
-        heroTextColor,
-      },
-      update: { heroStyle, heroVideoKey, heroOverlayOpacity, heroTextColor },
-    });
-  } catch (err) {
-    return logActionError("updateHeroStyle", err, "Could not save that setting. Try again.");
-  }
-
-  revalidateTag(HOMEPAGE_CACHE_TAG, { expire: 0 });
-  revalidatePath("/", "layout");
-  revalidatePath("/admin/settings");
-  revalidatePath("/admin/settings/hero-photos");
-  return {
-    ok: true,
-    message:
-      heroStyle === "cinematic"
-        ? "Switched the homepage to the video hero."
-        : heroStyle === "globe"
-          ? "Switched the homepage to the globe hero."
-          : heroStyle === "parallax"
-            ? "Switched the homepage to the parallax hero."
-            : heroStyle === "marquee"
-              ? "Switched the homepage to the 3D marquee hero."
-              : heroStyle === "slider"
-                ? "Switched the homepage to the photo slider hero."
-                : heroStyle === "default"
-                  ? "Switched the homepage to the default hero."
-                  : "Switched the homepage hero.",
-  };
-}
-
-/** Background pattern (none/dots/stripes — see src/lib/section-background.ts)
- * behind one homepage section. One action for all five sections: which
- * SiteSetting column it writes depends on `section`. */
-async function updateSectionBgPatternWork(
-  _prev: ActionResult | null,
-  formData: FormData,
-): Promise<ActionResult> {
-  const admin = await requireAdmin();
-  if (!admin.permDisplay) return permissionDenied("permDisplay");
-
-  const section = String(formData.get("section") ?? "") as SectionBgKey;
-  if (!SECTION_BG_KEYS.includes(section)) {
-    return { ok: false, error: "Unknown section." };
-  }
-  const pattern = parseSectionBgPattern(String(formData.get("pattern") ?? ""));
-  const column = SECTION_BG_COLUMNS[section];
-
-  try {
-    await prisma.siteSetting.upsert({
-      where: { id: SITE_SETTING_ID },
-      create: { id: SITE_SETTING_ID, primaryColor: DEFAULT_PRIMARY_COLOR, [column]: pattern },
-      update: { [column]: pattern },
-    });
-  } catch (err) {
-    return logActionError("updateSectionBgPattern", err, "Could not save that setting. Try again.");
-  }
-
-  revalidateTag(HOMEPAGE_CACHE_TAG, { expire: 0 });
-  revalidatePath("/", "layout");
-  revalidatePath("/admin/settings");
-  return { ok: true, message: "Background pattern updated." };
-}
-
-/** Site-wide switch for the homepage's "Latest notices" section — off
- * hides it for every signed-in member, even when there are notices they'd
- * otherwise see there (see SiteTheme.memberNoticesEnabled). */
-async function updateMemberNoticesEnabledWork(
-  _prev: ActionResult | null,
-  formData: FormData,
-): Promise<ActionResult> {
-  const admin = await requireAdmin();
-  if (!admin.permDisplay) return permissionDenied("permDisplay");
-  const enabled = String(formData.get("memberNoticesEnabled") ?? "") === "on";
-
-  try {
-    await prisma.siteSetting.upsert({
-      where: { id: SITE_SETTING_ID },
-      create: {
-        id: SITE_SETTING_ID,
-        primaryColor: DEFAULT_PRIMARY_COLOR,
-        memberNoticesEnabled: enabled,
-      },
-      update: { memberNoticesEnabled: enabled },
-    });
-  } catch (err) {
-    return logActionError("updateMemberNoticesEnabled", err, "Could not save that setting. Try again.");
-  }
-
-  revalidateTag(HOMEPAGE_CACHE_TAG, { expire: 0 });
-  revalidatePath("/", "layout");
-  revalidatePath("/admin/settings");
-  revalidatePath("/admin/settings/homepage-layout");
-  return {
-    ok: true,
-    message: enabled
-      ? "Latest notices will show on the homepage again."
-      : "Latest notices is now hidden from the homepage.",
-  };
-}
 
 /** Site-wide switch for /progress (see getProgressEnabled) — off 404s the
  * page for everyone, organisers included, not just members. */
@@ -550,7 +369,6 @@ async function updateScrollToTopEnabledWork(
       create: {
         id: SITE_SETTING_ID,
         primaryColor: DEFAULT_PRIMARY_COLOR,
-        carouselEnabled: true,
         scrollToTopEnabled: enabled,
       },
       update: { scrollToTopEnabled: enabled },
@@ -581,7 +399,6 @@ async function updateAnnouncementBannerWork(
       create: {
         id: SITE_SETTING_ID,
         primaryColor: DEFAULT_PRIMARY_COLOR,
-        carouselEnabled: true,
         announcementEnabled: enabled,
       },
       update: { announcementEnabled: enabled },
@@ -607,7 +424,7 @@ async function updateMobileNavWork(
   try {
     await prisma.siteSetting.upsert({
       where: { id: SITE_SETTING_ID },
-      create: { id: SITE_SETTING_ID, primaryColor: DEFAULT_PRIMARY_COLOR, carouselEnabled: true, mobileNav: style },
+      create: { id: SITE_SETTING_ID, primaryColor: DEFAULT_PRIMARY_COLOR, mobileNav: style },
       update: { mobileNav: style },
     });
   } catch (err) {
@@ -623,66 +440,6 @@ async function updateMobileNavWork(
   };
 }
 
-async function updateSliderHeroWordsWork(
-  _prev: ActionResult | null,
-  formData: FormData,
-): Promise<ActionResult> {
-  const admin = await requireAdmin();
-  if (!admin.permDisplay) return permissionDenied("permDisplay");
-  const words = parseSliderHeroWords(String(formData.get("sliderHeroWords") ?? ""));
-
-  try {
-    await prisma.siteSetting.upsert({
-      where: { id: SITE_SETTING_ID },
-      create: { id: SITE_SETTING_ID, primaryColor: DEFAULT_PRIMARY_COLOR, carouselEnabled: true, sliderHeroWords: words },
-      update: { sliderHeroWords: words },
-    });
-  } catch (err) {
-    return logActionError("updateSliderHeroWords", err, "Could not save that setting. Try again.");
-  }
-
-  revalidateTag(HOMEPAGE_CACHE_TAG, { expire: 0 });
-  revalidatePath("/", "layout");
-  revalidatePath("/admin/settings/homepage-layout");
-  return {
-    ok: true,
-    message:
-      words === "site"
-        ? "The site name now shows on every photo."
-        : words === "slides"
-          ? "Each photo now shows its own words."
-          : "The photos now show without words.",
-  };
-}
-
-/** Settings → Homepage layout → Framed sections (shadcn.io style). */
-async function updateHomeFramedWork(
-  _prev: ActionResult | null,
-  formData: FormData,
-): Promise<ActionResult> {
-  const admin = await requireAdmin();
-  if (!admin.permDisplay) return permissionDenied("permDisplay");
-  const enabled = String(formData.get("homeFramed") ?? "") === "on";
-
-  try {
-    await prisma.siteSetting.upsert({
-      where: { id: SITE_SETTING_ID },
-      create: { id: SITE_SETTING_ID, primaryColor: DEFAULT_PRIMARY_COLOR, homeFramed: enabled },
-      update: { homeFramed: enabled },
-    });
-  } catch (err) {
-    return logActionError("updateHomeFramed", err, "Could not save that setting. Try again.");
-  }
-
-  revalidateTag(HOMEPAGE_CACHE_TAG, { expire: 0 });
-  revalidatePath("/");
-  revalidatePath("/admin/settings/homepage-layout");
-  return {
-    ok: true,
-    message: enabled ? "Homepage sections are framed (shadcn.io style)." : "Homepage sections are centred again.",
-  };
-}
-
 async function updateFooterWordmarkMobileWork(
   _prev: ActionResult | null,
   formData: FormData,
@@ -694,7 +451,7 @@ async function updateFooterWordmarkMobileWork(
   try {
     await prisma.siteSetting.upsert({
       where: { id: SITE_SETTING_ID },
-      create: { id: SITE_SETTING_ID, primaryColor: DEFAULT_PRIMARY_COLOR, carouselEnabled: true, footerWordmarkMobile: enabled },
+      create: { id: SITE_SETTING_ID, primaryColor: DEFAULT_PRIMARY_COLOR, footerWordmarkMobile: enabled },
       update: { footerWordmarkMobile: enabled },
     });
   } catch (err) {
@@ -721,7 +478,6 @@ async function updateFooterWordmarkEnabledWork(
       create: {
         id: SITE_SETTING_ID,
         primaryColor: DEFAULT_PRIMARY_COLOR,
-        carouselEnabled: true,
         footerWordmarkEnabled: enabled,
       },
       update: { footerWordmarkEnabled: enabled },
@@ -754,7 +510,6 @@ async function updateSiteFontWork(
       create: {
         id: SITE_SETTING_ID,
         primaryColor: DEFAULT_PRIMARY_COLOR,
-        carouselEnabled: true,
         scrollToTopEnabled: true,
         siteFont: font,
       },
@@ -797,38 +552,6 @@ async function updatePageTopStyleWork(
   return { ok: true, message: "Page tops updated." };
 }
 
-/** Settings → Branding → Site design: the whole site's look, for everyone. */
-async function updateSiteDesignWork(
-  _prev: ActionResult | null,
-  formData: FormData,
-): Promise<ActionResult> {
-  const admin = await requireAdmin();
-  if (!admin.permDisplay) return permissionDenied("permDisplay");
-  const asked = String(formData.get("siteDesign") ?? "");
-  const design = SITE_DESIGNS.includes(asked as SiteDesign) ? (asked as SiteDesign) : "original";
-
-  try {
-    await prisma.siteSetting.upsert({
-      where: { id: SITE_SETTING_ID },
-      create: { id: SITE_SETTING_ID, primaryColor: DEFAULT_PRIMARY_COLOR, siteDesign: design },
-      update: { siteDesign: design },
-    });
-  } catch (err) {
-    return logActionError("updateSiteDesign", err, "Could not save that setting. Try again.");
-  }
-
-  revalidateTag(HOMEPAGE_CACHE_TAG, { expire: 0 });
-  revalidatePath("/", "layout");
-  revalidatePath("/admin/settings/branding");
-  return {
-    ok: true,
-    message:
-      design === "original"
-        ? "The site is back to its original design."
-        : `The site now uses the ${design.charAt(0).toUpperCase()}${design.slice(1)} design.`,
-  };
-}
-
 async function updateTextSizesWork(
   _prev: ActionResult | null,
   formData: FormData,
@@ -850,7 +573,6 @@ async function updateTextSizesWork(
       create: {
         id: SITE_SETTING_ID,
         primaryColor: DEFAULT_PRIMARY_COLOR,
-        carouselEnabled: true,
         scrollToTopEnabled: true,
         ...sizes,
       },
@@ -884,7 +606,6 @@ async function updateCookieConsentVariantWork(
       create: {
         id: SITE_SETTING_ID,
         primaryColor: DEFAULT_PRIMARY_COLOR,
-        carouselEnabled: true,
         scrollToTopEnabled: true,
         cookieConsentVariant: variant,
       },
@@ -930,7 +651,6 @@ async function updateSiteBrandingWork(
       create: {
         id: SITE_SETTING_ID,
         primaryColor: DEFAULT_PRIMARY_COLOR,
-        carouselEnabled: true,
         scrollToTopEnabled: true,
         cookieConsentVariant: DEFAULT_COOKIE_CONSENT_VARIANT,
         siteName,
@@ -970,7 +690,6 @@ async function updateFacebookGroupUrlWork(
       create: {
         id: SITE_SETTING_ID,
         primaryColor: DEFAULT_PRIMARY_COLOR,
-        carouselEnabled: true,
         scrollToTopEnabled: true,
         cookieConsentVariant: DEFAULT_COOKIE_CONSENT_VARIANT,
         facebookGroupUrl,
@@ -994,38 +713,6 @@ async function updateFacebookGroupUrlWork(
   };
 }
 
-async function reorderHomepageSectionsWork(ids: HomepageSectionId[]): Promise<ActionResult> {
-  const admin = await requireAdmin();
-  if (!admin.permDisplay) return permissionDenied("permDisplay");
-  const order = parseHomepageSectionOrder(serializeHomepageSectionOrder(ids));
-  if (order === "invalid") {
-    return { ok: false, error: "Could not save that order. Try again." };
-  }
-
-  try {
-    await prisma.siteSetting.upsert({
-      where: { id: SITE_SETTING_ID },
-      create: {
-        id: SITE_SETTING_ID,
-        primaryColor: DEFAULT_PRIMARY_COLOR,
-        carouselEnabled: true,
-        scrollToTopEnabled: true,
-        cookieConsentVariant: DEFAULT_COOKIE_CONSENT_VARIANT,
-        homepageSectionOrder: serializeHomepageSectionOrder(order),
-      },
-      update: { homepageSectionOrder: serializeHomepageSectionOrder(order) },
-    });
-  } catch (err) {
-    return logActionError("reorderHomepageSections", err, "Could not save that order. Try again.");
-  }
-
-  revalidateTag(HOMEPAGE_CACHE_TAG, { expire: 0 });
-  revalidatePath("/");
-  revalidatePath("/admin/settings");
-  revalidatePath("/admin/settings/homepage-layout");
-  return { ok: true, message: "Homepage section order saved." };
-}
-
 async function updateFaqSectionCopyWork(
   _prev: ActionResult | null,
   formData: FormData,
@@ -1047,7 +734,6 @@ async function updateFaqSectionCopyWork(
       create: {
         id: SITE_SETTING_ID,
         primaryColor: DEFAULT_PRIMARY_COLOR,
-        carouselEnabled: true,
         scrollToTopEnabled: true,
         cookieConsentVariant: DEFAULT_COOKIE_CONSENT_VARIANT,
         faqSectionTitle,
@@ -1097,7 +783,6 @@ async function updateTestimonialsSectionCopyWork(
       create: {
         id: SITE_SETTING_ID,
         primaryColor: DEFAULT_PRIMARY_COLOR,
-        carouselEnabled: true,
         scrollToTopEnabled: true,
         cookieConsentVariant: DEFAULT_COOKIE_CONSENT_VARIANT,
         testimonialsSectionEyebrow,
@@ -1158,7 +843,6 @@ async function updateHowThisStartedCopyWork(
       create: {
         id: SITE_SETTING_ID,
         primaryColor: DEFAULT_PRIMARY_COLOR,
-        carouselEnabled: true,
         scrollToTopEnabled: true,
         cookieConsentVariant: DEFAULT_COOKIE_CONSENT_VARIANT,
         howThisStartedTitle,
@@ -1252,7 +936,6 @@ async function updateAboutListsWork(
       create: {
         id: SITE_SETTING_ID,
         primaryColor: DEFAULT_PRIMARY_COLOR,
-        carouselEnabled: true,
         scrollToTopEnabled: true,
         cookieConsentVariant: DEFAULT_COOKIE_CONSENT_VARIANT,
         aboutGoals: aboutGoalsText,
@@ -1372,7 +1055,6 @@ async function updateWalkPageCopyWork(
       create: {
         id: SITE_SETTING_ID,
         primaryColor: DEFAULT_PRIMARY_COLOR,
-        carouselEnabled: true,
         scrollToTopEnabled: true,
         cookieConsentVariant: DEFAULT_COOKIE_CONSENT_VARIANT,
         beforeYouSetOffTips: tipsText,
@@ -1424,7 +1106,6 @@ async function updateMonthlyClockInGoalWork(
       create: {
         id: SITE_SETTING_ID,
         primaryColor: DEFAULT_PRIMARY_COLOR,
-        carouselEnabled: true,
         monthlyClockInGoal: parsed,
       },
       update: { monthlyClockInGoal: parsed },
@@ -1461,7 +1142,6 @@ async function updateSiteLogoWork(
       create: {
         id: SITE_SETTING_ID,
         primaryColor: DEFAULT_PRIMARY_COLOR,
-        carouselEnabled: true,
         ...(image ? { logoMime: image.mime, logoData: image.data, logoBlur: image.blur } : {}),
       },
       update: image
@@ -1505,7 +1185,6 @@ async function updateSiteFaviconWork(
       create: {
         id: SITE_SETTING_ID,
         primaryColor: DEFAULT_PRIMARY_COLOR,
-        carouselEnabled: true,
         ...(image ? { faviconMime: image.mime, faviconData: image.data } : {}),
       },
       update: image
@@ -1555,7 +1234,7 @@ async function updateWalkEssentialsWork(
   try {
     await prisma.siteSetting.upsert({
       where: { id: SITE_SETTING_ID },
-      create: { id: SITE_SETTING_ID, primaryColor: DEFAULT_PRIMARY_COLOR, carouselEnabled: true, walkEssentials: items },
+      create: { id: SITE_SETTING_ID, primaryColor: DEFAULT_PRIMARY_COLOR, walkEssentials: items },
       update: { walkEssentials: items },
     });
   } catch (err) {
@@ -1597,7 +1276,7 @@ async function updateWalkWordingWork(
   try {
     await prisma.siteSetting.upsert({
       where: { id: SITE_SETTING_ID },
-      create: { id: SITE_SETTING_ID, primaryColor: DEFAULT_PRIMARY_COLOR, carouselEnabled: true, walkWording: changed },
+      create: { id: SITE_SETTING_ID, primaryColor: DEFAULT_PRIMARY_COLOR, walkWording: changed },
       update: { walkWording: changed },
     });
   } catch (err) {
@@ -1625,22 +1304,6 @@ function readStrings<const K extends string>(
 function reject(ctx: z.RefinementCtx, path: string, message: string) {
   ctx.addIssue({ code: z.ZodIssueCode.custom, message, path: [path] });
 }
-
-const heroStyleSchema = z
-  .object({ heroStyle: z.string(), heroVideoKey: z.string() })
-  .superRefine((value, ctx) => {
-    const heroStyle = parseHeroStyle(value.heroStyle);
-    if (heroStyle === "cinematic" && !HERO_VIDEO_OPTIONS.some((option) => option.key === value.heroVideoKey)) {
-      reject(ctx, "heroVideoKey", "Choose a video.");
-    }
-  });
-
-const sectionBgSchema = z.object({
-  section: z.string().refine(
-    (section): section is SectionBgKey => SECTION_BG_KEYS.includes(section as SectionBgKey),
-    "Unknown section.",
-  ),
-});
 
 const retentionMessage = `Enter a whole number of days from 1 to ${MAX_RETENTION_DAYS.toLocaleString("en-GB")}, or leave it blank to turn auto-delete off.`;
 
@@ -1885,26 +1548,6 @@ function readWalkEssentials(formData: FormData) {
   return { items: String(formData.get("items") ?? "[]") };
 }
 
-const reorderHomepageSectionsGuarded = guardArgs(
-  "organiser",
-  reorderIdsSchema,
-  (ids) => reorderHomepageSectionsWork(ids as HomepageSectionId[]),
-);
-
-export const updateCarouselEnabled = guardForm("organiser", pass, readPass, updateCarouselEnabledWork);
-export const updateHeroStyle = guardForm(
-  "organiser",
-  heroStyleSchema,
-  (formData) => readStrings(formData, ["heroStyle", "heroVideoKey"] as const),
-  updateHeroStyleWork,
-);
-export const updateSectionBgPattern = guardForm(
-  "organiser",
-  sectionBgSchema,
-  (formData) => readStrings(formData, ["section"] as const),
-  updateSectionBgPatternWork,
-);
-export const updateMemberNoticesEnabled = guardForm("organiser", pass, readPass, updateMemberNoticesEnabledWork);
 export const updateProgressEnabled = guardForm("organiser", pass, readPass, updateProgressEnabledWork);
 export const updateStoriesEnabled = guardForm("organiser", pass, readPass, updateStoriesEnabledWork);
 export const updateOrganiserInviteRequired = guardForm(
@@ -1935,11 +1578,8 @@ export const updateContactMessagesOwner = guardForm("organiser", pass, readPass,
 export const updateScrollToTopEnabled = guardForm("organiser", pass, readPass, updateScrollToTopEnabledWork);
 export const updateAnnouncementBanner = guardForm("organiser", pass, readPass, updateAnnouncementBannerWork);
 export const updateMobileNav = guardForm("organiser", pass, readPass, updateMobileNavWork);
-export const updateSliderHeroWords = guardForm("organiser", pass, readPass, updateSliderHeroWordsWork);
-export const updateHomeFramed = guardForm("organiser", pass, readPass, updateHomeFramedWork);
 export const updateFooterWordmarkMobile = guardForm("organiser", pass, readPass, updateFooterWordmarkMobileWork);
 export const updateFooterWordmarkEnabled = guardForm("organiser", pass, readPass, updateFooterWordmarkEnabledWork);
-export const updateSiteDesign = guardForm("organiser", pass, readPass, updateSiteDesignWork);
 export const updatePageTopStyle = guardForm("organiser", pass, readPass, updatePageTopStyleWork);
 export const updateSiteFont = guardForm(
   "organiser",
@@ -1971,10 +1611,6 @@ export const updateFacebookGroupUrl = guardForm(
   (formData) => readStrings(formData, ["facebookGroupUrl"] as const),
   updateFacebookGroupUrlWork,
 );
-export async function reorderHomepageSections(ids: HomepageSectionId[]): Promise<ActionResult> {
-  return reorderHomepageSectionsGuarded(ids);
-}
-
 /** Every tab bar on the site: standard or underline (tab-style.ts). */
 async function updateTabStyleWork(_prev: ActionResult | null, formData: FormData): Promise<ActionResult> {
   const admin = await requireAdmin();

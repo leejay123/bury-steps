@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { LegalPage } from "@/components/legal-page";
+import { DesignedSitePage } from "@/components/site-page-designer/designed-page";
 import { getSiteTheme } from "@/lib/site-theme";
 import { howThisStartedParagraphs } from "@/lib/homepage-copy";
 
@@ -17,6 +18,7 @@ export default async function AboutPage() {
   const facebookUrl = theme.facebookGroupUrl.trim();
 
   return (
+    <DesignedSitePage page="about">
     <LegalPage
       description={theme.howThisStartedTeaser}
       sections={[
@@ -134,5 +136,6 @@ export default async function AboutPage() {
       }}
       title={theme.howThisStartedTitle || "About"}
     />
+    </DesignedSitePage>
   );
 }

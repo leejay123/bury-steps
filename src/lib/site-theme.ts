@@ -2,7 +2,6 @@ import { parseWalkWording, WALK_WORDING_DEFAULTS, type WalkWording } from "@/lib
 import { cache } from "react";
 import { readFile } from "node:fs/promises";
 import path from "node:path";
-import { parseSliderHeroWords, type SliderHeroWords } from "@/lib/hero-style";
 import { DEFAULT_TEXT_SIZES, parseTextSize, type TextSizes } from "@/lib/text-sizes";
 import { cacheLife, cacheTag } from "next/cache";
 import {
@@ -31,22 +30,6 @@ import {
   DEFAULT_TESTIMONIALS_SECTION_INTRO,
   DEFAULT_TESTIMONIALS_SECTION_TITLE,
 } from "@/lib/testimonials";
-import {
-  normalizeHomepageSectionOrder,
-  type HomepageSectionId,
-} from "@/lib/homepage-sections";
-import {
-  DEFAULT_HERO_OVERLAY_OPACITY,
-  DEFAULT_HERO_STYLE,
-  DEFAULT_HERO_TEXT_COLOR,
-  DEFAULT_HERO_VIDEO_KEY,
-  parseHeroOverlayOpacity,
-  parseHeroStyle,
-  parseHeroTextColor,
-  parseHeroVideoKey,
-  type HeroStyle,
-} from "@/lib/hero-style";
-import { SECTION_BG_DEFAULTS, parseSectionBgPattern, type SectionBgPattern } from "@/lib/section-background";
 import {
 
   DEFAULT_ABOUT_EXPECT,
@@ -103,25 +86,7 @@ export const PAGE_TOP_STYLES: readonly PageTopStyle[] = [
   "brand",
 ];
 
-/** Settings → Branding → Site design: the original look, or shadcn.io's. */
-export type SiteDesign = "original" | "shadcnio";
-export const SITE_DESIGNS: readonly SiteDesign[] = ["original", "shadcnio"];
-
 export type SiteTheme = {
-  heroStyle: HeroStyle;
-  heroVideoKey: string;
-  heroOverlayOpacity: number;
-  heroTextColor: string;
-  heroBgPattern: SectionBgPattern;
-  howThisStartedBgPattern: SectionBgPattern;
-  testimonialsBgPattern: SectionBgPattern;
-  memberNoticesBgPattern: SectionBgPattern;
-  faqsBgPattern: SectionBgPattern;
-  carouselEnabled: boolean;
-  /** Site-wide switch for the homepage's "Latest notices" section (see
-   * updateMemberNoticesEnabled) — off hides it even when there are notices
-   * a signed-in member would otherwise see there. */
-  memberNoticesEnabled: boolean;
   scrollToTopEnabled: boolean;
   /** Giant outlined site name at the foot of every page (see updateFooterWordmarkEnabled). */
   footerWordmarkEnabled: boolean;
@@ -129,10 +94,6 @@ export type SiteTheme = {
   footerWordmarkMobile: boolean;
   /** Phone navigation style (updateMobileNav). */
   mobileNav: "bottom" | "menu";
-  /** Words on the Photo slider hero (updateSliderHeroWords). */
-  sliderHeroWords: SliderHeroWords;
-  /** Homepage sections in the shadcn.io style: left headings, button on the right, + marks. */
-  homeFramed: boolean;
   /** Homepage join strip ("New here? Come for a walk…") — see updateAnnouncementBanner. */
   announcementEnabled: boolean;
   /** Unused: kept so older database rows still load. */
@@ -141,8 +102,6 @@ export type SiteTheme = {
   announcementPages: string;
   cookieConsentVariant: CookieConsentVariant;
   siteFont: SiteFontId;
-  /** The whole site's look: the original, or the Vercel-inspired one. */
-  siteDesign: SiteDesign;
   /** How the edge-to-edge band at the top of a page looks (title, intro, button). */
   pageTopStyle: PageTopStyle;
   textSizes: TextSizes;
@@ -188,7 +147,6 @@ export type SiteTheme = {
   tabStyle: TabStyle;
   howWalksWorkSteps: AboutRule[];
   howWalksWorkStepsText: string;
-  homepageSectionOrder: HomepageSectionId[];
   /** Bundled default, or `/api/site-logo?v=...` once an admin has uploaded one. */
   logoSrc: string;
   /** Blurred preview of the logo, when one has been made. */
@@ -209,30 +167,16 @@ const DEFAULT_FAVICON_SRC = "/default-favicon.png";
  * placeholders draw with before greying them out (settings-mask.tsx). */
 export function defaultTheme(): SiteTheme {
   return {
-    heroStyle: DEFAULT_HERO_STYLE,
-    heroVideoKey: DEFAULT_HERO_VIDEO_KEY,
-    heroOverlayOpacity: DEFAULT_HERO_OVERLAY_OPACITY,
-    heroTextColor: DEFAULT_HERO_TEXT_COLOR,
-    heroBgPattern: SECTION_BG_DEFAULTS.hero,
-    howThisStartedBgPattern: SECTION_BG_DEFAULTS.howThisStarted,
-    testimonialsBgPattern: SECTION_BG_DEFAULTS.testimonials,
-    memberNoticesBgPattern: SECTION_BG_DEFAULTS.memberNotices,
-    faqsBgPattern: SECTION_BG_DEFAULTS.faqs,
-    carouselEnabled: true,
-    memberNoticesEnabled: true,
     scrollToTopEnabled: true,
     footerWordmarkEnabled: true,
     footerWordmarkMobile: true,
-    sliderHeroWords: "site",
     mobileNav: "bottom",
-    homeFramed: false,
     announcementEnabled: true,
     announcementText: "",
     announcementLink: "",
     announcementPages: "all",
     cookieConsentVariant: DEFAULT_COOKIE_CONSENT_VARIANT,
     siteFont: DEFAULT_SITE_FONT,
-    siteDesign: "original",
     pageTopStyle: "plain",
     textSizes: DEFAULT_TEXT_SIZES,
     siteName: DEFAULT_SITE_NAME,
@@ -269,7 +213,6 @@ export function defaultTheme(): SiteTheme {
     tabStyle: "standard",
     howWalksWorkSteps: DEFAULT_HOW_WALKS_WORK_STEPS.map((step) => ({ ...step })),
     howWalksWorkStepsText: DEFAULT_HOW_WALKS_WORK_STEPS_TEXT,
-    homepageSectionOrder: normalizeHomepageSectionOrder(null),
     logoSrc: DEFAULT_LOGO_SRC,
     logoBlur: null,
     hasCustomLogo: false,
@@ -284,30 +227,16 @@ async function loadSiteTheme(): Promise<SiteTheme> {
   const row = await prisma.siteSetting.findUnique({
     where: { id: SITE_SETTING_ID },
     select: {
-      heroStyle: true,
-      heroVideoKey: true,
-      heroOverlayOpacity: true,
-      heroTextColor: true,
-      heroBgPattern: true,
-      howThisStartedBgPattern: true,
-      testimonialsBgPattern: true,
-      memberNoticesBgPattern: true,
-      faqsBgPattern: true,
-      carouselEnabled: true,
-      memberNoticesEnabled: true,
       scrollToTopEnabled: true,
       footerWordmarkEnabled: true,
       footerWordmarkMobile: true,
-      sliderHeroWords: true,
       mobileNav: true,
-      homeFramed: true,
       announcementEnabled: true,
       announcementText: true,
       announcementLink: true,
       announcementPages: true,
       cookieConsentVariant: true,
       siteFont: true,
-      siteDesign: true,
       pageTopStyle: true,
       textHeadlinePx: true,
       textSectionPx: true,
@@ -341,7 +270,6 @@ async function loadSiteTheme(): Promise<SiteTheme> {
       walkPageSections: true,
       tabStyle: true,
       howWalksWorkSteps: true,
-      homepageSectionOrder: true,
       logoMime: true,
       logoBlur: true,
       faviconMime: true,
@@ -367,32 +295,10 @@ async function loadSiteTheme(): Promise<SiteTheme> {
   );
 
   return {
-    heroStyle: parseHeroStyle(row?.heroStyle),
-    heroVideoKey: parseHeroVideoKey(row?.heroVideoKey),
-    heroOverlayOpacity: parseHeroOverlayOpacity(row?.heroOverlayOpacity),
-    heroTextColor: parseHeroTextColor(row?.heroTextColor),
-    heroBgPattern: parseSectionBgPattern(row?.heroBgPattern, SECTION_BG_DEFAULTS.hero),
-    howThisStartedBgPattern: parseSectionBgPattern(
-      row?.howThisStartedBgPattern,
-      SECTION_BG_DEFAULTS.howThisStarted,
-    ),
-    testimonialsBgPattern: parseSectionBgPattern(
-      row?.testimonialsBgPattern,
-      SECTION_BG_DEFAULTS.testimonials,
-    ),
-    memberNoticesBgPattern: parseSectionBgPattern(
-      row?.memberNoticesBgPattern,
-      SECTION_BG_DEFAULTS.memberNotices,
-    ),
-    faqsBgPattern: parseSectionBgPattern(row?.faqsBgPattern, SECTION_BG_DEFAULTS.faqs),
-    carouselEnabled: row?.carouselEnabled ?? true,
-    memberNoticesEnabled: row?.memberNoticesEnabled ?? true,
     scrollToTopEnabled: row?.scrollToTopEnabled ?? true,
     footerWordmarkEnabled: row?.footerWordmarkEnabled ?? true,
     footerWordmarkMobile: row?.footerWordmarkMobile ?? true,
-    sliderHeroWords: parseSliderHeroWords(row?.sliderHeroWords),
     mobileNav: row?.mobileNav === "menu" ? "menu" : "bottom",
-    homeFramed: row?.homeFramed ?? false,
     announcementEnabled: row?.announcementEnabled ?? true,
     announcementText: row?.announcementText ?? "",
     announcementLink: row?.announcementLink ?? "",
@@ -404,9 +310,6 @@ async function loadSiteTheme(): Promise<SiteTheme> {
     pageTopStyle: PAGE_TOP_STYLES.includes(row?.pageTopStyle as PageTopStyle)
       ? (row?.pageTopStyle as PageTopStyle)
       : "plain",
-    siteDesign: SITE_DESIGNS.includes(row?.siteDesign as SiteDesign)
-      ? (row?.siteDesign as SiteDesign)
-      : "original",
     textSizes: {
       headline: parseTextSize("headline", row?.textHeadlinePx) ?? DEFAULT_TEXT_SIZES.headline,
       section: parseTextSize("section", row?.textSectionPx) ?? DEFAULT_TEXT_SIZES.section,
@@ -463,7 +366,6 @@ async function loadSiteTheme(): Promise<SiteTheme> {
     howWalksWorkStepsText: row?.howWalksWorkSteps?.trim()
       ? serializeAboutRules(howWalksWorkSteps)
       : DEFAULT_HOW_WALKS_WORK_STEPS_TEXT,
-    homepageSectionOrder: normalizeHomepageSectionOrder(row?.homepageSectionOrder),
     logoSrc: row?.logoMime
       ? `/api/site-logo?v=${row.updatedAt.getTime()}`
       : DEFAULT_LOGO_SRC,

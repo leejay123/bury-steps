@@ -11,9 +11,7 @@ import { KeepFormInputOnError } from "@/components/keep-form-input-on-error";
 import { WalkEssentialsProvider } from "@/components/walk-essentials-context";
 import { WalkWordingProvider } from "@/components/walk-wording-context";
 import { SignedInProvider } from "@/components/signed-in-context";
-import { SiteDesignProvider } from "@/components/site-design-context";
 import { textSizeCssVars } from "@/lib/text-sizes";
-import { FullWidthDivider } from "@/components/full-width-divider";
 import { ButtonRipple } from "@/components/button-ripple";
 import { HeaderScrollShadow } from "@/components/header-scroll-shadow";
 import { FocusRescue } from "@/components/focus-rescue";
@@ -28,20 +26,12 @@ import { auth } from "@clerk/nextjs/server";
 import { isClerkMiddlewareMissingError } from "@/lib/auth";
 import { Toaster } from "@/components/ui/sonner";
 import { appUrl } from "@/lib/urls";
-import { PAGE_X, PAGE_Y } from "@/lib/page-x";
-import { SiteMobileNav, SiteNavSlot, SiteBottomNav } from "@/components/site-nav";
-import { BottomBarBootScript, HeaderBootScript } from "@/components/header-boot";
-import { MobileMenuShell } from "@/components/mobile-menu-shell";
-import { SiteFooter, copyrightYear } from "@/components/site-footer";
-import { SiteBrandLink } from "@/components/site-brand-link";
-import { SiteLogo } from "@/components/site-logo";
 import { UnlockPageOnNavigate } from "@/components/overlay-root";
 import { SiteCookieConsentGate } from "@/components/site-cookie-consent-gate";
 import { StaleDeployReload } from "@/components/stale-deploy-reload";
 import { getSiteTheme } from "@/lib/site-theme";
-import { siteFontById } from "@/lib/site-font";
-import { pageFontFace, siteFontVariableClassName, typesetFontVariables } from "@/app/fonts";
-import { DEFAULT_SITE_NAME, siteMetaDescription } from "@/lib/site-branding";
+import { hankenGrotesk, siteFontVariableClassName, typesetFontVariables } from "@/app/fonts";
+import { siteMetaDescription } from "@/lib/site-branding";
 import { ScrollRowArrows } from "@/components/scroll-row-arrows";
 import "./globals.css";
 import "@/components/shadcnio/shadcnio.css";
@@ -108,14 +98,11 @@ async function isSignedIn() {
 }
 
 export default async function RootLayout({ children }: { children: React.ReactNode }) {
-  const [theme, year] = await Promise.all([getSiteTheme(), copyrightYear()]);
+  const theme = await getSiteTheme();
   // Not awaited: the page is drawn without waiting for the session, so the
   // same ready-made page can serve everyone. Only the parts that differ
-  // (the hero's buttons) wait for this, each in its own placeholder.
+  // wait for this, each in its own placeholder.
   const signedIn = isSignedIn();
-  const font = siteFontById(theme.siteFont);
-  // The site design's own font, or the Branding font for Original.
-  const face = pageFontFace(theme.siteDesign, theme.siteFont);
 
   return (
     <html
@@ -124,16 +111,13 @@ export default async function RootLayout({ children }: { children: React.ReactNo
       // in, so phone layout rules for the bottom bar (logo on the left, room
       // at the bottom) apply from the first paint — see globals.css.
       data-phone-menu={theme.mobileNav}
-      // Settings → Branding → Site design (globals.css: [data-design="shadcnio"]).
-      data-design={theme.siteDesign}
+      data-design="shadcnio"
       // Settings → Branding → Page tops (globals.css: [data-page-top]).
       data-page-top={theme.pageTopStyle}
       lang="en-GB"
       style={
         {
-          // The site designs bring their own font (Original: the chosen one).
-          "--font-site":
-            theme.siteDesign === "shadcnio" ? "var(--font-hanken)" : `var(${font.cssVariable})`,
+          "--font-site": "var(--font-hanken)",
           ...textSizeCssVars(theme.textSizes),
         } as CSSProperties
       }
@@ -160,17 +144,13 @@ export default async function RootLayout({ children }: { children: React.ReactNo
             and the browser drew whatever had arrived: the header first, then
             the hero, then the rest, with the logo a beat behind. Now the first
             paint is the whole page. Chrome/Edge; other browsers ignore it. The
-            shadcn.io frame has no phone bar, so it waits for its own end instead
+            frame has no phone bar, so it waits for its own end instead
             (waiting for a slot that never comes held the page back until it had
             all arrived). */}
-        <link
-          blocking="render"
-          href={theme.siteDesign === "shadcnio" ? "#bs-frame-end" : "#bs-bottom-boot"}
-          rel="expect"
-        />
+        <link blocking="render" href="#bs-frame-end" rel="expect" />
       </head>
       <body
-        className={`${face.className} min-h-dvh overflow-x-clip touch-manipulation bg-background text-foreground antialiased`}
+        className={`${hankenGrotesk.className} min-h-dvh overflow-x-clip touch-manipulation bg-background text-foreground antialiased`}
       >
         <SerwistProvider reloadOnOnline={false} swUrl="/serwist/sw.js">
         {/*
@@ -195,186 +175,21 @@ export default async function RootLayout({ children }: { children: React.ReactNo
             the outermost shell (rather than on individual pages) so it also
             covers content that intentionally bleeds edge-to-edge.
           */}
-          {theme.siteDesign === "shadcnio" ? (
-            // Homepage draws its own header and footer. Every other page gets
-            // the dashboard frame from (site)/layout.tsx, so Home doesn't
-            // download a hidden copy of that shell.
-            <TopLoader>
-              <UnlockPageOnNavigate />
-              <LiveUpdates />
-              <ScrollRowArrows />
-              <KeepFormInputOnError />
-                <WalkEssentialsProvider items={theme.walkEssentials}>
-                  <WalkWordingProvider wording={theme.walkWording}>
-                    <TabStyleProvider style={theme.tabStyle}>
-                      <SignedInProvider signedIn={signedIn}>
-                        <SiteDesignProvider design="shadcnio">{children}</SiteDesignProvider>
-                      </SignedInProvider>
-                    </TabStyleProvider>
-                  </WalkWordingProvider>
-                </WalkEssentialsProvider>
-              {/* First paint waits for this (rel="expect" above). */}
-              <div hidden id="bs-frame-end" />
-            </TopLoader>
-          ) : (
-          <div
-            className="mx-auto flex min-h-dvh w-full max-w-[1200px] flex-col border-x pl-[env(safe-area-inset-left)] pr-[env(safe-area-inset-right)]"
-            data-site-shell=""
-          >
+          <TopLoader>
             <UnlockPageOnNavigate />
             <LiveUpdates />
             <ScrollRowArrows />
             <KeepFormInputOnError />
-            {/*
-              Off-screen until focused, so a keyboard/screen-reader user's
-              very first tab stop jumps straight past the header and nav —
-              repeated on every page — instead of having to tab through it
-              every single time to reach the actual content.
-            */}
-            <a
-              className="sr-only rounded-md bg-background px-4 py-2 text-sm font-medium focus:not-sr-only focus:fixed focus:top-2 focus:left-2 focus:z-[100] focus:outline focus:outline-2 focus:outline-offset-2 focus:outline-ring"
-              href="#main-content"
-            >
-              Skip to content
-            </a>
-            {/*
-              Solid sticky header — no backdrop-filter. Blurring content that
-              scrolls under a sticky bar is expensive on Safari and caused
-              visible lag on MacBooks; an opaque bar stays crisp and cheap.
-              [transform:translateZ(0)] keeps it on its own compositor layer.
-
-              z-[66] keeps the header above any sticky or raised page content
-              scrolling underneath it.
-            */}
-            <header
-              className="group/site-header sticky top-0 z-[66] touch-manipulation bg-background transition-shadow duration-200 [transform:translateZ(0)] data-scrolled:shadow-[0_4px_12px_-6px_rgb(0_0_0/0.12)]"
-              data-site-header=""
-            >
-              <div className="relative">
-                {/*
-                  auto on the outer (logo, bell/avatar) columns, not 1fr —
-                  those should never be asked to shrink; only the middle
-                  nav-links column should give up space, since it already
-                  has its own overflow-x-auto scroller to fall back on
-                  (SiteNavLinks). A plain `auto` track's automatic minimum
-                  is otherwise its content's own max-content size, so this
-                  middle column still needs minmax(0,1fr) — the 0 floor
-                  lets it shrink past that and actually scroll instead of
-                  forcing the logo/avatar columns to shrink (or the nav to
-                  spill over them) once the window is too narrow for
-                  everything to fit at its natural size. 1fr instead of
-                  auto for its own max: this column should claim all
-                  left-over space once there's room to (so its own
-                  justify-center still centers the links), not stop
-                  growing at exactly the links' own content width the way
-                  the previous auto-based track did.
-                */}
-                {/*
-                  Phones: equal 1fr side columns put the logo in the true
-                  middle of the screen. A 1fr track never shrinks below its
-                  content, so when Sign in + Join the group are wider than
-                  half the space the logo moves left rather than overlapping.
-                */}
-                <div
-                  className={`group/header-row grid h-14 grid-cols-[1fr_auto_1fr] items-center gap-3 ${PAGE_X} md:grid-cols-[1fr_auto_1fr]`}
-                  data-header-row=""
-                >
-                  <HeaderPartBoundary name="mobile-nav">
-                    <Suspense fallback={<MobileMenuShell />}>
-                      <SiteMobileNav />
-                    </Suspense>
-                  </HeaderPartBoundary>
-                  <div className="contents max-md:col-start-2 max-md:flex max-md:justify-center" data-site-logo-cell="">
-                    <HeaderPartBoundary
-                      fallback={
-                        <div className="flex h-8 min-w-max items-center justify-self-start">
-                          <SiteLogo alt={DEFAULT_SITE_NAME} />
-                        </div>
-                      }
-                      name="logo"
-                    >
-                      <Suspense
-                        fallback={
-                          <div className="flex h-8 min-w-max items-center justify-self-start">
-                            <SiteLogo alt={DEFAULT_SITE_NAME} />
-                          </div>
-                        }
-                      >
-                        <SiteBrandLink />
-                      </Suspense>
-                    </HeaderPartBoundary>
-                  </div>
-                  {/* The boot script below may already have drawn last visit's menu in
-                      here. Marked as raw HTML so React leaves it alone when the page
-                      wakes up: a filled slot failed hydration (React error #418) and
-                      redrew the whole page. The script empties it once the live menu
-                      arrives. */}
-                  <div
-                    className="contents"
-                    dangerouslySetInnerHTML={{ __html: "" }}
-                    id="bs-header-boot"
-                    suppressHydrationWarning
-                  />
-                  <HeaderBootScript facebookUrl={theme.facebookGroupUrl.trim()} />
-                  <HeaderPartBoundary name="nav">
-                    <Suspense fallback={null}>
-                      <SiteNavSlot />
-                    </Suspense>
-                  </HeaderPartBoundary>
-                </div>
-                {/* Line at the top of the page; the stuck header's shadow takes over once scrolled. */}
-                <FullWidthDivider
-                  className="transition-opacity duration-200 group-data-scrolled/site-header:opacity-0"
-                  position="bottom"
-                />
-              </div>
-            </header>
-            {/*
-              Standard flexbox "sticky footer": the outer shell above is
-              `min-h-dvh flex flex-col`, and this flex-1 is what makes <main>
-              claim all the leftover height so the footer always sits at the
-              very bottom of the viewport on a short page (e.g. Messages with
-              one row), instead of leaving blank space below the footer.
-
-              The trade-off is unavoidable, not a bug: on a short page the
-              empty space has to live somewhere, and this puts it between the
-              page's own content and the footer (inside <main>) rather than
-              below the footer. A page long enough to fill the viewport on
-              its own looks identical either way.
-            */}
-            <main className={`relative flex flex-1 flex-col ${PAGE_Y} ${PAGE_X}`} id="main-content">
-              {/* No page-change animation: a new page simply replaces the old one. */}
-              <div className="flex min-w-0 flex-1 flex-col">
-                <WalkEssentialsProvider items={theme.walkEssentials}>
-                  <WalkWordingProvider wording={theme.walkWording}>
-                    <TabStyleProvider style={theme.tabStyle}>
-                      <SignedInProvider signedIn={signedIn}>
-                        {children}
-                      </SignedInProvider>
-                    </TabStyleProvider>
-                  </WalkWordingProvider>
-                </WalkEssentialsProvider>
-              </div>
-            </main>
-            <HeaderPartBoundary name="footer">
-              <div className="contents" data-site-footer="">
-                <SiteFooter theme={theme} year={year} />
-              </div>
-            </HeaderPartBoundary>
-            <HeaderPartBoundary name="bottom-nav">
-              <div className="contents" data-site-bottom="">
-              {/* Last visit's phone bar is drawn in here by the script below,
-                  before the first paint. Raw HTML so React leaves it alone
-                  when the page wakes up (same as #bs-header-boot). */}
-              <div dangerouslySetInnerHTML={{ __html: "" }} id="bs-bottom-boot" suppressHydrationWarning />
-              <BottomBarBootScript />
-              <Suspense fallback={null}>
-                <SiteBottomNav />
-              </Suspense>
-              </div>
-            </HeaderPartBoundary>
-          </div>
-          )}
+            <WalkEssentialsProvider items={theme.walkEssentials}>
+              <WalkWordingProvider wording={theme.walkWording}>
+                <TabStyleProvider style={theme.tabStyle}>
+                  <SignedInProvider signedIn={signedIn}>{children}</SignedInProvider>
+                </TabStyleProvider>
+              </WalkWordingProvider>
+            </WalkEssentialsProvider>
+            {/* First paint waits for this (rel="expect" above). */}
+            <div hidden id="bs-frame-end" />
+          </TopLoader>
           <Toaster
             duration={2800}
             // Above the phone bottom bar when it's there (globals.css sets the var).

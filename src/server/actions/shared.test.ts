@@ -180,9 +180,7 @@ describe("revalidateHomepage", () => {
     for (const path of [
       "/",
       "/admin/settings",
-      "/admin/settings/hero-photos",
-      "/admin/settings/testimonials",
-      "/admin/settings/faqs",
+      "/admin/settings/page-designs",
     ]) {
       expect(revalidatePath).toHaveBeenCalledWith(path);
     }

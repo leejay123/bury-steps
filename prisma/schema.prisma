@@ -231,27 +231,6 @@ model Attendance {
   @@index([conditionsPurgeAfter])
 }
 
-/// Public homepage carousel. Organisers can keep up to 3 slides.
-model HomepageSlide {
-  id        String   @id @default(cuid())
-  sortOrder Int
-  alt       String   @default("Bury Steps Walking Group")
-  /// Optional words shown on this photo by the Photo slider hero when it's
-  /// set to "Each photo's own words" (SiteSetting.sliderHeroWords).
-  heading   String   @default("")
-  caption   String   @default("")
-  /// Bundled file such as /slides/bury-steps-hero.jpg. Null once an upload is stored.
-  imagePath String?
-  imageMime String?
-  imageData Bytes?
-  /// Tiny blurred preview (a data URL) shown while the real photo loads.
-  imageBlur String?
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  @@index([sortOrder])
-}
-
 /// Public homepage testimonials. Organisers can keep up to 12.
 model HomepageTestimonial {
   id        String   @id @default(cuid())
@@ -376,31 +355,20 @@ model SiteSetting {
   id                          String   @id
   /// Kept for existing rows. The public site is a fixed black-and-white theme.
   primaryColor                String
-  /// When false, the homepage carousel is hidden.
-  carouselEnabled             Boolean  @default(true)
   /// When false, the floating back-to-top button is hidden.
   scrollToTopEnabled          Boolean  @default(true)
   /// When false, the giant outlined site name at the foot of every page is hidden.
   footerWordmarkEnabled       Boolean  @default(true)
   /// When false, the footer name is hidden on phones (still shows on wider screens).
   footerWordmarkMobile        Boolean  @default(true)
-  /// Settings → Branding → Site design: "original" or "vercel".
-  siteDesign                  String   @default("original")
   /// Settings → Branding → Page tops: "plain", "grey", "big" or "dark".
   pageTopStyle                String   @default("plain")
   /// Settings → Branding → Dashboard design: "1"–"4" (Efferd dashboards).
   dashboardDesign             String   @default("1")
-  /// Words on the Photo slider hero: "site" (site name + tagline on every
-  /// photo), "slides" (each photo's own heading/caption), or "none".
-  sliderHeroWords             String   @default("site")
   /// Page change animation: "fade", "slide" (sideways, like the returns portal), "rise" (up, like the walk cards) or "none".
   pageTransition              String   @default("fade")
   /// Phone navigation: "bottom" (bottom bar + More sheet) or "menu" (the ☰ menu).
   mobileNav                   String   @default("bottom")
-  /// Word-by-word reveal on the homepage section titles (Homepage layout).
-  titleRevealEnabled          Boolean  @default(true)
-  /// Settings → Homepage layout → Framed sections (shadcn.io style).
-  homeFramed                  Boolean  @default(false)
   /// Homepage join strip ("New here? Come for a walk…") — Settings → Site behaviour.
   announcementEnabled         Boolean  @default(true)
   /// Unused (older custom announcement wording). Kept so existing rows still load.
@@ -460,10 +428,6 @@ model SiteSetting {
   aboutPlacesHeading          String   @default("What we do")
   aboutExpectHeading          String   @default("What you can expect")
   aboutRulesHeading           String   @default("Group rules")
-  /// Comma-separated homepage block order (howWalksWork, howThisStarted, memberNotices, testimonials, faqs).
-  homepageSectionOrder        String   @default("howWalksWork,howThisStarted,memberNotices,testimonials,faqs")
-  /// Signed-in members: latest notices carousel on the homepage.
-  memberNoticesEnabled        Boolean  @default(true)
   /// Walk-page “How this group works” card. Off hides that card on every walk.
   howWalksWorkEnabled         Boolean  @default(true)
   /// Walk pages (members' and organisers'): order of the shared sections under
@@ -479,6 +443,9 @@ model SiteSetting {
   /// Walk page designer (Puck): the saved designs, as JSON —
   /// { organiser, member, visitor }, each Puck page data. Empty until saved.
   walkPageDesigns             String   @default("")
+  /// Public page designer (Puck): JSON { home, about, contact, privacy, terms, apps },
+  /// each { draft, published } Puck page data. Empty until first save.
+  sitePageDesigns             String   @default("")
   /// Every tab bar on the site: "standard" (grey pill) or "underline"
   /// (shadcn-space tabs-05: sliding underline and hover highlight).
   tabStyle                    String   @default("standard")
@@ -498,25 +465,6 @@ model SiteSetting {
   /// drops the link (see Settings → Display → Site chrome).
   progressEnabled             Boolean  @default(true)
   storiesEnabled              Boolean  @default(true)
-  /// Homepage hero style: "default" (the usual light hero + optional photo
-  /// carousel) or "cinematic" (a dark, full-bleed video hero). See
-  /// HERO_VIDEO_OPTIONS in src/components/hero-cinematic.tsx for valid
-  /// heroVideoKey values — ignored entirely when this is "default".
-  heroStyle                   String   @default("default")
-  heroVideoKey                String   @default("hero-1")
-  /// Cinematic hero only: darkness of the gradient over the video, 0-100.
-  heroOverlayOpacity          Int      @default(55)
-  /// Cinematic hero only: hex color for the eyebrow/title/tagline text.
-  heroTextColor               String   @default("#ffffff")
-  /// Background pattern behind each homepage section — "none", "dots", or
-  /// "stripes". See src/lib/section-background.ts. Hero defaults to "dots"
-  /// (it always showed a dot grid before this setting existed); every other
-  /// section defaults to "none" (no pattern, as before).
-  heroBgPattern               String   @default("dots")
-  howThisStartedBgPattern     String   @default("none")
-  testimonialsBgPattern       String   @default("none")
-  memberNoticesBgPattern      String   @default("none")
-  faqsBgPattern               String   @default("none")
   /// Uploaded site logo (header, print reports). Null uses the bundled default.
   logoMime                    String?
   logoData                    Bytes?

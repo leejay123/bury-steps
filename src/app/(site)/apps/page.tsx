@@ -1,10 +1,9 @@
 import type { Metadata } from "next";
+import { Smartphone } from "lucide-react";
 import { WalkAppsSection } from "@/components/walk-apps-section";
-import { PAGE_X_BLEED } from "@/lib/page-x";
-import { getSiteTheme } from "@/lib/site-theme";
 import { PageKindMark } from "@/components/shadcnio/page-kind";
 import { PlainHero } from "@/components/shadcnio/legal";
-import { Smartphone } from "lucide-react";
+import { DesignedSitePage } from "@/components/site-page-designer/designed-page";
 
 export const metadata: Metadata = {
   title: "Apps for our walks",
@@ -12,11 +11,8 @@ export const metadata: Metadata = {
 };
 
 export default async function AppsPage() {
-  const theme = await getSiteTheme();
-  if (theme.siteDesign === "shadcnio") {
-    // A main-site page, as Contact: the site's header and footer even for signed-in
-    // people, never inside the dashboard.
-    return (
+  return (
+    <DesignedSitePage page="apps">
       <div className="flex flex-1 flex-col">
         <PageKindMark kind="plain" />
         <PlainHero
@@ -29,11 +25,6 @@ export default async function AppsPage() {
         />
         <WalkAppsSection plain />
       </div>
-    );
-  }
-  return (
-    <div className={`-mt-6 -mb-6 ${PAGE_X_BLEED}`}>
-      <WalkAppsSection />
-    </div>
+    </DesignedSitePage>
   );
 }

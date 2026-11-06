@@ -26,7 +26,6 @@ import {
   DEFAULT_TESTIMONIALS_SECTION_TITLE,
 } from "@/lib/testimonials";
 import { DEFAULT_FAQ_SECTION_INTRO, DEFAULT_FAQ_SECTION_TITLE } from "@/lib/faqs";
-import { DEFAULT_HOMEPAGE_SECTION_ORDER_TEXT } from "@/lib/homepage-sections";
 import {
   DEFAULT_ABOUT_EXPECT_TEXT,
   DEFAULT_ABOUT_EXPECT_HEADING,
@@ -44,7 +43,6 @@ import {
 import {
   DEFAULT_FAQS,
   DEFAULT_FAQ_CATEGORIES,
-  DEFAULT_HERO_SLIDE,
   DEFAULT_TESTIMONIALS,
   DEFAULT_WELCOME_NOTICE,
 } from "@/lib/site-defaults";
@@ -127,7 +125,6 @@ async function resetSiteToDefaultWork(
       });
       await tx.homepageFaq.deleteMany();
       await tx.homepageFaqCategory.deleteMany();
-      await tx.homepageSlide.deleteMany();
       await tx.homepageTestimonial.deleteMany();
       await tx.user.deleteMany({ where: { id: { not: admin.id } } });
       await tx.siteSetting.upsert({
@@ -135,7 +132,6 @@ async function resetSiteToDefaultWork(
         create: {
           id: SITE_SETTING_ID,
           primaryColor: DEFAULT_PRIMARY_COLOR,
-          carouselEnabled: true,
           scrollToTopEnabled: true,
           cookieConsentVariant: DEFAULT_COOKIE_CONSENT_VARIANT,
           siteFont: DEFAULT_SITE_FONT,
@@ -162,9 +158,8 @@ async function resetSiteToDefaultWork(
           aboutPlacesHeading: DEFAULT_ABOUT_PLACES_HEADING,
           aboutExpectHeading: DEFAULT_ABOUT_EXPECT_HEADING,
           aboutRulesHeading: DEFAULT_ABOUT_RULES_HEADING,
-          homepageSectionOrder: DEFAULT_HOMEPAGE_SECTION_ORDER_TEXT,
           walkPageSections: DEFAULT_WALK_PAGE_SECTIONS_TEXT,
-          memberNoticesEnabled: true,
+          sitePageDesigns: "",
           howWalksWorkEnabled: true,
           howWalksWorkSteps: "",
           beforeYouSetOffEnabled: true,
@@ -186,11 +181,9 @@ async function resetSiteToDefaultWork(
         },
         update: {
           primaryColor: DEFAULT_PRIMARY_COLOR,
-          carouselEnabled: true,
           scrollToTopEnabled: true,
           footerWordmarkEnabled: true,
           footerWordmarkMobile: true,
-          sliderHeroWords: "site",
           pageTransition: "fade",
           mobileNav: "bottom",
           announcementEnabled: true,
@@ -222,9 +215,8 @@ async function resetSiteToDefaultWork(
           aboutPlacesHeading: DEFAULT_ABOUT_PLACES_HEADING,
           aboutExpectHeading: DEFAULT_ABOUT_EXPECT_HEADING,
           aboutRulesHeading: DEFAULT_ABOUT_RULES_HEADING,
-          homepageSectionOrder: DEFAULT_HOMEPAGE_SECTION_ORDER_TEXT,
           walkPageSections: DEFAULT_WALK_PAGE_SECTIONS_TEXT,
-          memberNoticesEnabled: true,
+          sitePageDesigns: "",
           howWalksWorkEnabled: true,
           howWalksWorkSteps: "",
           beforeYouSetOffEnabled: true,
@@ -261,14 +253,6 @@ async function resetSiteToDefaultWork(
           question: faq.question,
           answer: faq.answer,
         })),
-      });
-      await tx.homepageSlide.create({
-        data: {
-          id: DEFAULT_HERO_SLIDE.id,
-          sortOrder: DEFAULT_HERO_SLIDE.sortOrder,
-          alt: DEFAULT_HERO_SLIDE.alt,
-          imagePath: DEFAULT_HERO_SLIDE.imagePath,
-        },
       });
       await tx.homepageTestimonial.createMany({
         data: DEFAULT_TESTIMONIALS.map((row) => ({
