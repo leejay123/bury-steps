@@ -7,6 +7,7 @@ import { X } from "lucide-react";
 import { publishSitePageDesign, saveSitePageDraft } from "@/server/actions";
 import { Button } from "@/components/ui/button";
 import { SITE_PAGES, type PuckData, type SitePageKey } from "@/lib/site-page-designs";
+import { PuckFrameStyles } from "@/components/puck-frame-styles";
 import { configForPage } from "./config";
 import { SitePageLiveProvider, type SitePageLive } from "./live";
 
@@ -79,6 +80,7 @@ export function SitePageDesignEditor({
               current.current = next;
             }}
             onPublish={publish}
+            overrides={{ iframe: PuckFrameStyles }}
           />
         </SitePageLiveProvider>
       </div>

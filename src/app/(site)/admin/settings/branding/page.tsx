@@ -22,7 +22,7 @@ export default function BrandingSettingsPage() {
   // themselves (and the access check) fill in just after.
   return (
     <SettingsPage
-      description="How the site introduces itself — name, tagline, logo, favicon, and the Facebook link."
+      description="How the site names itself — name, share line, logo, favicon, and the Facebook link."
       previewHref="/"
       title="Branding"
     >
@@ -51,7 +51,7 @@ function SettingsView({ theme }: { theme: SiteTheme }) {
   return (
     <>
       <SettingsSectionGroup
-        description="How the site introduces itself in the hero and share previews."
+        description="How the site names itself in tabs, emails, the footer, and share previews."
         title="Identity"
       >
         <SiteBrandingSettings siteName={theme.siteName} siteTagline={theme.siteTagline} />

@@ -39,8 +39,8 @@ export function SiteBrandingSettings({
 
   return (
     <SettingsSection
-      description="Used on the homepage hero, the logo’s name for screen readers, browser tab titles, and link previews when someone shares the site."
-      title="Site name and tagline"
+      description="Used on browser tab titles, the logo’s name for screen readers, emails, the footer, and link previews when someone shares the site. The homepage heading is edited in Page designs."
+      title="Site name and share line"
     >
       <form action={action} ref={form} className="flex w-full flex-col gap-4">
         <div className="flex flex-col gap-2">
@@ -55,7 +55,7 @@ export function SiteBrandingSettings({
           />
         </div>
         <div className="flex flex-col gap-2">
-          <Label htmlFor="siteTagline">Homepage tagline</Label>
+          <Label htmlFor="siteTagline">Share preview line</Label>
           <Textarea
             id="siteTagline"
             maxLength={MAX_SITE_TAGLINE}
@@ -66,7 +66,7 @@ export function SiteBrandingSettings({
             value={tagline}
           />
           <p className="text-xs text-muted-foreground">
-            Keep it under about 160 characters if you want the same line in share previews.
+            Shown under the site name when someone shares a link. Keep it under about 160 characters so search and share cards use this line.
           </p>
         </div>
         <FormError message={state && !state.ok ? state.error : null} />

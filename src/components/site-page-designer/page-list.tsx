@@ -6,14 +6,8 @@ import dynamic from "next/dynamic";
 import Link from "next/link";
 import { Paintbrush } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
+import { Skeleton } from "@/components/ui/skeleton";
+import { DataList, DataListActions, DataListBody, DataListItem } from "@/components/data-list";
 import {
   pageHasDraft,
   pageHasPublished,
@@ -44,6 +38,8 @@ function status(designs: SitePageDesigns, key: SitePageKey): string {
   return "Uses the current live page";
 }
 
+const ROW = "items-start gap-3 px-4 py-3.5";
+
 /**
  * Settings → Page designs: the six public pages, each opening the same
  * Puck designer as walk pages. Computers only (1024px+); the list stays
@@ -65,44 +61,34 @@ export function SitePageDesignList({
   return (
     <>
       {computer ? null : (
-        <p className="text-sm text-muted-foreground">
-          Open a page's designer on a computer (1024px or wider). The list is here so you can still see which pages have a design.
+        <p className="text-sm text-muted-foreground" data-edge-note="">
+          Open a page&apos;s designer on a computer (1024px or wider). The list is here so you can still see which pages have a design.
         </p>
       )}
-      <Table>
-        <TableHeader>
-          <TableRow>
-            <TableHead>Page</TableHead>
-            <TableHead>Address</TableHead>
-            <TableHead>Design</TableHead>
-            <TableHead className="text-end"> </TableHead>
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          {SITE_PAGES.map((page) => (
-            <TableRow key={page.key}>
-              <TableCell className="whitespace-normal">
-                <div className="font-medium">{page.title}</div>
-                <div className="text-muted-foreground text-xs">{page.description}</div>
-              </TableCell>
-              <TableCell>
-                <Link className="underline-offset-4 hover:underline" href={page.path}>
-                  {page.path}
-                </Link>
-              </TableCell>
-              <TableCell>{status(designs, page.key)}</TableCell>
-              <TableCell className="text-end">
-                {computer ? (
-                  <Button onClick={() => setOpen(page.key)} size="sm" type="button" variant="outline">
-                    <Paintbrush data-icon="inline-start" />
-                    Design this page
-                  </Button>
-                ) : null}
-              </TableCell>
-            </TableRow>
-          ))}
-        </TableBody>
-      </Table>
+      <DataList data-edge-top="">
+        {SITE_PAGES.map((page) => (
+          <DataListItem className={ROW} key={page.key}>
+            <DataListBody className="flex flex-col gap-1">
+              <div className="flex flex-col gap-x-3 gap-y-0.5 sm:flex-row sm:items-baseline sm:justify-between">
+                <p className="font-medium leading-snug">{page.title}</p>
+                <p className="text-xs text-muted-foreground sm:shrink-0 sm:text-right">{status(designs, page.key)}</p>
+              </div>
+              <p className="text-sm text-muted-foreground">{page.description}</p>
+              <Link className="w-fit text-sm underline-offset-4 hover:underline" href={page.path}>
+                {page.path}
+              </Link>
+            </DataListBody>
+            {computer ? (
+              <DataListActions>
+                <Button onClick={() => setOpen(page.key)} size="sm" type="button" variant="outline">
+                  <Paintbrush data-icon="inline-start" />
+                  Design this page
+                </Button>
+              </DataListActions>
+            ) : null}
+          </DataListItem>
+        ))}
+      </DataList>
       {open
         ? createPortal(
             <SitePageDesignEditor data={drafts[open]} live={live} onClose={close} page={open} />,
@@ -110,5 +96,24 @@ export function SitePageDesignList({
           )
         : null}
     </>
+  );
+}
+
+/** Grey stand-in for each row while the list loads. */
+export function SitePageDesignListSkeleton() {
+  return (
+    <DataList data-edge-top="">
+      {SITE_PAGES.map((page) => (
+        <DataListItem className={ROW} key={page.key}>
+          <DataListBody className="flex flex-col gap-1">
+            <p className="font-medium leading-snug">{page.title}</p>
+            <p className="text-sm text-muted-foreground">{page.description}</p>
+          </DataListBody>
+          <span className="flex h-8 items-center">
+            <Skeleton className="h-8 w-36 rounded-md" />
+          </span>
+        </DataListItem>
+      ))}
+    </DataList>
   );
 }

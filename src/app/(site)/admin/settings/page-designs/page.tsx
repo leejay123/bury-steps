@@ -4,7 +4,7 @@ import { PRIVATE_SAVED_COPY } from "@/lib/private-saved-copy";
 import { requirePermission } from "@/lib/auth";
 import { SettingsPage } from "../settings-page";
 import { PlaceholderPreview } from "@/components/placeholder-preview";
-import { SitePageDesignList } from "@/components/site-page-designer/page-list";
+import { SitePageDesignList, SitePageDesignListSkeleton } from "@/components/site-page-designer/page-list";
 import { getSitePageDesigns } from "@/lib/site-page-designs-store";
 import { editorDataForPages, loadSitePageLive } from "@/lib/site-page-seeds";
 
@@ -16,8 +16,8 @@ export default function PageDesignsSettingsPage() {
       description="The public pages you can design, the same way as a walk page. Publish puts the design on the live site; closing without publishing keeps a draft."
       title="Page designs"
     >
-      <Suspense fallback={<p className="text-sm text-muted-foreground">Loading pages…</p>}>
-        <PlaceholderPreview fallback={<p className="text-sm text-muted-foreground">Loading pages…</p>}>
+      <Suspense fallback={<SitePageDesignListSkeleton />}>
+        <PlaceholderPreview fallback={<SitePageDesignListSkeleton />}>
           <PageDesignsSettingsPageContent />
         </PlaceholderPreview>
       </Suspense>
