@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState, type ComponentType, type ReactNode } from "react";
-import { AlertTriangle, Clock, Footprints, HeartPulse, NotebookPen, Users } from "lucide-react";
+import { AlertTriangle, Clock, Footprints, Hash, HeartPulse, NotebookPen, Users } from "lucide-react";
 import { toast } from "sonner";
 import {
   addAccidentReport,
@@ -64,14 +64,18 @@ function SectionHeading({ children }: { children: ReactNode }) {
 function InvolvedMembersField({
   prefix,
   initialMembers,
+  pickNumberedFor,
   walkId,
 }: {
   prefix: string;
   initialMembers: InvolvedMember[];
+  /** On create, pick who the report number belongs to when several people are tagged. */
+  pickNumberedFor: boolean;
   walkId: string;
 }) {
   const [attendees, setAttendees] = useState<InvolvedMember[]>(initialMembers);
   const [selectedIds, setSelectedIds] = useState(() => new Set(initialMembers.map((m) => m.id)));
+  const [numberedForId, setNumberedForId] = useState("");
   // Which walk's attendees `attendees` currently reflects — set only from
   // inside the fetch's .then() below (never synchronously in the effect
   // body), so "loading" derives cleanly from comparing it to `walkId`.
@@ -133,6 +137,7 @@ function InvolvedMembersField({
                     const next = new Set(current);
                     if (checked) next.add(member.id);
                     else next.delete(member.id);
+                    if (!next.has(numberedForId)) setNumberedForId("");
                     return next;
                   })
                 }
@@ -145,6 +150,34 @@ function InvolvedMembersField({
       {[...selectedIds].map((id) => (
         <input key={id} name="involvedMemberIds" type="hidden" value={id} />
       ))}
+      {pickNumberedFor && selectedIds.size === 1 ? (
+        <input name="numberedForMemberId" type="hidden" value={[...selectedIds][0]} />
+      ) : null}
+      {pickNumberedFor && selectedIds.size > 1 ? (
+        <div className="flex flex-col gap-1.5 pt-1">
+          <FieldLabel htmlFor={`${prefix}-numbered-for`} icon={Hash} required>
+            Number this report for
+          </FieldLabel>
+          <Select onValueChange={setNumberedForId} value={numberedForId || undefined}>
+            <SelectTrigger id={`${prefix}-numbered-for`}>
+              <SelectValue placeholder="Pick who this report is numbered for" />
+            </SelectTrigger>
+            <SelectContent>
+              {attendees
+                .filter((member) => selectedIds.has(member.id))
+                .map((member) => (
+                  <SelectItem key={member.id} value={member.id}>
+                    {member.name}
+                  </SelectItem>
+                ))}
+            </SelectContent>
+          </Select>
+          <p className="text-xs text-muted-foreground">
+            The report number uses this person&apos;s initials. Everyone tagged stays on the report.
+          </p>
+          <input name="numberedForMemberId" type="hidden" value={numberedForId} />
+        </div>
+      ) : null}
     </div>
   );
 }
@@ -222,6 +255,7 @@ function ReportFields({
         </FieldLabel>
         <InvolvedMembersField
           initialMembers={report?.involvedMembers ?? []}
+          pickNumberedFor={!report}
           prefix={prefix}
           walkId={walkId}
         />

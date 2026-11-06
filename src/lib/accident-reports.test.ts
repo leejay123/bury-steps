@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import {
   involvedSummaryText,
   nextAccidentReportNumber,
+  numberedForMemberId,
   reportNumberPrefix,
 } from "./accident-reports";
 
@@ -35,8 +36,39 @@ describe("involvedSummaryText", () => {
   });
 });
 
+describe("numberedForMemberId", () => {
+  it("has no numbered-for member when nobody was tagged", () => {
+    expect(numberedForMemberId([], undefined)).toEqual({ ok: true, userId: null });
+  });
+
+  it("uses the only tagged member, even if the form didn't send a pick", () => {
+    expect(numberedForMemberId(["member-1"], undefined)).toEqual({ ok: true, userId: "member-1" });
+  });
+
+  it("uses the pick when several members were tagged", () => {
+    expect(numberedForMemberId(["member-1", "member-2"], "member-2")).toEqual({
+      ok: true,
+      userId: "member-2",
+    });
+  });
+
+  it("asks for a pick when several members were tagged and none was chosen", () => {
+    expect(numberedForMemberId(["member-1", "member-2"], undefined)).toEqual({
+      ok: false,
+      error: "Pick who this report is numbered for.",
+    });
+  });
+
+  it("rejects a pick who was not tagged as involved", () => {
+    expect(numberedForMemberId(["member-1", "member-2"], "member-3")).toEqual({
+      ok: false,
+      error: "Pick who this report is numbered for.",
+    });
+  });
+});
+
 describe("accident report numbers", () => {
-  it("takes the submitter's initials as the prefix", () => {
+  it("takes the member's initials as the prefix", () => {
     expect(reportNumberPrefix("Tom Robert")).toBe("TR");
     expect(reportNumberPrefix("Chris Berman")).toBe("CB");
     expect(reportNumberPrefix("John Smith")).toBe("JS");

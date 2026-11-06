@@ -3,12 +3,17 @@
 import { revalidatePath } from "@/lib/revalidate";
 import { z } from "zod";
 import { guardForm } from "@/lib/safe-action";
-import { requireAdmin, displayName } from "@/lib/auth";
+import { requireAdmin, displayName, memberDisplayName } from "@/lib/auth";
 import { isOwner, actorStillOwner } from "@/lib/site-owner";
 import { prisma } from "@/lib/db";
 import { formatDateTime, londonWallClockToUtc } from "@/lib/dates";
 import { sendAccidentReportAlertEmail } from "@/lib/email/mailer";
-import { involvedSummaryText, nextAccidentReportNumber, reportNumberPrefix } from "@/lib/accident-reports";
+import {
+  involvedSummaryText,
+  nextAccidentReportNumber,
+  numberedForMemberId,
+  reportNumberPrefix,
+} from "@/lib/accident-reports";
 import { getWalkAttendeesForReport } from "@/lib/walk-members";
 import { walkStatus } from "@/lib/walk-window";
 import { type ActionResult, isPrismaCode, logActionError, ownerDenied, permissionDenied } from "./shared";
@@ -112,6 +117,11 @@ function readInvolvedMemberIds(formData: FormData): string[] {
   return [...new Set(formData.getAll("involvedMemberIds").map(String).filter(Boolean))];
 }
 
+function readNumberedForMemberId(formData: FormData): string | undefined {
+  const value = String(formData.get("numberedForMemberId") ?? "").trim();
+  return value || undefined;
+}
+
 async function addAccidentReportWork(
   _prev: ActionResult | null,
   formData: FormData,
@@ -125,6 +135,8 @@ async function addAccidentReportWork(
   if (!parsed.data.whoInvolved && involvedMemberIds.length === 0) {
     return { ok: false, error: "Say who was involved, or tag at least one member." };
   }
+  const numberedFor = numberedForMemberId(involvedMemberIds, readNumberedForMemberId(formData));
+  if (!numberedFor.ok) return numberedFor;
 
   let happenedAt: Date;
   try {
@@ -138,21 +150,33 @@ async function addAccidentReportWork(
   const onWalk = await assertInvolvedMembersOnWalk(parsed.data.walkId, involvedMemberIds);
   if (!onWalk.ok) return onWalk;
 
-  const prefix = reportNumberPrefix(displayName(admin));
+  let prefix: string | null = null;
+  if (numberedFor.userId) {
+    const member = await prisma.user.findUnique({
+      where: { id: numberedFor.userId },
+      select: { firstName: true, lastName: true },
+    });
+    if (!member) return { ok: false, error: "That member is no longer there." };
+    prefix = reportNumberPrefix(memberDisplayName(member));
+  }
+
   let created: {
     walk: { title: string } | null;
     involvedMembers: { user: { firstName: string | null; lastName: string | null } }[];
   } | null = null;
   for (let attempt = 0; attempt < 5; attempt++) {
     try {
-      const taken = await prisma.accidentReport.findMany({
-        where: { reportNumber: { startsWith: prefix } },
-        select: { reportNumber: true },
-      });
-      const reportNumber = nextAccidentReportNumber(
-        prefix,
-        taken.map((row) => row.reportNumber).filter((value): value is string => Boolean(value)),
-      );
+      let reportNumber: string | null = null;
+      if (prefix) {
+        const taken = await prisma.accidentReport.findMany({
+          where: { reportNumber: { startsWith: prefix } },
+          select: { reportNumber: true },
+        });
+        reportNumber = nextAccidentReportNumber(
+          prefix,
+          taken.map((row) => row.reportNumber).filter((value): value is string => Boolean(value)),
+        );
+      }
       created = await prisma.accidentReport.create({
         data: {
           happenedAt,
@@ -162,6 +186,7 @@ async function addAccidentReportWork(
           whatWeDid: parsed.data.whatWeDid,
           organiserNotes: parsed.data.organiserNotes ?? null,
           createdById: admin.id,
+          numberedForUserId: numberedFor.userId,
           reportNumber,
           involvedMembers: { create: involvedMemberIds.map((userId) => ({ userId })) },
         },

@@ -77,7 +77,8 @@ model User {
   walksCreated            Walk[]                 @relation("WalkCreator")
   attendances             Attendance[]
   noticeReads             SiteNoticeRead[]
-  accidentReports         AccidentReport[]
+  accidentReports         AccidentReport[]       @relation("AccidentReportRecorder")
+  numberedAccidentReports AccidentReport[]       @relation("AccidentReportNumberedFor")
   journeyEvents           WalkJourneyEvent[]     @relation("JourneyCreator")
   reportInvolvements      AccidentReportMember[]
   /// At most one SiteSetting row ever exists, so this is really 0-or-1 —
@@ -516,7 +517,9 @@ model SiteSetting {
 /// Organiser-only accident reports. Printed from the report page.
 model AccidentReport {
   id              String   @id @default(cuid())
-  /// TR001, CB002 — initials of whoever submitted, then a 3-digit sequence.
+  /// TR001, CB002 — initials of the involved member this report is numbered
+  /// for, then a 3-digit sequence. Null when nobody tagged is a member
+  /// (a passerby). Recorded-by does not get the number.
   reportNumber    String?  @unique
   happenedAt      DateTime
   walkId          String?
@@ -527,14 +530,18 @@ model AccidentReport {
   whatWeDid       String
   organiserNotes  String?
   createdById     String
+  /// The involved member whose initials the report number uses. Set on
+  /// create; left alone on edit so the number stays put.
+  numberedForUserId String?
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt
   /// Flagged by an organiser to exempt this report from the accident-report
   /// auto-delete cron, regardless of SiteSetting.accidentReportRetentionDays.
   retentionLocked Boolean  @default(false)
 
-  walk      Walk? @relation(fields: [walkId], references: [id], onDelete: SetNull)
-  createdBy User  @relation(fields: [createdById], references: [id], onDelete: Restrict)
+  walk            Walk?  @relation(fields: [walkId], references: [id], onDelete: SetNull)
+  createdBy       User   @relation("AccidentReportRecorder", fields: [createdById], references: [id], onDelete: Restrict)
+  numberedForUser User?  @relation("AccidentReportNumberedFor", fields: [numberedForUserId], references: [id], onDelete: SetNull)
 
   /// Members explicitly tagged as involved — lets an organiser follow up
   /// via the member's real profile instead of just a name in free text.
@@ -543,6 +550,7 @@ model AccidentReport {
   @@index([happenedAt])
   @@index([walkId])
   @@index([createdAt])
+  @@index([numberedForUserId])
 }
 
 /// Join row: one member tagged as involved in one accident report.
