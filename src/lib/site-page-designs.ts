@@ -122,6 +122,13 @@ export function pageHasDraft(slot: SitePageSlot): boolean {
   return isPuckData(slot.draft);
 }
 
+/** A saved draft that isn't what's on the live page (so Discard draft has something to throw away). */
+export function pageHasUnpublishedDraft(slot: SitePageSlot): boolean {
+  if (!isPuckData(slot.draft)) return false;
+  if (!isPuckData(slot.published)) return true;
+  return JSON.stringify(slot.draft) !== JSON.stringify(slot.published);
+}
+
 export function publicPathFor(page: SitePageKey): string {
   return SITE_PAGES.find((item) => item.key === page)?.path ?? "/";
 }

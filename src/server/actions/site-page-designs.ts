@@ -76,6 +76,15 @@ async function saveSitePageDraftWork(input: { page: string; data: string }): Pro
   return result;
 }
 
+async function discardSitePageDraftWork(input: { page: string }): Promise<ActionResult> {
+  if (!isSitePageKey(input.page)) return { ok: false, error: "That page isn't in the designer." };
+  const result = await writeSlot(input.page, { draft: null });
+  if (result.ok) {
+    result.message = "Draft discarded. The live page is unchanged.";
+  }
+  return result;
+}
+
 async function publishSitePageDesignWork(input: { page: string; data: string }): Promise<ActionResult> {
   if (!isSitePageKey(input.page)) return { ok: false, error: "That page isn't in the designer." };
   let design: unknown;
@@ -101,6 +110,9 @@ const saveSitePageDraftGuarded = guardArgs("organiser", payload, (value) =>
 const publishSitePageDesignGuarded = guardArgs("organiser", payload, (value) =>
   publishSitePageDesignWork(value as { page: string; data: string }),
 );
+const discardSitePageDraftGuarded = guardArgs("organiser", z.object({ page: z.string().max(20) }), (value) =>
+  discardSitePageDraftWork(value as { page: string }),
+);
 
 export async function saveSitePageDraft(page: string, data: string): Promise<ActionResult> {
   return saveSitePageDraftGuarded({ page, data });
@@ -108,4 +120,8 @@ export async function saveSitePageDraft(page: string, data: string): Promise<Act
 
 export async function publishSitePageDesign(page: string, data: string): Promise<ActionResult> {
   return publishSitePageDesignGuarded({ page, data });
+}
+
+export async function discardSitePageDraft(page: string): Promise<ActionResult> {
+  return discardSitePageDraftGuarded({ page });
 }

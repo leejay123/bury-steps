@@ -4,13 +4,26 @@ import { useCallback, useState, useSyncExternalStore } from "react";
 import { createPortal } from "react-dom";
 import dynamic from "next/dynamic";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { toast } from "sonner";
 import { Paintbrush } from "lucide-react";
+import { discardSitePageDraft } from "@/server/actions";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
+import {
+  AlertDialog,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 import { DataList, DataListActions, DataListBody, DataListItem } from "@/components/data-list";
 import {
-  pageHasDraft,
   pageHasPublished,
+  pageHasUnpublishedDraft,
   SITE_PAGES,
   type PuckData,
   type SitePageDesigns,
@@ -33,8 +46,8 @@ const isWide = () => window.matchMedia(WIDE).matches;
 
 function status(designs: SitePageDesigns, key: SitePageKey): string {
   const slot = designs[key];
+  if (pageHasUnpublishedDraft(slot)) return "Unpublished draft";
   if (pageHasPublished(slot)) return "Published";
-  if (pageHasDraft(slot)) return "Draft";
   return "Uses the current live page";
 }
 
@@ -55,8 +68,12 @@ export function SitePageDesignList({
   live: SitePageLive;
 }) {
   const computer = useSyncExternalStore(subscribeWide, isWide, () => false);
+  const router = useRouter();
   const [open, setOpen] = useState<SitePageKey | null>(null);
-  const close = useCallback(() => setOpen(null), []);
+  const close = useCallback(() => {
+    setOpen(null);
+    router.refresh();
+  }, [router]);
 
   return (
     <>
@@ -78,12 +95,21 @@ export function SitePageDesignList({
                 {page.path}
               </Link>
             </DataListBody>
-            {computer ? (
-              <DataListActions>
-                <Button onClick={() => setOpen(page.key)} size="sm" type="button" variant="outline">
-                  <Paintbrush data-icon="inline-start" />
-                  Design this page
-                </Button>
+            {computer || pageHasUnpublishedDraft(designs[page.key]) ? (
+              <DataListActions className="flex-wrap gap-2">
+                {computer ? (
+                  <Button onClick={() => setOpen(page.key)} size="sm" type="button" variant="outline">
+                    <Paintbrush data-icon="inline-start" />
+                    Design this page
+                  </Button>
+                ) : null}
+                {pageHasUnpublishedDraft(designs[page.key]) ? (
+                  <DiscardDraftButton
+                    onDiscarded={() => router.refresh()}
+                    page={page.key}
+                    title={page.title}
+                  />
+                ) : null}
               </DataListActions>
             ) : null}
           </DataListItem>
@@ -96,6 +122,67 @@ export function SitePageDesignList({
           )
         : null}
     </>
+  );
+}
+
+function DiscardDraftButton({
+  onDiscarded,
+  page,
+  title,
+}: {
+  onDiscarded: () => void;
+  page: SitePageKey;
+  title: string;
+}) {
+  const [open, setOpen] = useState(false);
+  const [busy, setBusy] = useState(false);
+
+  async function discard() {
+    if (busy) return;
+    setBusy(true);
+    const result = await discardSitePageDraft(page);
+    if (result && !result.ok) {
+      toast.error(result.error);
+      setBusy(false);
+      return;
+    }
+    toast.success(result?.message ?? "Draft discarded. The live page is unchanged.");
+    setBusy(false);
+    setOpen(false);
+    onDiscarded();
+  }
+
+  return (
+    <AlertDialog
+      closeDisabled={busy}
+      onOpenChange={(next) => {
+        if (busy) return;
+        setOpen(next);
+      }}
+      open={open}
+    >
+      <AlertDialogTrigger asChild>
+        <Button size="sm" type="button" variant="outline">
+          Discard draft
+        </Button>
+      </AlertDialogTrigger>
+      <AlertDialogContent closeDisabled={busy}>
+        <AlertDialogHeader>
+          <AlertDialogTitle>Discard the {title} draft?</AlertDialogTitle>
+          <AlertDialogDescription>
+            Unpublished work on this page will be thrown away. The live page stays as it is.
+          </AlertDialogDescription>
+        </AlertDialogHeader>
+        <AlertDialogFooter>
+          <AlertDialogCancel disabled={busy} type="button">
+            Keep draft
+          </AlertDialogCancel>
+          <Button disabled={busy} onClick={() => void discard()} type="button" variant="destructive">
+            {busy ? "Discarding…" : "Discard draft"}
+          </Button>
+        </AlertDialogFooter>
+      </AlertDialogContent>
+    </AlertDialog>
   );
 }
 

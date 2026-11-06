@@ -13,7 +13,7 @@ export const prefetch = "partial";
 export default function PageDesignsSettingsPage() {
   return (
     <SettingsPage
-      description="The public pages you can design, the same way as a walk page. Publish puts the design on the live site; closing without publishing keeps a draft."
+      description="The public pages you can design, the same way as a walk page. Publish puts the design on the live site. Close keeps a draft. Discard draft throws the draft away and leaves the live page as it is."
       title="Page designs"
     >
       <Suspense fallback={<SitePageDesignListSkeleton />}>

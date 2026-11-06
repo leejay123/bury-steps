@@ -6,6 +6,7 @@ import {
   ensureHomeHero,
   isPuckData,
   isSitePageKey,
+  pageHasUnpublishedDraft,
   parseSitePageDesigns,
   puckBlock,
   puckPage,
@@ -73,5 +74,14 @@ describe("site page designs", () => {
     expect(publishedDesign({ draft, published: null })).toBeNull();
     expect(isPuckData(seed)).toBe(true);
     expect(isPuckData({ content: "no" })).toBe(false);
+  });
+
+  it("treats a draft as unpublished when it differs from the live page", () => {
+    const live = puckPage([hero]);
+    const draft = puckPage([about]);
+    expect(pageHasUnpublishedDraft({ draft, published: live })).toBe(true);
+    expect(pageHasUnpublishedDraft({ draft: live, published: live })).toBe(false);
+    expect(pageHasUnpublishedDraft({ draft, published: null })).toBe(true);
+    expect(pageHasUnpublishedDraft({ draft: null, published: live })).toBe(false);
   });
 });
