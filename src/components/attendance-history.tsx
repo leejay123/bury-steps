@@ -16,6 +16,7 @@ import {
   DataListItemMain,
 } from "@/components/data-list";
 import { EDGE_FILTER, EdgeBar, EdgeFilters, EdgeSearch } from "@/components/edge-search";
+import { ClearFiltersButton } from "@/components/empty-state";
 import {
   Select,
   SelectContent,
@@ -144,6 +145,15 @@ export function AttendanceHistory({
 
       {filtered.length === 0 ? (
         <EmptyState
+          action={
+            <ClearFiltersButton
+              onClick={() => {
+                setQuery("");
+                setStatus("all");
+                setYearFilter("all");
+              }}
+            />
+          }
           description="Try a different search or filter."
           icon={Search}
           title="No matching walks"

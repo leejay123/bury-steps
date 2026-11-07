@@ -46,6 +46,7 @@ import { Button } from "@/components/ui/button";
 import { DropdownMenuItem } from "@/components/ui/dropdown-menu";
 import { EDGE_FILTER, EdgeBar, EdgeFilters, EdgeSearch } from "@/components/edge-search";
 import { SkeletonReveal } from "@/components/spectrumui/skeleton-reveal";
+import { ClearFiltersButton } from "@/components/empty-state";
 import {
   Select,
   SelectContent,
@@ -581,6 +582,7 @@ function MembersTableInner({
                 ? "When someone signs up, they will show here."
                 : "Try a different name, email, or role."
           }
+          action={filtersActive ? <ClearFiltersButton onClick={clearFilters} /> : undefined}
           icon={Search}
           title="No matching members"
         />

@@ -19,6 +19,7 @@ import { useSiteDesign } from "@/components/site-design-context";
 import { WalkTableCard, type WalkTableRow } from "@/components/walk-table-card";
 import { InputGroup, InputGroupAddon, InputGroupInput } from "@/components/ui/input-group";
 import { Label } from "@/components/ui/label";
+import { ClearFiltersButton } from "@/components/empty-state";
 import {
   Select,
   SelectContent,
@@ -128,6 +129,11 @@ function AdminWalkTableInner({
     scope === "all" ? "first" : scope === "past" ? "desc" : "asc",
   );
   const listRef = useRef<HTMLDivElement>(null);
+  /** No matches: the search and status back to everything. */
+  const clearFilters = () => {
+    void setQuery("");
+    void setStatusFilter("all");
+  };
   const allStatusOptions =
     scope === "all" ? ALL_STATUS_OPTIONS : scope === "upcoming" ? UPCOMING_STATUS_OPTIONS : PAST_STATUS_OPTIONS;
   const now = useLiveNow();
@@ -278,7 +284,12 @@ function AdminWalkTableInner({
           countLabel={attendanceLabel}
           empty={
             query.trim() || statusFilter !== "all" ? (
-              <EmptyState description="Try a different search, status, or sort." icon={Search} title="No matching walks" />
+              <EmptyState
+                action={<ClearFiltersButton onClick={clearFilters} />}
+                description="Try a different search, status, or sort."
+                icon={Search}
+                title="No matching walks"
+              />
             ) : (
               <EmptyState
                 description={upcomingNeedsServerSplit ? "Moving finished walks to History…" : emptyDescription}
@@ -362,6 +373,7 @@ function AdminWalkTableInner({
       {filtered.length === 0 ? (
         query.trim() || statusFilter !== "all" ? (
           <EmptyState
+            action={<ClearFiltersButton onClick={clearFilters} />}
             description="Try a different search, status, or sort."
             icon={Search}
             title="No matching walks"

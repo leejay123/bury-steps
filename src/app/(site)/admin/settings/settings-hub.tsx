@@ -12,6 +12,7 @@ import { EmptyState } from "@/components/empty-state";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { EdgeBar, EdgeSearch } from "@/components/edge-search";
 import type { SettingsPageLink } from "@/lib/settings-pages";
+import { ClearFiltersButton } from "@/components/empty-state";
 
 /** Where a setting stands right now, worked out on the server. */
 export type SettingsRowState = {
@@ -258,6 +259,7 @@ export function SettingsHub({ groups }: { groups: SettingsHubGroup[] }) {
 
       {filtered.length === 0 ? (
         <EmptyState
+          action={<ClearFiltersButton onClick={() => setQuery("")} />}
           description="Try a different word, or clear the search to see every setting."
           icon={SearchX}
           title={`No settings match “${query.trim()}”`}

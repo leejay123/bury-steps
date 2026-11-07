@@ -34,6 +34,7 @@ import { ReportReadView } from "./report-read-view";
 import { AddForm, EditForm } from "./report-form";
 import { RemoveButton } from "./remove-report-button";
 import { matchesReportQuery, type ReportView, type WalkOption } from "./types";
+import { ClearFiltersButton } from "@/components/empty-state";
 
 export type { ReportView, WalkOption };
 
@@ -149,6 +150,14 @@ export function AccidentReportManager({
           />
         ) : filtered.length === 0 ? (
           <EmptyState
+            action={
+              <ClearFiltersButton
+                onClick={() => {
+                  setQuery("");
+                  if (linkFilter !== "all") setFilter("link", "all", "all");
+                }}
+              />
+            }
             description="Try a different walk, name, or detail from the write-up."
             icon={Search}
             title="No matching reports"

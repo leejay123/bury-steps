@@ -43,6 +43,7 @@ import { EDGE_FILTER, EdgeBar, EdgeFilters, EdgeSearch } from "@/components/edge
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { LIST_PAGE_SIZE } from "@/lib/list-page-size";
 import { MESSAGE_LINES_COOKIE, writeClientCookie } from "@/lib/remembered-rows-key";
+import { ClearFiltersButton } from "@/components/empty-state";
 
 export type ContactMessageRow = {
   id: string;
@@ -331,6 +332,7 @@ export function ContactMessagesList({ messages }: { messages: ContactMessageRow[
               ? "Nothing unread right now."
               : "Try a different name, email, word, or date range."
           }
+          action={filtersActive ? <ClearFiltersButton onClick={clearFilters} /> : undefined}
           icon={Search}
           title="No matching messages"
         />
