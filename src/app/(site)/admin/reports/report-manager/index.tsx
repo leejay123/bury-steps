@@ -1,7 +1,6 @@
 "use client";
 
 import { useMemo, useRef, useState } from "react";
-import { useRouter } from "next/navigation";
 import { ChevronRight, ClipboardList, Printer, Search } from "lucide-react";
 import { formatWalkDay, formatTime } from "@/lib/dates";
 import { EmptyState } from "@/components/empty-state";
@@ -17,7 +16,9 @@ import {
 import { ListPagination } from "@/components/list-pagination";
 import { usePagedList } from "@/hooks/use-paged-list";
 import { useUrlListState } from "@/hooks/use-url-list-state";
+import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
+import { IntentLink } from "@/components/intent-link";
 import { AdminPageIntro } from "../../admin-page-intro";
 import { EDGE_FILTER, EdgeBar, EdgeFilters, EdgeSearch } from "@/components/edge-search";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -74,7 +75,6 @@ export function AccidentReportManager({
   /** permMembersView — involved-member badges link to member pages. */
   canViewMembers?: boolean;
 }) {
-  const router = useRouter();
   const [mode, setMode] = useState<DrawerMode | null>(null);
   const [isPending, setIsPending] = useState(false);
   const viewing =
@@ -160,16 +160,24 @@ export function AccidentReportManager({
               const at = new Date(report.happenedAt);
               return (
                 <DataListItem
-                  className={dataListItemStackClassName}
+                  className={cn("relative", dataListItemStackClassName)}
                   data-stagger-item=""
                   key={report.id}
-                  onClick={() => router.push(`/admin/reports/${report.id}`)}
                 >
                   <DataListItemMain>
                     <DataListBody>
                       <p className="font-medium">
-                        {report.reportNumber ? `${report.reportNumber} · ` : ""}
-                        {formatWalkDay(at)} · {formatTime(at)}
+                        {/* The whole row opens the report. Fetched on hover or
+                            touch, so it opens with its number already in the
+                            header instead of a placeholder. */}
+                        <IntentLink
+                          className="after:absolute after:inset-0"
+                          full
+                          href={`/admin/reports/${report.id}`}
+                        >
+                          {report.reportNumber ? `${report.reportNumber} · ` : ""}
+                          {formatWalkDay(at)} · {formatTime(at)}
+                        </IntentLink>
                       </p>
                       <p className="text-sm text-muted-foreground">
                         {report.walkTitle || "No walk"}
@@ -180,7 +188,7 @@ export function AccidentReportManager({
                     </DataListBody>
                     <ChevronRight className="mt-1 size-4 shrink-0 text-muted-foreground sm:mt-0" />
                   </DataListItemMain>
-                  <DataListActions className={dataListActionsStackClassName}>
+                  <DataListActions className={cn("relative z-10", dataListActionsStackClassName)}>
                     <Button asChild size="xs" variant="outline">
                       <a
                         aria-label="Print report"

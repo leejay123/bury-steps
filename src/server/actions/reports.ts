@@ -318,6 +318,8 @@ async function updateAccidentReportWork(
   }
 
   revalidatePath("/admin/reports");
+  // Its own page (a saved copy fetched ahead) shows the change at once.
+  revalidatePath(`/admin/reports/${id}`);
   return { ok: true, message: "Accident report saved." };
 }
 
@@ -343,6 +345,7 @@ async function deleteAccidentReportWork(
   }
 
   revalidatePath("/admin/reports");
+  revalidatePath(`/admin/reports/${id}`);
   return { ok: true, message: "Accident report removed." };
 }
 
@@ -366,6 +369,7 @@ async function setAccidentReportRetentionLockedWork(
   }
 
   revalidatePath("/admin/reports");
+  revalidatePath(`/admin/reports/${id}`);
   return {
     ok: true,
     message: locked

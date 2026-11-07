@@ -1,6 +1,9 @@
 import { Suspense } from "react";
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
+import { cacheLife } from "next/cache";
+import { PRIVATE_SAVED_COPY } from "@/lib/private-saved-copy";
+import { PlaceholderPreview } from "@/components/placeholder-preview";
 import { cn } from "@/lib/utils";
 import { displayName, getOptionalAdmin, getOptionalUser, memberDisplayName } from "@/lib/auth";
 import { prisma } from "@/lib/db";
@@ -25,10 +28,19 @@ export async function generateMetadata({ params }: { params: Promise<{ id: strin
   return { title: report.reportNumber ? `Accident report ${report.reportNumber}` : "Accident report" };
 }
 
-async function ReportPageContent({ params }: { params: Promise<{ id: string }> }) {
+/**
+ * This report's page, as a private saved copy: kept in this browser only for
+ * five minutes (never on the server), so it can be fetched ahead (on hover or
+ * touch of its row in the Reports list, IntentLink) and open with no
+ * placeholder — the header already reads "Accident report AS002". Saving or
+ * changing the report refreshes it at once. See node_modules/next/dist/docs/
+ * 01-app/02-guides/optimizing-prefetching.md.
+ */
+async function ReportPageContent({ id }: { id: string }) {
+  "use cache: private";
+  cacheLife(PRIVATE_SAVED_COPY);
   const admin = await getOptionalAdmin();
   if (!admin?.permReportsView) notFound();
-  const { id } = await params;
 
   const [report, walks] = await Promise.all([
     prisma.accidentReport.findUnique({
@@ -131,10 +143,21 @@ function ReportPageFallback() {
   );
 }
 
+/** The report named in the address (fetched ahead with it, prefetch={true}). */
+async function ReportForAddress({ params }: { params: Promise<{ id: string }> }) {
+  const { id } = await params;
+  return <ReportPageContent id={id} />;
+}
+
+/** Fetched ahead from its row in the Reports list, on hover or touch. */
+export const prefetch = "partial";
+
 export default function AccidentReportPage(props: { params: Promise<{ id: string }> }) {
   return (
     <Suspense fallback={<ReportPageFallback />}>
-      <ReportPageContent {...props} />
+      <PlaceholderPreview fallback={<ReportPageFallback />}>
+        <ReportForAddress {...props} />
+      </PlaceholderPreview>
     </Suspense>
   );
 }
