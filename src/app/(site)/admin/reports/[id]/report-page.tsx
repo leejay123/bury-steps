@@ -88,7 +88,6 @@ export function ReportPage({
         <div className="flex flex-col gap-1">
           <p className="text-sm text-muted-foreground">Walk</p>
           <p className="font-medium">{report.walkTitle || "Not linked to a walk"}</p>
-          {report.walkLocation ? <p className="text-sm text-muted-foreground">{report.walkLocation}</p> : null}
         </div>
         <div className="col-span-2 flex flex-col gap-1 md:col-span-1">
           <p className="text-sm text-muted-foreground">Recorded by</p>
