@@ -645,7 +645,6 @@ html[data-promo-bar] .globalfooter, html[data-promo-bar] [data-slot="docs-main"]
 [data-slot="docs-sidebar"] { display: none; }
 /* clip, not hidden: a hidden box can still be scrolled by the browser (bringing something into
    view during a page change), which left the whole page shifted sideways, sidebar cut off. */
-[data-efferd-folded-only] { display: none; list-style: none; }
 @media (min-width: 64rem) { [data-slot="docs-shell"] { position: relative; display: grid; height: 100svh; min-height: 0px; grid-template-columns: var(--sidebar-width, 288px) minmax(0, 1fr); overflow: clip; background: var(--background); --header-height: 3.5rem; --top-spacing: 2rem; --sidebar-width: var(--docs-sidebar-width, 288px); transition: grid-template-columns .2s; } }
 @media (min-width: 64rem) { [data-slot="docs-sidebar"] { display: flex; grid-area: 1 / 1; flex-direction: column; margin-top: var(--header-height); height: calc(100svh - var(--header-height)); min-width: 0px; overflow: hidden; z-index: 30; background: color-mix(in oklab, var(--muted) 60%, var(--background)); transition: visibility; } }
 @media (min-width: 64rem) { [data-slot="docs-main"] { grid-area: 1 / 2; min-width: 0px; height: 100svh; min-height: 0px; padding-top: var(--header-height); overflow-y: scroll; overscroll-behavior: contain; scrollbar-width: thin; background: var(--background); transition: margin .2s; } }
@@ -824,9 +823,6 @@ html:is([data-remembered-in], [data-guest-dash]):not([data-page-kind="home"], [d
      column and is still easy to make out (16px, before, was too small). */
   html:is([data-remembered-in], [data-guest-dash])[data-docs-sidebar="collapsed"]:not([data-sidebar-animating]):not([data-page-kind="home"], [data-page-kind="plain"]) [data-slot="docs-sidebar"] [data-efferd-logo] > img { width: 1.5rem; height: 1.5rem; margin-inline: auto; }
   html:is([data-remembered-in], [data-guest-dash])[data-docs-sidebar="collapsed"]:not([data-sidebar-animating]):not([data-page-kind="home"], [data-page-kind="plain"]) [data-slot="docs-sidebar"] [data-slot="efferd-nav"] > div > [data-efferd-label] { margin-top: -2rem; opacity: 0; pointer-events: none; }
-  html:is([data-remembered-in], [data-guest-dash])[data-docs-sidebar="collapsed"]:not([data-sidebar-animating]):not([data-page-kind="home"], [data-page-kind="plain"]) [data-slot="docs-sidebar"] [data-efferd-foot] > [data-efferd-label] { display: none; }
-  /* …and its calendar icon takes its place in the folded column (hidden while open, below). */
-  html:is([data-remembered-in], [data-guest-dash])[data-docs-sidebar="collapsed"]:not([data-sidebar-animating]):not([data-page-kind="home"], [data-page-kind="plain"]) [data-slot="docs-sidebar"] [data-efferd-folded-only] { display: list-item; }
   html:is([data-remembered-in], [data-guest-dash])[data-docs-sidebar="collapsed"]:not([data-sidebar-animating]):not([data-page-kind="home"], [data-page-kind="plain"]) [data-slot="docs-sidebar"] [data-slot="efferd-nav"] { overflow: hidden; }
 }
 /* The search and Customize panels opened from the signed-in top bar: the main header's

@@ -1,6 +1,6 @@
 import { Suspense } from "react";
 import { IntentLink as Link } from "@/components/intent-link";
-import { CalendarDays, ChevronsUpDown, Mail } from "lucide-react";
+import { ChevronsUpDown, Mail } from "lucide-react";
 import { ClerkIsland } from "@/components/clerk-island";
 import { LazySiteUserButton } from "@/components/clerk-lazy";
 import { AvatarPlaceholder, BellPlaceholder } from "@/components/header-placeholders";
@@ -13,7 +13,6 @@ import { FoldedTip } from "./folded-tip";
 import type { SidebarGroup } from "./sidebar-nav";
 import type { SidebarMe as SidebarMeData } from "./sidebar-state";
 import { EfferdNav } from "./efferd-nav";
-import type { ShadcnHomeData } from "./home-data";
 import { SignedInMark } from "./signed-in-mark";
 
 /*
@@ -60,14 +59,7 @@ const GUEST_GROUPS: SidebarGroup[] = [
   },
 ];
 
-export function EfferdSidebarBody({
-  data,
-  progressEnabled,
-}: {
-  data: ShadcnHomeData;
-  progressEnabled: boolean;
-}) {
-  const next = data.next ? data.upcoming[0] : null;
+export function EfferdSidebarBody({ progressEnabled }: { progressEnabled: boolean }) {
   return (
     <>
       <Suspense fallback={null}>
@@ -81,35 +73,7 @@ export function EfferdSidebarBody({
         <EfferdNav groups={GUEST_GROUPS} />
       </div>
       <div className="flex shrink-0 flex-col" data-efferd-foot="">
-        {next ? (
-          // Efferd's "latest change" card, here the next walk.
-          <div className="relative flex min-h-27 flex-col justify-center gap-1 overflow-hidden border-t px-4 pt-3 pb-1 *:text-nowrap" data-efferd-label="">
-            <span className="font-light font-mono text-[10px] text-muted-foreground">NEXT WALK</span>
-            <p className="truncate font-medium text-xs">{next.title}</p>
-            <span className="truncate text-[10px] text-muted-foreground">{next.when}</span>
-            <Link className="w-max py-1.5 font-light text-xs underline-offset-4 hover:underline" href={next.href}>
-              See the walk
-            </Link>
-          </div>
-        ) : null}
         <ul className="flex flex-col gap-1 border-t p-2">
-          {next ? (
-            // Folded, the Next walk card above has no room: this icon stands in for it
-            // (shown only then, shadcnio.css), its name and day beside it on hover.
-            <li data-efferd-folded-only="">
-              <FoldedTip label={`Next walk: ${next.title} · ${next.when}`}>
-                <Link
-                  aria-label={`Next walk: ${next.title}, ${next.when}`}
-                  className="flex h-7 w-full items-center gap-2 overflow-hidden rounded-md p-2 text-muted-foreground text-xs hover:bg-muted hover:text-foreground [&>svg]:size-4 [&>svg]:shrink-0"
-                  data-efferd-button=""
-                  href={next.href}
-                >
-                  <CalendarDays aria-hidden />
-                  <span className="truncate">Next walk</span>
-                </Link>
-              </FoldedTip>
-            </li>
-          ) : null}
           <li>
             <FoldedTip label="Contact us">
               <Link
