@@ -73,7 +73,7 @@ const MOMENTS: { id: Moment; label: string }[] = [
 
 type ClockedIn = "real" | "in" | "not-in";
 const CLOCKED_IN: { id: ClockedIn; label: string }[] = [
-  { id: "real", label: "Clocked in: as it really is" },
+  { id: "real", label: "As it really is" },
   { id: "not-in", label: "Not clocked in" },
   { id: "in", label: "Clocked in" },
 ];
@@ -247,7 +247,7 @@ export function WalkDesignEditor({
         <DesignerStripItem first label="Start from">
           <Select onValueChange={applyPreset} value="">
             <SelectTrigger aria-label="Start from a ready-made design" className="h-8 w-full">
-              <SelectValue placeholder="Start from a ready-made design…" />
+              <SelectValue placeholder="A ready-made design…" />
             </SelectTrigger>
             <SelectContent className="z-[100]">
               <SelectGroup>
@@ -282,7 +282,7 @@ export function WalkDesignEditor({
             value=""
           >
             <SelectTrigger aria-label="Copy this design to" className="h-8 w-full">
-              <SelectValue placeholder="Copy this design to…" />
+              <SelectValue placeholder="Another audience…" />
             </SelectTrigger>
             <SelectContent className="z-[100]">
               {AUDIENCES.filter((item) => item.id !== audience).map((item) => (
@@ -304,7 +304,7 @@ export function WalkDesignEditor({
             <SelectContent className="z-[100]">
               {MOMENTS.map((item) => (
                 <SelectItem key={item.id} value={item.id}>
-                  Preview: {item.label}
+                  {item.label}
                 </SelectItem>
               ))}
             </SelectContent>
