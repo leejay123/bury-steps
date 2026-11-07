@@ -6,7 +6,6 @@ import { getOptionalUser } from "@/lib/auth";
 import { getInlineLogo } from "@/lib/inline-logo";
 import { FULL_ORGANISER_PERMISSIONS, ORGANISER_PERMISSIONS } from "@/lib/organiser-permissions";
 import { getProgressEnabled } from "@/lib/progress-settings";
-import { SETTINGS_PAGE_GROUPS } from "@/lib/settings-pages";
 import { getShadcnHomeData } from "./home-data";
 import { SidebarNav, type SidebarGroup } from "./sidebar-nav";
 import { SignedInMark } from "./signed-in-mark";
@@ -43,16 +42,8 @@ export async function sidebarGroups(): Promise<SidebarGroup[] | null> {
     if (perms.permMembersView) links.push({ href: "/admin/members", label: "Members", icon: "members" });
     if (perms.permMessages) links.push({ href: "/admin/messages", label: "Messages", icon: "messages" });
     if (perms.permReportsView) links.push({ href: "/admin/reports", label: "Reports", icon: "reports" });
-    if (user.isOwner)
-      links.push({
-        href: "/admin/settings",
-        label: "Settings",
-        icon: "settings",
-        // Settings itself opens the main settings page, so no "All settings" row.
-        children: SETTINGS_PAGE_GROUPS.flatMap((group) =>
-          group.pages.map((page) => ({ href: page.href, label: page.title })),
-        ),
-      });
+    // One link: the main Settings page lists every settings page.
+    if (user.isOwner) links.push({ href: "/admin/settings", label: "Settings", icon: "settings" });
     groups.push({ title: "Organisers", links });
   }
   groups.push({
@@ -70,9 +61,6 @@ export async function sidebarGroups(): Promise<SidebarGroup[] | null> {
  * has every page.
  */
 export function staticSidebarGroups(progressEnabled: boolean): SidebarGroup[] {
-  const settings = SETTINGS_PAGE_GROUPS.flatMap((group) =>
-    group.pages.map((page) => ({ href: page.href, label: page.title })),
-  );
   return [
     {
       title: "Dashboard",
@@ -93,7 +81,7 @@ export function staticSidebarGroups(progressEnabled: boolean): SidebarGroup[] {
         { href: "/admin/members", label: "Members", icon: "members", only: "owner" },
         { href: "/admin/messages", label: "Messages", icon: "messages", only: "owner" },
         { href: "/admin/reports", label: "Reports", icon: "reports" },
-        { href: "/admin/settings", label: "Settings", icon: "settings", only: "owner", children: settings },
+        { href: "/admin/settings", label: "Settings", icon: "settings", only: "owner" },
       ],
     },
     { title: "Settings", links: [{ href: "/email-preferences", label: "Email preferences", icon: "emails" }] },

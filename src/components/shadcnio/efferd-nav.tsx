@@ -1,9 +1,8 @@
 "use client";
 
-import { Suspense, useState } from "react";
+import { Suspense } from "react";
 import { IntentLink as Link } from "@/components/intent-link";
 import { usePathname } from "next/navigation";
-import { ChevronRight } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { FoldedTip } from "./folded-tip";
 import { SIDEBAR_ICONS, type SidebarGroup } from "./sidebar-nav";
@@ -54,8 +53,6 @@ function NavList({ groups, onNavigate, path }: NavProps & { path: string }) {
             {group.links.map((link) => {
               const Icon = SIDEBAR_ICONS[link.icon];
               const current = isCurrent(path, link.href);
-              if (link.children?.length)
-                return <SubMenu current={current} key={`${link.href}-sub`} link={link} onNavigate={onNavigate} path={path} />;
               return (
                 <li className="relative" data-sb-only={link.only} key={`${link.href}-${link.only ?? ""}`}>
                   <FoldedTip label={link.label}>
@@ -81,82 +78,3 @@ function NavList({ groups, onNavigate, path }: NavProps & { path: string }) {
   );
 }
 
-/**
- * A row whose pages open beneath it (Efferd's collapsible sub-menu, with its line down
- * the side). The row itself is a link to its main page (Settings → /admin/settings),
- * marked as the current page there, and it opens the list as it goes; the arrow on the
- * right only opens or closes the list.
- */
-function SubMenu({
-  link,
-  path,
-  current,
-  onNavigate,
-}: {
-  link: SidebarGroup["links"][number];
-  path: string;
-  current: boolean;
-  onNavigate?: () => void;
-}) {
-  const [open, setOpen] = useState(current);
-  const [wasCurrent, setWasCurrent] = useState(current);
-  // Arriving on one of its pages opens it.
-  if (current !== wasCurrent) {
-    setWasCurrent(current);
-    if (current) setOpen(true);
-  }
-  const Icon = SIDEBAR_ICONS[link.icon];
-  // On the main page itself (not one of the pages beneath it).
-  const here = path === link.href;
-  return (
-    <li className="relative" data-sb-only={link.only}>
-      <FoldedTip label={link.label}>
-        <Link
-          aria-current={here ? "page" : undefined}
-          aria-label={link.label}
-          className={`${BUTTON} pr-9 ${here ? "bg-muted font-medium text-foreground" : current ? "font-medium text-foreground" : "text-foreground/75"}`}
-          data-efferd-button=""
-          href={link.href}
-          onClick={() => {
-            setOpen(true);
-            onNavigate?.();
-          }}
-        >
-          <Icon aria-hidden />
-          <span>{link.label}</span>
-        </Link>
-      </FoldedTip>
-      {/* Opens or closes the list without leaving the page. data-efferd-sub: hidden
-          with the list when the sidebar is folded to icons (shadcnio.css). */}
-      <button
-        aria-expanded={open}
-        aria-label={`${open ? "Hide" : "Show"} ${link.label} pages`}
-        className="absolute top-0 right-0 flex size-8 items-center justify-center rounded-md text-foreground/75 outline-hidden hover:bg-muted hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring"
-        data-efferd-sub=""
-        onClick={() => setOpen((was) => !was)}
-        type="button"
-      >
-        <ChevronRight aria-hidden className={`size-4 transition-transform duration-200 ${open ? "rotate-90" : ""}`} />
-      </button>
-      {open ? (
-        <ul className="mx-3.5 flex min-w-0 translate-x-px flex-col gap-1 border-l px-2.5 py-0.5" data-efferd-sub="">
-          {link.children!.map((child) => {
-            const childHere = isCurrent(path, child.href);
-            return (
-              <li key={child.href}>
-                <Link
-                  aria-current={childHere ? "page" : undefined}
-                  className={`flex h-7 min-w-0 items-center gap-2 overflow-hidden rounded-md px-2 text-sm outline-hidden hover:bg-muted hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring ${childHere ? "bg-muted font-medium text-foreground" : "text-foreground/75"}`}
-                  href={child.href}
-                  onClick={onNavigate}
-                >
-                  <span className="truncate">{child.label}</span>
-                </Link>
-              </li>
-            );
-          })}
-        </ul>
-      ) : null}
-    </li>
-  );
-}
