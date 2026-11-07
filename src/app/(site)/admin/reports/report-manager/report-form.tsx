@@ -18,7 +18,6 @@ import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { DrawerClose, DrawerFooter } from "@/components/ui/drawer";
 import { Label } from "@/components/ui/label";
-import { Separator } from "@/components/ui/separator";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import type { InvolvedMember, ReportView, WalkOption } from "./types";
@@ -41,19 +40,6 @@ function FieldLabel({
       <Icon className="size-4 shrink-0 text-muted-foreground" />
       {children}
     </Label>
-  );
-}
-
-/** Small uppercase divider between the "when/where" fields and the write-up
- * fields — the six fields used to read as one undifferentiated stack. */
-function SectionHeading({ children }: { children: ReactNode }) {
-  return (
-    <div className="flex items-center gap-3 pt-1">
-      <p className="shrink-0 text-xs font-semibold tracking-[0.08em] text-muted-foreground uppercase">
-        {children}
-      </p>
-      <Separator className="flex-1" />
-    </div>
   );
 }
 
@@ -211,7 +197,7 @@ function InvolvedMembersField({
   );
 }
 
-/** The steps of Add a report, in order (their names show above each). */
+/** The steps of Add a report and Edit report, in order (their names show above each). */
 const REPORT_STEPS = ["When and which walk", "What happened", "What we did"];
 
 type ReportSteps = {
@@ -219,33 +205,39 @@ type ReportSteps = {
   go: (n: number) => void;
   /** Next, if the boxes on this step are filled in properly. */
   next: () => void;
-  root: RefObject<HTMLDivElement | null>;
 };
 
 function ReportFields({
   prefix,
   report,
+  root,
   steps,
   walks,
 }: {
   prefix: string;
   report?: ReportView;
-  /** Show one step at a time. Without it, every field shows at once. */
-  steps?: ReportSteps;
+  /** The scrolling box holding the steps (useReportSteps). */
+  root: RefObject<HTMLDivElement | null>;
+  /** One step at a time (useReportSteps). */
+  steps: ReportSteps;
   walks: WalkOption[];
 }) {
+  // A new report must name a finished walk people attended; an existing one
+  // keeps the older rule (any started walk, or none), as older reports may
+  // have no walk.
+  const creating = !report;
   const [walkId, setWalkId] = useState(report?.walkId ?? "none");
   const [walkMissing, setWalkMissing] = useState(false);
   // Every step stays in the form while hidden, so all of it is sent with Save.
   const stepClass = (n: number) =>
-    cn("flex flex-col gap-3", steps && steps.step !== n && "hidden");
+    cn("flex flex-col gap-3", steps.step !== n && "hidden");
 
   return (
     <div
       className="flex min-h-0 flex-1 flex-col gap-3 overflow-y-auto overscroll-y-contain px-4 pb-2"
       // Enter in a box goes to the next step instead of saving early.
       onKeyDown={(event) => {
-        if (!steps || steps.step >= REPORT_STEPS.length - 1) return;
+        if (steps.step >= REPORT_STEPS.length - 1) return;
         const target = event.target as HTMLElement;
         if (event.key === "Enter" && target.tagName === "INPUT") {
           event.preventDefault();
@@ -257,20 +249,17 @@ function ReportFields({
       onInvalidCapture={(event) => {
         const panel = (event.target as HTMLElement).closest<HTMLElement>("[data-report-step]");
         const n = Number(panel?.dataset.reportStep);
-        if (steps && Number.isInteger(n) && n !== steps.step) steps.go(n);
+        if (Number.isInteger(n) && n !== steps.step) steps.go(n);
       }}
-      ref={steps?.root}
+      ref={root}
     >
       {report ? <input name="reportId" type="hidden" value={report.id} /> : null}
       <input name="walkId" type="hidden" value={walkId === "none" ? "" : walkId} />
 
-      {steps ? (
-        <p className="text-xs font-medium tracking-wider text-muted-foreground uppercase">
-          Step {steps.step + 1} of {REPORT_STEPS.length} · {REPORT_STEPS[steps.step]}
-        </p>
-      ) : null}
+      <p className="text-xs font-medium tracking-wider text-muted-foreground uppercase">
+        Step {steps.step + 1} of {REPORT_STEPS.length} · {REPORT_STEPS[steps.step]}
+      </p>
       <div className={stepClass(0)} data-report-step="0">
-        {steps ? null : <SectionHeading>Details</SectionHeading>}
         <div className="flex flex-col gap-1.5">
           <FieldLabel htmlFor={`${prefix}-happened`} icon={Clock} required>
             When
@@ -283,22 +272,22 @@ function ReportFields({
           />
         </div>
         <div className="flex flex-col gap-1.5">
-          <FieldLabel htmlFor={`${prefix}-walk`} icon={Footprints} required={Boolean(steps)}>
-            {steps ? "Walk" : "Walk (optional)"}
+          <FieldLabel htmlFor={`${prefix}-walk`} icon={Footprints} required={creating}>
+            {creating ? "Walk" : "Walk (optional)"}
           </FieldLabel>
           <Select
-            disabled={steps ? walks.length === 0 : undefined}
+            disabled={creating ? walks.length === 0 : undefined}
             onValueChange={(value) => {
               setWalkId(value);
               setWalkMissing(false);
             }}
-            value={steps && walkId === "none" ? "" : walkId}
+            value={creating && walkId === "none" ? "" : walkId}
           >
             <SelectTrigger id={`${prefix}-walk`}>
-              <SelectValue placeholder={steps ? "Choose a walk" : "No linked walk"} />
+              <SelectValue placeholder={creating ? "Choose a walk" : "No linked walk"} />
             </SelectTrigger>
             <SelectContent>
-              {steps ? null : <SelectItem value="none">No linked walk</SelectItem>}
+              {creating ? null : <SelectItem value="none">No linked walk</SelectItem>}
               {walks.map((walk) => (
                 <SelectItem key={walk.id} value={walk.id}>
                   {/* Newest first, with the day, so two walks with the same
@@ -308,7 +297,7 @@ function ReportFields({
               ))}
             </SelectContent>
           </Select>
-          {steps ? (
+          {creating ? (
             // A new report must name its walk. The Select's button can't be
             // marked required, so this invisible box stops Next and Save, and
             // the message shows under the button (as DateTimePicker does).
@@ -326,7 +315,7 @@ function ReportFields({
               value={walkId === "none" ? "" : walkId}
             />
           ) : null}
-          {steps && walks.length === 0 ? (
+          {creating && walks.length === 0 ? (
             <p className="text-xs text-muted-foreground">
               No walks to choose yet. A walk shows here once it has finished and someone attended it.
             </p>
@@ -337,7 +326,6 @@ function ReportFields({
       </div>
 
       <div className={stepClass(1)} data-report-step="1">
-        {steps ? null : <SectionHeading>The report</SectionHeading>}
         <div className="flex flex-col gap-1.5">
           <FieldLabel htmlFor={`${prefix}-what`} icon={AlertTriangle} required>
             What happened
@@ -414,22 +402,11 @@ function ReportFields({
   );
 }
 
-export function AddForm({
-  onPendingChange,
-  onSaved,
-  walks,
-}: {
-  onPendingChange?: (pending: boolean) => void;
-  onSaved: () => void;
-  walks: WalkOption[];
-}) {
-  const [state, action, isPending] = useSafeActionState(addAccidentReport);
-  useActionToast(state, onSaved);
-  useEffect(() => onPendingChange?.(isPending), [isPending, onPendingChange]);
-  // Keeps everything typed if the save comes back with a problem.
-  const submit = useKeepFormOnError(action);
-
-  // One step at a time: Next until the last, then Save report.
+/**
+ * One step at a time, as Create and Edit walk: Next checks the boxes on the
+ * current step (as Save would) before moving on; Back keeps every answer.
+ */
+function useReportSteps(): [ReportSteps, RefObject<HTMLDivElement | null>] {
   const [step, setStep] = useState(0);
   const root = useRef<HTMLDivElement>(null);
   const go = (n: number) => {
@@ -460,39 +437,77 @@ export function AddForm({
     }
     go(Math.min(step + 1, REPORT_STEPS.length - 1));
   };
+  return [{ step, go, next }, root];
+}
 
+/** Cancel (or Back) and Next, then Back and Save on the last step. */
+function ReportStepsFooter({
+  label,
+  onCancel,
+  pending,
+  steps,
+}: {
+  label: string;
+  /** Cancel on the first step does this instead of closing the drawer. */
+  onCancel?: () => void;
+  pending: boolean;
+  steps: ReportSteps;
+}) {
+  if (steps.step === REPORT_STEPS.length - 1)
+    return (
+      <DrawerFormFooter
+        cancelLabel="Back"
+        halves
+        label={label}
+        onCancel={() => steps.go(steps.step - 1)}
+        pending={pending}
+        pendingLabel="Saving…"
+      />
+    );
+  const cancel = (
+    <Button onClick={onCancel} type="button" variant="outline">
+      Cancel
+    </Button>
+  );
+  return (
+    // Two buttons, half the drawer's width each on every screen.
+    <DrawerFooter className="grid grid-cols-2">
+      {steps.step > 0 ? (
+        <Button onClick={() => steps.go(steps.step - 1)} type="button" variant="outline">
+          Back
+        </Button>
+      ) : onCancel ? (
+        cancel
+      ) : (
+        <DrawerClose asChild>{cancel}</DrawerClose>
+      )}
+      <Button onClick={steps.next} type="button">
+        Next
+      </Button>
+    </DrawerFooter>
+  );
+}
+
+export function AddForm({
+  onPendingChange,
+  onSaved,
+  walks,
+}: {
+  onPendingChange?: (pending: boolean) => void;
+  onSaved: () => void;
+  walks: WalkOption[];
+}) {
+  const [state, action, isPending] = useSafeActionState(addAccidentReport);
+  useActionToast(state, onSaved);
+  useEffect(() => onPendingChange?.(isPending), [isPending, onPendingChange]);
+  // Keeps everything typed if the save comes back with a problem.
+  const submit = useKeepFormOnError(action);
+  const [steps, root] = useReportSteps();
   return (
     <form className="flex min-h-0 flex-1 flex-col" onSubmit={submit}>
-      <ReportFields prefix="add" steps={{ step, go, next, root }} walks={walks} />
+      <ReportFields prefix="add" root={root} steps={steps} walks={walks} />
       <FormError message={state && !state.ok ? state.error : null} />
-      {step === REPORT_STEPS.length - 1 ? (
-        <DrawerFormFooter
-          cancelLabel="Back"
-          halves
-          label="Save report"
-          onCancel={() => go(step - 1)}
-          pending={isPending}
-          pendingLabel="Saving…"
-        />
-      ) : (
-        // Two buttons, half the drawer's width each on every screen.
-        <DrawerFooter className="grid grid-cols-2">
-          {step === 0 ? (
-            <DrawerClose asChild>
-              <Button type="button" variant="outline">
-                Cancel
-              </Button>
-            </DrawerClose>
-          ) : (
-            <Button onClick={() => go(step - 1)} type="button" variant="outline">
-              Back
-            </Button>
-          )}
-          <Button onClick={next} type="button">
-            Next
-          </Button>
-        </DrawerFooter>
-      )}
+      <ReportStepsFooter label="Save report" pending={isPending} steps={steps} />
     </form>
   );
 }
@@ -515,11 +530,12 @@ export function EditForm({
   useEffect(() => onPendingChange?.(isPending), [isPending, onPendingChange]);
   // Keeps everything typed if the save comes back with a problem.
   const submit = useKeepFormOnError(action);
+  const [steps, root] = useReportSteps();
   return (
     <form className="flex min-h-0 flex-1 flex-col" onSubmit={submit}>
-      <ReportFields prefix="edit" report={report} walks={walks} />
+      <ReportFields prefix="edit" report={report} root={root} steps={steps} walks={walks} />
       <FormError message={state && !state.ok ? state.error : null} />
-      <DrawerFormFooter label="Save changes" onCancel={onCancel} pending={isPending} pendingLabel="Saving…" />
+      <ReportStepsFooter label="Save changes" onCancel={onCancel} pending={isPending} steps={steps} />
     </form>
   );
 }
