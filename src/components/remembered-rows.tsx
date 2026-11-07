@@ -1,6 +1,6 @@
 "use client";
 
-import { createElement, useId, useState, type ReactNode } from "react";
+import { createElement, useId, useLayoutEffect, useState, type ReactNode } from "react";
 import { InlineScript } from "@/components/inline-script";
 import { FIRST_VISIT_ROWS, LIST_PAGE_SIZE } from "@/lib/list-page-size";
 import { rememberedRowsCookie } from "@/lib/remembered-rows-key";
@@ -73,6 +73,20 @@ export function RememberedRows({
     if (exact === null) return readCount(name, limit);
     return window.location.search ? Math.min(exact, readCount(name, limit)) : exact;
   });
+
+  // The script below trims the rows before the first paint, but not when this placeholder
+  // arrives later in the stream (the Placeholders preview, a held page): React moves that
+  // HTML in without running its scripts, and hydration leaves the attributes as they were,
+  // so every row showed (12 badges for 3). Apply the count here too, once it's running.
+  useLayoutEffect(() => {
+    if (count === null) return;
+    const el = document.getElementById(id);
+    if (el) {
+      el.toggleAttribute("hidden", count === 0);
+      el.querySelectorAll(":scope>[data-sk-row]").forEach((row, i) => row.toggleAttribute("hidden", i >= count));
+    }
+    document.getElementById(`${id}-empty`)?.toggleAttribute("hidden", count !== 0);
+  }, [id, count]);
 
   const first = Math.min(FIRST_VISIT_ROWS, limit);
   const script = `{var m=document.cookie.match(/(?:^|; )${name}=(\\d+)/);var c=m?Math.min(+m[1],${limit}):${first};var n=${
