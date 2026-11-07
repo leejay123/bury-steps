@@ -192,7 +192,9 @@ export function extractWalkDesignCopy(data: unknown, base?: WalkWording): Extrac
 export function withSiteCopy<T>(data: T, copy: WalkDesignSiteCopy): T {
   const cloned = structuredClone(data);
   const root = ensureRootProps(cloned);
-  if (root && !messagePropsHaveWording(root)) {
+  // Always the site's current wording (Publish saves it there, so it is the source):
+  // a design saved with older wording would otherwise publish that back.
+  if (root) {
     Object.assign(root, messagePropsFromWording(copy.wording));
   }
   walkBlocks(cloned, (type, props) => {

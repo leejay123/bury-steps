@@ -20,7 +20,7 @@ import { LogIn } from "lucide-react";
 import { createContext, useContext } from "react";
 import { cn } from "@/lib/utils";
 
-/** How the "You need to sign in to join this walk" box looks (the designer's Sign in block). */
+/** How the "Sign in to join this walk" box looks (the designer's Sign in block). */
 export type SignInLook =
   | "box"
   | "outline"
@@ -44,8 +44,8 @@ export const SignInLookContext = createContext<SignInLook | null>(null);
 export type SignInWords = { title?: string; text?: string; line?: string };
 export const SignInWordsContext = createContext<SignInWords>({});
 
-const SIGN_IN_TITLE = "You need to sign in to join this walk";
-const SIGN_IN_TEXT = "Only signed-in members can clock in. Use Sign in or Join the group at the top.";
+const SIGN_IN_TITLE = "Sign in to join this walk";
+const SIGN_IN_TEXT = "Only members can clock in. Sign in or join at the top.";
 const SIGN_IN_LINE = "use Sign in or Join the group at the top";
 
 /** The sign-in box in one of its looks: greys and black, 8px corners. */

@@ -5,7 +5,7 @@ import {
   type ComponentConfig,
   type Config,
 } from "@puckeditor/core";
-import { createContext, useContext, useEffect, useRef, useState, type ReactNode } from "react";
+import { createContext, useContext, useEffect, useId, useRef, useState, type ReactNode } from "react";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
@@ -527,6 +527,9 @@ function RootMessageWording() {
   const values = usePuck((s) => (s.appState.data.root?.props ?? {}) as Record<string, unknown>);
   const dispatch = usePuck((s) => s.dispatch);
   const areas = useRef<Record<string, HTMLTextAreaElement | null>>({});
+  // Its own ids: the same boxes show on Status, the Details card and Messages, and a
+  // shared id sent a label's click to a hidden copy.
+  const uid = useId();
 
   function patch(key: string, value: string) {
     dispatch({
@@ -563,9 +566,9 @@ function RootMessageWording() {
       </p>
       {STATUS_MESSAGE_FIELDS.map((field) => (
         <div className="flex flex-col gap-1.5" key={field.prop}>
-          <Label htmlFor={`walk-msg-${field.prop}`}>{field.label}</Label>
+          <Label htmlFor={`${uid}-walk-msg-${field.prop}`}>{field.label}</Label>
           <Textarea
-            id={`walk-msg-${field.prop}`}
+            id={`${uid}-walk-msg-${field.prop}`}
             onChange={(event) => patch(field.prop, event.target.value)}
             placeholder={WALK_WORDING_DEFAULTS[field.key]}
             ref={(el) => {
@@ -2397,7 +2400,7 @@ export const walkDesignConfig: Config = {
         },
         title: {
           type: "text",
-          label: "Heading (blank: You need to sign in to join this walk)",
+          label: "Heading (blank: Sign in to join this walk)",
         },
         text: {
           type: "textarea",

@@ -115,7 +115,7 @@ export function SelfClockInPanel({
     return (
       <Alert variant="info">
         <AlertDescription>
-          Clock-in opens at {formatTime(opensAt)} on {formatWalkDay(opensAt)}, an hour before the start.
+          Clock-in opens at {formatTime(opensAt)} on {formatWalkDay(opensAt)}.
         </AlertDescription>
       </Alert>
     );

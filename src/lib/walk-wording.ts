@@ -17,21 +17,21 @@ export const WALK_WORDING_DEFAULTS = {
   clockedIn: "{count} clocked in",
   finishedLabel: "Finished",
   finishedAttended: "{count} attended",
-  finishedLine: "This walk has finished",
+  finishedLine: "Walk finished",
   cancelledLabel: "Cancelled",
-  cancelledLine: "This walk isn't going ahead",
+  cancelledLine: "Not going ahead",
   countdownDays: "{n} days to go",
   countdownOneDay: "{n} day to go",
   countdownHours: "{n} hours to go",
   countdownMinutes: "{n} min to go",
   countdownLeft: "{n} min left",
-  memberBefore: "Clock-in opens at {opens} on {opensDay}, an hour before the start.",
-  memberMissed: "This walk has finished. Were you there? Ask an organiser to add you.",
-  visitorFinished: "This walk has finished. The details are kept here to look back on.",
-  organiserFinished:
-    "Finished, so it can't be edited or cancelled. Missed a clock-in? Use Add someone under Attended.",
-  cancelledTitle: "This walk has been cancelled",
-  cancelledNext: "Check the walks list for the next one.",
+  memberBefore: "Clock-in opens at {opens} on {opensDay}.",
+  memberMissed: "Finished. Missed clocking in? Ask an organiser to add you.",
+  visitorFinished: "This walk has finished.",
+  // Kept short: these show in the Details card's status band, which is narrow on a phone.
+  organiserFinished: "Finished and locked. Add anyone missed under Attended.",
+  cancelledTitle: "Walk cancelled",
+  cancelledNext: "See Walks for the next one.",
 } as const;
 
 export type WalkWordingKey = keyof typeof WALK_WORDING_DEFAULTS;
