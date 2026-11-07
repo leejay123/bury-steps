@@ -49,6 +49,7 @@ import { HeroCopy } from "@/components/hero-copy";
 import { DecorIcon } from "@/components/decor-icon";
 import type { FaqCategoryView, FaqView } from "@/lib/faqs";
 import type { TestimonialView } from "@/lib/testimonials";
+import { essentialIcon } from "@/lib/walk-essentials";
 import { BodyText } from "./body-text";
 import { useSitePageLive } from "./live";
 
@@ -402,20 +403,23 @@ export function HomeCtaBlock(props: Record<string, unknown>) {
   );
 }
 
+const LEGAL_ICONS: ShadcnLegalIcon[] = ["about", "privacy", "terms", "how", "expect", "rules", "essentials"];
+
 export function LegalHeroBlock(props: Record<string, unknown>) {
-  const icon = (["about", "privacy", "terms"].includes(asText(props.icon))
-    ? asText(props.icon)
-    : "about") as ShadcnLegalIcon;
+  const iconName = asText(props.icon);
+  const icon = (LEGAL_ICONS.includes(iconName as ShadcnLegalIcon) ? iconName : "about") as ShadcnLegalIcon;
+  const updated = asText(props.updated).trim();
   return (
     <ShadcnLegal
       current={asText(props.current, "/about")}
+      docs={asText(props.docs, "legal") === "guide" ? "guide" : "legal"}
       heroOnly
       icon={icon}
       lead={asText(props.lead)}
       rest={asText(props.rest)}
       sections={[]}
       title={asText(props.title, "About")}
-      updated={asText(props.updated, "28 August 2026")}
+      updated={updated || null}
     />
   );
 }
@@ -452,6 +456,42 @@ export function LegalClosingBlock(props: Record<string, unknown>) {
         Ask a question
       </Link>
     </div>
+  );
+}
+
+export function WalkEssentialsListBlock(props: Record<string, unknown>) {
+  const { walkEssentials } = useSitePageLive();
+  const title = asText(props.title, "On each walk’s page");
+  const id = "essentials";
+  const after = asText(props.after);
+  return (
+    <Section id={`legal-${id}`}>
+      <div
+        className="px-5 md:px-12 grid gap-5 py-12 md:grid-cols-[12rem_minmax(0,1fr)] md:gap-10 md:py-16 lg:grid-cols-[15rem_minmax(0,1fr)] lg:gap-14"
+        id={id}
+      >
+        <div className="flex flex-col gap-2 md:sticky md:top-[calc(var(--header-height)+2.5rem)] md:self-start">
+          <h2 className="scroll-mt-(--header-height) text-balance font-semibold text-xl tracking-tight md:text-2xl" id={`legal-${id}`}>
+            {title}
+          </h2>
+        </div>
+        <div className="min-w-0 [&_.typeset-docs>:first-child]:mt-0">
+          <div className="typeset typeset-docs w-full flex-1">
+            <ul className="list-none ps-0 [&>li]:ps-0 [&>li]:before:hidden [&>li]:marker:content-none">
+              {walkEssentials.map((item) => (
+                <li key={item.key}>
+                  <span className="inline-flex items-center gap-2">
+                    {createElement(essentialIcon(item.icon), { "aria-hidden": true, className: "size-4 shrink-0" })}
+                    {item.label}
+                  </span>
+                </li>
+              ))}
+            </ul>
+            {after ? <BodyText text={after} /> : null}
+          </div>
+        </div>
+      </div>
+    </Section>
   );
 }
 

@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { createElement } from "react";
 import { LegalPage } from "@/components/legal-page";
+import { DesignedSitePage } from "@/components/site-page-designer/designed-page";
 import { getSiteTheme } from "@/lib/site-theme";
 import { essentialIcon } from "@/lib/walk-essentials";
 
@@ -14,6 +15,7 @@ export const metadata: Metadata = {
 export default async function WalkEssentialsPage() {
   const theme = await getSiteTheme();
   return (
+    <DesignedSitePage page="walkEssentials">
     <LegalPage
       description="What each walk's page tells you before you set off, and what to bring."
       sections={[
@@ -102,5 +104,6 @@ export default async function WalkEssentialsPage() {
       }}
       title="Walk essentials"
     />
+    </DesignedSitePage>
   );
 }

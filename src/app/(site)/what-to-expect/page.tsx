@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { LegalPage } from "@/components/legal-page";
+import { DesignedSitePage } from "@/components/site-page-designer/designed-page";
 import { getSiteTheme } from "@/lib/site-theme";
 
 export const metadata: Metadata = {
@@ -12,6 +13,7 @@ export const metadata: Metadata = {
 export default async function WhatToExpectPage() {
   const theme = await getSiteTheme();
   return (
+    <DesignedSitePage page="whatToExpect">
     <LegalPage
       description="A friendly, welcoming walking group for every age and every pace."
       sections={[
@@ -104,5 +106,6 @@ export default async function WhatToExpectPage() {
       }}
       title="What to expect"
     />
+    </DesignedSitePage>
   );
 }

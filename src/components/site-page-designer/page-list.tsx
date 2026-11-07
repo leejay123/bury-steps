@@ -54,7 +54,7 @@ function status(designs: SitePageDesigns, key: SitePageKey): string {
 const ROW = "items-start gap-3 px-4 py-3.5";
 
 /**
- * Settings → Page designs: the six public pages, each opening the same
+ * Settings → Page designs: the public pages, each opening the same
  * Puck designer as walk pages. Computers only (1024px+); the list stays
  * visible on a phone or tablet.
  */

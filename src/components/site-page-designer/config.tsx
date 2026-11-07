@@ -1,6 +1,7 @@
 "use client";
 
 import type { Config } from "@puckeditor/core";
+import type { SitePageKey } from "@/lib/site-page-designs";
 import {
   AppsCardBlock,
   AppsHeroBlock,
@@ -18,6 +19,7 @@ import {
   LegalClosingBlock,
   LegalHeroBlock,
   LegalSectionBlock,
+  WalkEssentialsListBlock,
 } from "./blocks";
 
 const text = (label: string) => ({ type: "text" as const, label });
@@ -188,7 +190,7 @@ export const legalPageConfig = {
   categories: {
     page: {
       title: "Page sections",
-      components: ["LegalHero", "LegalSection", "LegalClosing"],
+      components: ["LegalHero", "LegalSection", "WalkEssentialsList", "LegalClosing"],
     },
   },
   components: {
@@ -207,6 +209,18 @@ export const legalPageConfig = {
             { label: "About", value: "about" },
             { label: "Privacy", value: "privacy" },
             { label: "Terms", value: "terms" },
+            { label: "How it works", value: "how" },
+            { label: "What to expect", value: "expect" },
+            { label: "Group rules", value: "rules" },
+            { label: "Walk essentials", value: "essentials" },
+          ],
+        },
+        docs: {
+          type: "select",
+          label: "Related pages under the heading",
+          options: [
+            { label: "About, Terms, Privacy, Contact", value: "legal" },
+            { label: "How it works, What to expect, Group rules, Walk essentials", value: "guide" },
           ],
         },
         current: text("This page's path"),
@@ -221,6 +235,15 @@ export const legalPageConfig = {
         body: area("Body (blank line = new paragraph, start a line with - for a list, **bold**, [link](url))"),
       },
       render: LegalSectionBlock,
+    },
+    WalkEssentialsList: {
+      label: "Walk essentials list",
+      permissions: keep,
+      fields: {
+        title: text("Heading"),
+        after: area("Line under the list"),
+      },
+      render: WalkEssentialsListBlock,
     },
     LegalClosing: {
       label: "Closing",
@@ -302,7 +325,7 @@ export const appsPageConfig = {
   },
 } as Config;
 
-export function configForPage(page: "home" | "about" | "contact" | "privacy" | "terms" | "apps"): Config {
+export function configForPage(page: SitePageKey): Config {
   if (page === "home") return homePageConfig;
   if (page === "contact") return contactPageConfig;
   if (page === "apps") return appsPageConfig;

@@ -1,6 +1,7 @@
 import { DEFAULT_FAQ_CATEGORIES } from "@/lib/faqs";
 import {
   DEFAULT_ABOUT_EXPECT,
+  DEFAULT_ABOUT_EXPECT_HEADING,
   DEFAULT_ABOUT_GOALS,
   DEFAULT_ABOUT_PLACES,
   DEFAULT_ABOUT_RULES_HEADING,
@@ -380,23 +381,28 @@ export const TERMS_SECTIONS: { title: string; body: string }[] = [
   },
 ];
 
+type LegalHeroIcon = "about" | "privacy" | "terms" | "how" | "expect" | "rules" | "essentials";
+
 function seedLegalPage(opts: {
   title: string;
   lead: string;
   rest: string;
-  icon: "privacy" | "terms";
+  icon: LegalHeroIcon;
   current: string;
   closing: string;
   sections: { title: string; body: string }[];
+  docs?: "legal" | "guide";
+  updated?: string;
 }): PuckData {
   return puckPage([
     puckBlock("LegalHero", 1, {
       title: opts.title,
       lead: opts.lead,
       rest: opts.rest,
-      updated: LEGAL_UPDATED,
+      updated: opts.updated ?? LEGAL_UPDATED,
       icon: opts.icon,
       current: opts.current,
+      docs: opts.docs ?? "legal",
     }),
     ...opts.sections.map((section, i) => puckBlock("LegalSection", i + 2, section)),
     puckBlock("LegalClosing", opts.sections.length + 2, { closing: opts.closing }),
@@ -425,4 +431,226 @@ export function seedTermsDesign(): PuckData {
     closing: "By using Bury Steps, you agree to this Terms of Service.",
     sections: TERMS_SECTIONS,
   });
+}
+
+export const HOW_IT_WORKS_SECTIONS: { title: string; body: string }[] = [
+  {
+    title: "Create an account",
+    body: [
+      "Joining is free and takes about a minute. [Sign up](/sign-up) with your email address or your Google account, add your name, and that’s it — you’re part of the group.",
+      "Your account is what lets you clock in on a walk, read the organisers’ notices and keep a record of the walks you’ve been on. You choose which emails you get, and you can change that at any time in your email preferences.",
+    ].join("\n\n"),
+  },
+  {
+    title: "See the walks",
+    body: [
+      "Every walk coming up is on the [Walks](/walks) page, soonest first. Open one to see everything you need before you go: the day and time, where to meet, a map, how long and how hilly the route is, and what’s there on the day, such as toilets, parking or a café.",
+      "Each meeting point has a map pin and a what3words address, so you can find the exact spot even in a big car park. Walks can be shared with a link, so you can send one to a friend who’d like to come along.",
+    ].join("\n\n"),
+  },
+  {
+    title: "Clock in on the day",
+    body: [
+      "When you arrive at the meeting point, open the walk on your phone and clock in. It takes a few seconds and tells the walk leader you’re there, so nobody is counted twice or left behind.",
+      "As you clock in, you confirm that you’re fit to walk that day. You can also add an emergency contact, and anything the leader should know about your health. Only the organisers can see these, and only so they can help if you need it.",
+    ].join("\n\n"),
+  },
+  {
+    title: "Walk at your pace",
+    body: [
+      "This isn’t a race. Walk at whatever speed suits you — the group goes at the pace of its walkers, and nobody gets left behind. Stop for a breather, chat, take photos, or just enjoy the quiet.",
+      "The walk leaders know the route and keep an eye on everyone. If you’re unsure about anything on the way, just ask one of them.",
+    ].join("\n\n"),
+  },
+  {
+    title: "Clock out when done",
+    body: [
+      "At the end of the walk, clock out on the same page. If you need to leave early, that’s completely fine — clock out when you go, so the leader knows you’ve left safely and isn’t waiting for you.",
+      "Your walk then shows in your history, whether you stayed for all of it or part of it.",
+    ].join("\n\n"),
+  },
+  {
+    title: "Read the notices",
+    body: [
+      "The organisers post news on the [Notices](/notices) page: changes to a walk, new routes, group news and anything to do with safety. Short messages show in the bell at the top of the page, and you can choose to get them by email too.",
+      "A notice you haven’t read yet is marked New, so nothing important slips past.",
+    ].join("\n\n"),
+  },
+  {
+    title: "Watch the miles add up",
+    body: [
+      "The [Progress](/progress) page shows how the group is walking together this month: every clock-in counts towards a shared goal, and people with the same number of walks sit side by side. There are no winners or losers — it’s about turning up, not speed or distance.",
+      "You’ll also see your own month, year and how many weeks in a row you’ve walked, and earn badges along the way.",
+    ].join("\n\n"),
+  },
+  {
+    title: "Look back",
+    body: [
+      "Your [History](/history) keeps every walk you’ve clocked in to, newest first, with whether you stayed for the whole walk or left early. Search it by walk or meeting point, or filter it to find a particular day.",
+      "It’s a nice way to see how far you’ve come since your first step with the group.",
+    ].join("\n\n"),
+  },
+];
+
+export function seedHowItWorksDesign(): PuckData {
+  return seedLegalPage({
+    title: "How it works",
+    lead: "Joining is free.",
+    rest: "Make an account, pick a walk and meet us there. Here is how it all works, step by step.",
+    icon: "how",
+    current: "/how-it-works",
+    closing: "Come for a walk — everyone is welcome.",
+    docs: "guide",
+    updated: "",
+    sections: HOW_IT_WORKS_SECTIONS,
+  });
+}
+
+export type WhatToExpectSeedInput = {
+  expectHeading: string;
+  expect: string[];
+};
+
+export function seedWhatToExpectDesign(input: WhatToExpectSeedInput): PuckData {
+  return seedLegalPage({
+    title: "What to expect",
+    lead: "A friendly, welcoming group",
+    rest: "for every age and every pace. No pressure, no judgement, just good company on the paths.",
+    icon: "expect",
+    current: "/what-to-expect",
+    closing: "Come for a walk — everyone is welcome.",
+    docs: "guide",
+    updated: "",
+    sections: [
+      {
+        title: "A friendly welcome",
+        body: [
+          "Bury Steps is a friendly, welcoming group for every age and every pace. Whether it’s your first walk in years or you’re out every weekend, you’ll be made to feel at home from the moment you arrive.",
+          "There’s no pressure and no judgement. Nobody minds how fast you walk, how far you go, or how fit you are. What matters is that you came.",
+        ].join("\n\n"),
+      },
+      {
+        title: input.expectHeading || DEFAULT_ABOUT_EXPECT_HEADING,
+        body: list(input.expect),
+      },
+      {
+        title: "On the day",
+        body: [
+          "Get to the meeting point a few minutes early and look out for the group. Clock in on your phone when you arrive, so the walk leader knows you’re there. If you’re new, say hello — someone will happily walk with you and show you the ropes.",
+          "The leader will set off once everyone is ready. The walk goes at a comfortable pace, with time to chat, catch your breath and enjoy the views. If you need to leave early, just clock out as you go.",
+        ].join("\n\n"),
+      },
+      {
+        title: "Who walks with us",
+        body: [
+          "The group suits beginners and people getting back into exercise, as well as regular walkers. Many of our members are middle-aged or older, but everyone is welcome, and plenty of people come along on their own.",
+          "People walk with us for all sorts of reasons: to get fitter, to feel better, to get outdoors, or simply to meet new people. You’ll find something here whatever your reason.",
+        ].join("\n\n"),
+      },
+      {
+        title: "Taking the first step",
+        body: [
+          "Joining a new group can feel daunting. You don’t have to have it all figured out — come as you are. Have a look at the [walks coming up](/walks), read [how it works](/how-it-works), and pick one that suits you.",
+          "Have a question first? [Get in touch](/contact) and an organiser will get back to you.",
+        ].join("\n\n"),
+      },
+    ],
+  });
+}
+
+export type GroupRulesSeedInput = {
+  rulesHeading: string;
+  rules: RuleSeed[];
+};
+
+export function seedGroupRulesDesign(input: GroupRulesSeedInput): PuckData {
+  return seedLegalPage({
+    title: "Group rules",
+    lead: "A few simple rules",
+    rest: "that keep the group kind, safe and welcoming for everyone.",
+    icon: "rules",
+    current: "/group-rules",
+    closing: "Questions about a rule? Ask us.",
+    docs: "guide",
+    updated: "",
+    sections: [
+      {
+        title: "Why we have rules",
+        body: [
+          "Bury Steps works because everyone looks out for each other. These few simple rules aren’t there to tell anyone off — they’re what keeps the group kind, safe and welcoming, so that everyone wants to come back next time.",
+          "By coming on a walk, you agree to follow them. Most of them are just good manners.",
+        ].join("\n\n"),
+      },
+      {
+        title: input.rulesHeading || DEFAULT_ABOUT_RULES_HEADING,
+        body: rulesList(input.rules),
+      },
+      {
+        title: "Staying safe on a walk",
+        body: [
+          "Walks are outdoors, and paths, weather and fitness all vary. You take part at your own risk, so only come if you feel well enough on the day. Clock in when you arrive and clock out when you leave, even if you leave early, so the leader always knows who is still on the walk.",
+          "Follow the walk leader’s instructions, take care near roads, rivers and steep ground, and keep the group in sight. If you feel unwell or need to stop, tell a leader straight away — nobody will mind.",
+        ].join("\n\n"),
+      },
+      {
+        title: "Looking after the countryside",
+        body: [
+          "Leave gates as you find them, stick to the paths, and take your litter home. Be friendly to the people we pass and to the farmers and landowners whose land we walk through.",
+          "Dogs are welcome on walks marked as dog friendly. Keep them under control, on a lead near livestock and wildlife, and always clear up after them.",
+        ].join("\n\n"),
+      },
+      {
+        title: "If something goes wrong",
+        body: [
+          "If there’s an accident or anyone is hurt, tell a walk leader at once. The organisers keep a record of anything that happens on a walk, so it can be looked after properly and learned from.",
+          "If something has upset you, or you’re worried about anything in the group, please [get in touch](/contact). An organiser will listen and help.",
+        ].join("\n\n"),
+      },
+    ],
+  });
+}
+
+export function seedWalkEssentialsDesign(): PuckData {
+  return puckPage([
+    puckBlock("LegalHero", 1, {
+      title: "Walk essentials",
+      lead: "Know before you go.",
+      rest: "Each walk's page shows what's there on the day: toilets, parking, dogs, stiles and more.",
+      updated: "",
+      icon: "essentials",
+      current: "/walk-essentials",
+      docs: "guide",
+    }),
+    puckBlock("LegalSection", 2, {
+      title: "Know before you go",
+      body: [
+        "Every walk is different. Some start from a car park with a café and toilets; others meet at a roadside gate with stiles along the way. So that nothing catches you out, each walk’s page shows which of the essentials below apply to that walk.",
+        "Have a look at the walk before you set off — especially if you’re bringing a dog or a pushchair, or coming by bus.",
+      ].join("\n\n"),
+    }),
+    puckBlock("WalkEssentialsList", 3, {
+      title: "On each walk’s page",
+      after: "Each walk page also shows the distance, how hilly the route is, and where to meet.",
+    }),
+    puckBlock("LegalSection", 4, {
+      title: "What to bring",
+      body: [
+        "Comfortable footwear with a good grip matters most — walking boots if the walk recommends them, as paths can be muddy or uneven. Dress for the weather in layers, and bring a waterproof if there’s any chance of rain.",
+        list([
+          "Water, and a snack on longer walks",
+          "Your phone, charged, to clock in and out",
+          "Any medication you might need",
+          "Sun cream and a hat in summer, gloves and a warm hat in winter",
+        ]),
+      ].join("\n\n"),
+    }),
+    puckBlock("LegalSection", 5, {
+      title: "Getting there",
+      body: [
+        "Each walk’s meeting point has a map pin and a what3words address, so you can find the exact spot. The free [walking apps](/apps) help with directions and with following the route on the day.",
+        "Walks near public transport are marked, and so is parking. If you’re not sure how to get to a walk, [ask us](/contact).",
+      ].join("\n\n"),
+    }),
+    puckBlock("LegalClosing", 6, { closing: "Not sure what to bring? Ask us." }),
+  ]);
 }

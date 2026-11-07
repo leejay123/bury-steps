@@ -7,6 +7,7 @@ import { getSiteTheme } from "@/lib/site-theme";
 import type { SitePageLive } from "@/components/site-page-designer/live";
 import {
   editorDesign,
+  SITE_PAGE_KEYS,
   type PuckData,
   type SitePageDesigns,
   type SitePageKey,
@@ -15,9 +16,13 @@ import {
   seedAboutDesign,
   seedAppsDesign,
   seedContactDesign,
+  seedGroupRulesDesign,
   seedHomeDesign,
+  seedHowItWorksDesign,
   seedPrivacyDesign,
   seedTermsDesign,
+  seedWalkEssentialsDesign,
+  seedWhatToExpectDesign,
 } from "./site-page-copy";
 
 export async function seedForPage(page: SitePageKey): Promise<PuckData> {
@@ -69,7 +74,23 @@ export async function seedForPage(page: SitePageKey): Promise<PuckData> {
   if (page === "contact") return seedContactDesign();
   if (page === "privacy") return seedPrivacyDesign();
   if (page === "terms") return seedTermsDesign();
-  return seedAppsDesign();
+  if (page === "apps") return seedAppsDesign();
+  if (page === "howItWorks") return seedHowItWorksDesign();
+  if (page === "whatToExpect") {
+    const theme = await getSiteTheme();
+    return seedWhatToExpectDesign({
+      expectHeading: theme.aboutExpectHeading,
+      expect: theme.aboutExpect,
+    });
+  }
+  if (page === "groupRules") {
+    const theme = await getSiteTheme();
+    return seedGroupRulesDesign({
+      rulesHeading: theme.aboutRulesHeading,
+      rules: theme.aboutRules,
+    });
+  }
+  return seedWalkEssentialsDesign();
 }
 
 export async function loadSitePageLive(): Promise<SitePageLive> {
@@ -80,11 +101,12 @@ export async function loadSitePageLive(): Promise<SitePageLive> {
     logo: { src: logo.src, width: logo.width, height: logo.height },
     joinHref: chrome.joinHref,
     facebookUrl: chrome.facebookUrl,
+    walkEssentials: theme.walkEssentials,
   };
 }
 
 export async function editorDataForPages(designs: SitePageDesigns): Promise<Record<SitePageKey, PuckData>> {
-  const keys: SitePageKey[] = ["home", "about", "contact", "privacy", "terms", "apps"];
+  const keys = [...SITE_PAGE_KEYS];
   const seeds = await Promise.all(keys.map((key) => seedForPage(key)));
   return Object.fromEntries(
     keys.map((key, i) => [key, editorDesign(designs[key], seeds[i]!)]),

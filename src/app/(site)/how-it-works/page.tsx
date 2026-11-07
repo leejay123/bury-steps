@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { LegalPage } from "@/components/legal-page";
+import { DesignedSitePage } from "@/components/site-page-designer/designed-page";
 
 export const metadata: Metadata = {
   title: "How it works",
@@ -10,6 +11,7 @@ export const metadata: Metadata = {
 /** The homepage's How it works steps (home.tsx STEPS), each explained in full. */
 export default function HowItWorksPage() {
   return (
+    <DesignedSitePage page="howItWorks">
     <LegalPage
       description="How Bury Steps works, from making an account to clocking out at the end of a walk."
       sections={[
@@ -148,5 +150,6 @@ export default function HowItWorksPage() {
       }}
       title="How it works"
     />
+    </DesignedSitePage>
   );
 }

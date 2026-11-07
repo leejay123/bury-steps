@@ -6,8 +6,12 @@ import {
   seedAppsDesign,
   seedContactDesign,
   seedHomeDesign,
+  seedGroupRulesDesign,
+  seedHowItWorksDesign,
   seedPrivacyDesign,
   seedTermsDesign,
+  seedWalkEssentialsDesign,
+  seedWhatToExpectDesign,
 } from "./site-page-copy";
 
 describe("site page seeds", () => {
@@ -31,5 +35,12 @@ describe("site page seeds", () => {
     expect(seedPrivacyDesign().content.length).toBeGreaterThan(4);
     expect(seedTermsDesign().content[0]?.props.title).toBe("Terms of Service");
     expect(seedAppsDesign().content.some((block) => block.type === "AppsCard")).toBe(true);
+  });
+
+  it("seeds the four guide pages", () => {
+    expect(seedHowItWorksDesign().content[0]?.props.docs).toBe("guide");
+    expect(seedWhatToExpectDesign({ expectHeading: "What you can expect", expect: ["Friendly"] }).content.some((block) => block.type === "LegalSection")).toBe(true);
+    expect(seedGroupRulesDesign({ rulesHeading: "Group rules", rules: [{ title: "Be kind", body: "Always." }] }).content[0]?.props.icon).toBe("rules");
+    expect(seedWalkEssentialsDesign().content.some((block) => block.type === "WalkEssentialsList")).toBe(true);
   });
 });

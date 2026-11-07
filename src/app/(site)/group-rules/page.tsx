@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { LegalPage } from "@/components/legal-page";
+import { DesignedSitePage } from "@/components/site-page-designer/designed-page";
 import { getSiteTheme } from "@/lib/site-theme";
 
 export const metadata: Metadata = {
@@ -12,6 +13,7 @@ export const metadata: Metadata = {
 export default async function GroupRulesPage() {
   const theme = await getSiteTheme();
   return (
+    <DesignedSitePage page="groupRules">
     <LegalPage
       description="The simple rules that keep Bury Steps friendly and safe."
       sections={[
@@ -103,5 +105,6 @@ export default async function GroupRulesPage() {
       }}
       title="Group rules"
     />
+    </DesignedSitePage>
   );
 }

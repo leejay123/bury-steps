@@ -18,9 +18,11 @@ const about = puckBlock("HomeAbout", 2, { title: "About" });
 const form = puckBlock("ContactForm", 1, { steps: ["One"] });
 
 describe("site page designs", () => {
-  it("recognises the six public pages", () => {
+  it("recognises the public pages", () => {
     expect(isSitePageKey("home")).toBe(true);
     expect(isSitePageKey("privacy")).toBe(true);
+    expect(isSitePageKey("howItWorks")).toBe(true);
+    expect(isSitePageKey("walkEssentials")).toBe(true);
     expect(isSitePageKey("walks")).toBe(false);
   });
 

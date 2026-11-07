@@ -1,7 +1,18 @@
 /** Saving a public page design refreshes this tag — the live pages that read it. */
 export const SITE_PAGE_DESIGNS_TAG = "site-page-designs";
 
-export const SITE_PAGE_KEYS = ["home", "about", "contact", "privacy", "terms", "apps"] as const;
+export const SITE_PAGE_KEYS = [
+  "home",
+  "about",
+  "contact",
+  "privacy",
+  "terms",
+  "apps",
+  "howItWorks",
+  "whatToExpect",
+  "groupRules",
+  "walkEssentials",
+] as const;
 export type SitePageKey = (typeof SITE_PAGE_KEYS)[number];
 
 export const SITE_PAGES: {
@@ -16,6 +27,10 @@ export const SITE_PAGES: {
   { key: "privacy", title: "Privacy", path: "/privacy-policy", description: "The privacy policy." },
   { key: "terms", title: "Terms", path: "/terms-of-service", description: "The terms of service." },
   { key: "apps", title: "Apps", path: "/apps", description: "The walking apps page." },
+  { key: "howItWorks", title: "How it works", path: "/how-it-works", description: "From making an account to clocking out." },
+  { key: "whatToExpect", title: "What to expect", path: "/what-to-expect", description: "What a walk with the group is like." },
+  { key: "groupRules", title: "Group rules", path: "/group-rules", description: "The simple rules that keep the group kind." },
+  { key: "walkEssentials", title: "Walk essentials", path: "/walk-essentials", description: "What each walk page tells you before you set off." },
 ];
 
 export function isSitePageKey(value: string): value is SitePageKey {
@@ -35,14 +50,9 @@ export type SitePageSlot = { draft: unknown | null; published: unknown | null };
 export type SitePageDesigns = Record<SitePageKey, SitePageSlot>;
 
 export function emptySitePageDesigns(): SitePageDesigns {
-  return {
-    home: { draft: null, published: null },
-    about: { draft: null, published: null },
-    contact: { draft: null, published: null },
-    privacy: { draft: null, published: null },
-    terms: { draft: null, published: null },
-    apps: { draft: null, published: null },
-  };
+  return Object.fromEntries(
+    SITE_PAGE_KEYS.map((key) => [key, { draft: null, published: null }]),
+  ) as SitePageDesigns;
 }
 
 export function isPuckData(value: unknown): value is PuckData {

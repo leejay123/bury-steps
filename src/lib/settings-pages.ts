@@ -45,8 +45,8 @@ export const SETTINGS_PAGE_GROUPS: SettingsPageGroup[] = [
       {
         href: "/admin/settings/page-designs",
         title: "Page designs",
-        description: "Design the public pages — home, about, contact, privacy, terms and apps — the same way as a walk page.",
-        keywords: "homepage about contact privacy terms apps quotes faq wording designer puck",
+        description: "Design the public pages — home, about, contact, privacy, terms, apps, and the four guide pages — the same way as a walk page.",
+        keywords: "homepage about contact privacy terms apps how it works what to expect group rules walk essentials quotes faq wording designer puck",
         permission: "permDisplay",
       },
     ],
