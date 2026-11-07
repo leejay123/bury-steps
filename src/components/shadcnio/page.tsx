@@ -7,6 +7,7 @@ import type { SiteTheme } from "@/lib/site-theme";
 import { copyrightYear } from "@/components/site-footer";
 import { GlobalNav, type SearchItem } from "./globalnav";
 import { GlobalFooter } from "./globalfooter";
+import { FooterWordmark } from "@/components/footer-wordmark";
 import { ShadcnHome } from "./home";
 import { getShadcnHomeData } from "./home-data";
 import { getPublishedSitePageDesign } from "@/lib/site-page-designs-store";
@@ -110,7 +111,15 @@ export async function ShadcnHomePage({ theme }: { theme: SiteTheme }) {
                 testimonials={testimonials}
               />
             )}
-            <GlobalFooter columns={columns} facebookUrl={facebookUrl} siteName={theme.siteName} year={year} />
+            <GlobalFooter
+              columns={columns}
+              facebookUrl={facebookUrl}
+              siteName={theme.siteName}
+              // Settings → Site behaviour → Show the big name in the footer (and on
+              // phones): the giant outlined name at the very bottom, as the old footer had.
+              wordmark={theme.footerWordmarkEnabled ? <FooterWordmark showOnPhones={theme.footerWordmarkMobile} /> : null}
+              year={year}
+            />
           </div>
         </div>
       </div>

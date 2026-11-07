@@ -1,5 +1,7 @@
 "use client";
 
+import type { ReactNode } from "react";
+
 import { useState } from "react";
 import { IntentLink as Link } from "@/components/intent-link";
 import { FooterAppearance } from "./appearance";
@@ -30,12 +32,15 @@ export function GlobalFooter({
   siteName,
   year,
   facebookUrl,
+  wordmark,
 }: {
   /** Each column holds one or more groups, top to bottom. */
   columns: FooterGroup[][];
   siteName: string;
   year: number;
   facebookUrl: string;
+  /** The giant outlined site name, at the very bottom (homepage only). */
+  wordmark?: ReactNode;
 }) {
   const [open, setOpen] = useState<Record<string, boolean>>({});
   return (
@@ -122,6 +127,7 @@ export function GlobalFooter({
         </div>
         <FooterAppearance />
       </div>
+      {wordmark}
     </footer>
   );
 }
