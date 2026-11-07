@@ -1,6 +1,6 @@
 import { Suspense } from "react";
 import { IntentLink as Link } from "@/components/intent-link";
-import { ChevronsUpDown, Mail } from "lucide-react";
+import { CalendarDays, ChevronsUpDown, Mail } from "lucide-react";
 import { ClerkIsland } from "@/components/clerk-island";
 import { LazySiteUserButton } from "@/components/clerk-lazy";
 import { AvatarPlaceholder, BellPlaceholder } from "@/components/header-placeholders";
@@ -93,6 +93,23 @@ export function EfferdSidebarBody({
           </div>
         ) : null}
         <ul className="flex flex-col gap-1 border-t p-2">
+          {next ? (
+            // Folded, the Next walk card above has no room: this icon stands in for it
+            // (shown only then, shadcnio.css), its name and day beside it on hover.
+            <li data-efferd-folded-only="">
+              <FoldedTip label={`Next walk: ${next.title} · ${next.when}`}>
+                <Link
+                  aria-label={`Next walk: ${next.title}, ${next.when}`}
+                  className="flex h-7 w-full items-center gap-2 overflow-hidden rounded-md p-2 text-muted-foreground text-xs hover:bg-muted hover:text-foreground [&>svg]:size-4 [&>svg]:shrink-0"
+                  data-efferd-button=""
+                  href={next.href}
+                >
+                  <CalendarDays aria-hidden />
+                  <span className="truncate">Next walk</span>
+                </Link>
+              </FoldedTip>
+            </li>
+          ) : null}
           <li>
             <FoldedTip label="Contact us">
               <Link
