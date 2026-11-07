@@ -30,7 +30,7 @@ import { UnlockPageOnNavigate } from "@/components/overlay-root";
 import { SiteCookieConsentGate } from "@/components/site-cookie-consent-gate";
 import { StaleDeployReload } from "@/components/stale-deploy-reload";
 import { getSiteTheme } from "@/lib/site-theme";
-import { hankenGrotesk, siteFontVariableClassName, typesetFontVariables } from "@/app/fonts";
+import { siteFontVariableClassName, typesetFontVariables } from "@/app/fonts";
 import { siteMetaDescription } from "@/lib/site-branding";
 import { ScrollRowArrows } from "@/components/scroll-row-arrows";
 import "./globals.css";
@@ -149,8 +149,11 @@ export default async function RootLayout({ children }: { children: React.ReactNo
             all arrived). */}
         <link blocking="render" href="#bs-frame-end" rel="expect" />
       </head>
+      {/* font-sans: the site font (--font-site: Hanken Grotesk, or the
+          Customize panel's Style), not a fixed face — a fixed one here
+          stopped Style changing the text anywhere. */}
       <body
-        className={`${hankenGrotesk.className} min-h-dvh overflow-x-clip touch-manipulation bg-background text-foreground antialiased`}
+        className={`font-sans min-h-dvh overflow-x-clip touch-manipulation bg-background text-foreground antialiased`}
       >
         <SerwistProvider reloadOnOnline={false} swUrl="/serwist/sw.js">
         {/*
