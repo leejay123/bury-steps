@@ -8,6 +8,8 @@ import { prisma } from "@/lib/db";
 import { requireUser } from "@/lib/auth";
 import { MAX_LIVE_STORIES, purgeExpiredStories, storyExpiry } from "@/lib/stories";
 import { removeStoryPhotos, storiesConfigured, uploadStoryPhoto } from "@/lib/story-storage";
+import { sniffImageMime } from "@/lib/image-bytes";
+import { stripImageMetadata } from "@/lib/strip-image-metadata";
 import type { ActionResult } from "./shared";
 
 /** Photos arrive already shrunk on the phone; this is only a safety limit. */
@@ -30,10 +32,17 @@ export const postStory = guardForm(
     const photo = formData.get("photo");
     if (!(photo instanceof Blob) || photo.size === 0)
       return { ok: false, error: "Choose a photo first." };
-    const ext = PHOTO_TYPES[photo.type];
-    if (!ext) return { ok: false, error: "That isn't a photo we can use. Try a JPEG or PNG." };
     if (photo.size > MAX_UPLOAD_BYTES)
       return { ok: false, error: "That photo is too big. Try another one." };
+    // The type comes from the file's own bytes, not the name or type the
+    // browser sent, so only real JPEG, PNG and WebP photos are stored.
+    const raw = new Uint8Array(await photo.arrayBuffer());
+    const mime = sniffImageMime(raw);
+    const ext = mime ? PHOTO_TYPES[mime] : undefined;
+    if (!mime || !ext) return { ok: false, error: "That isn't a photo we can use. Try a JPEG or PNG." };
+    // Photos are usually shrunk on the phone first, which drops hidden
+    // details such as where it was taken; strip them here too in case not.
+    const clean = stripImageMetadata(raw, mime);
 
     await purgeExpiredStories();
     const live = await prisma.story.count({
@@ -46,7 +55,7 @@ export const postStory = guardForm(
       };
 
     const path = `${user.id}/${randomUUID()}.${ext}`;
-    await uploadStoryPhoto(path, photo, photo.type);
+    await uploadStoryPhoto(path, new Blob([clean as Uint8Array<ArrayBuffer>], { type: mime }), mime);
     try {
       await prisma.story.create({ data: { userId: user.id, path, expiresAt: storyExpiry() } });
     } catch (err) {
