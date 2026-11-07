@@ -5,6 +5,10 @@
 // alongside the site's inline CSS (experimental.inlineCss) and crashed the page.
 import { useMemo, useRef, useState } from "react";
 import { Puck, type Data } from "@puckeditor/core";
+// Puck's styles up front, the copy with no outside font: otherwise Puck adds
+// them itself with an @import of rsms.me/inter, which the site's security
+// rules (style-src in next.config.ts) block, filling the console with errors.
+import "@puckeditor/core/no-external.css";
 import { toast } from "sonner";
 import { X } from "lucide-react";
 import { saveWalkDesign } from "@/server/actions";
