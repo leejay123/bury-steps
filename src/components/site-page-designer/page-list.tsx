@@ -10,6 +10,7 @@ import { Paintbrush } from "lucide-react";
 import { discardSitePageDraft } from "@/server/actions";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
+import { EDGE_FILTER, EdgeBar } from "@/components/edge-search";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
   AlertDialog,
@@ -124,48 +125,12 @@ function PageSketch({ designed }: { designed: boolean }) {
   );
 }
 
-/** How Design, Close, Publish and Discard draft fit together: a band across
- * the bottom of the page, in the page's own colours turned round. */
-function HowPublishingWorks() {
-  const steps = [
-    {
-      title: "Design this page",
-      text: "Opens the same designer as a walk page, starting from the live page.",
-    },
-    {
-      title: "Close keeps a draft",
-      text: "Nothing changes on the site. Come back later and carry on where you left off.",
-    },
-    {
-      title: "Publish puts it live",
-      text: "Visitors see the new design straight away. Discard draft throws a draft away and leaves the live page as it is.",
-    },
-  ];
-  return (
-    <section aria-labelledby="how-publishing-works" className="bg-foreground text-background" data-edge-note="">
-      <div className="flex flex-col gap-6 px-1 py-6 sm:px-3 sm:py-8">
-        <h2 className="text-xl font-semibold tracking-tight" id="how-publishing-works">
-          How publishing works
-        </h2>
-        <ol className="grid gap-6 sm:grid-cols-3">
-          {steps.map((step, index) => (
-            <li className="flex flex-col gap-1.5 border-t border-background/20 pt-4" key={step.title}>
-              <span className="text-xs tabular-nums opacity-70">{String(index + 1).padStart(2, "0")}</span>
-              <span className="font-medium">{step.title}</span>
-              <span className="text-sm leading-relaxed opacity-80">{step.text}</span>
-            </li>
-          ))}
-        </ol>
-      </div>
-    </section>
-  );
-}
-
 /**
  * Settings → Page designs: the public pages, each opening the same
- * Puck designer as walk pages. Edge to edge: the totals, a filter strip,
- * one full-width row per page, then how publishing works. The designer is
- * for computers only (1024px+); the list stays visible on a phone or tablet.
+ * Puck designer as walk pages. Edge to edge: the totals, a filter strip
+ * (EdgeBar, as the Reports pages), then one full-width row per page. The
+ * designer is for computers only (1024px+); the list stays visible on a
+ * phone or tablet.
  */
 export function SitePageDesignList({
   designs,
@@ -196,33 +161,39 @@ export function SitePageDesignList({
   return (
     <>
       <Totals counts={counts} />
-      <div className="flex flex-wrap items-center justify-between gap-3 bg-muted/40" data-edge-note="">
-        <div aria-label="Show" className="flex flex-wrap gap-1.5" role="group">
-          {FILTERS.map((option) => {
+      <EdgeBar>
+        <div aria-label="Show" className="flex max-sm:w-full max-sm:*:flex-1" role="group">
+          {FILTERS.map((option, index) => {
             const on = filter === option.id;
             const total = option.id === "all" ? SITE_PAGES.length : counts[option.id];
             return (
               <Button
                 aria-pressed={on}
-                className="rounded-full"
+                className={cn(
+                  EDGE_FILTER,
+                  // Narrower on a phone, so all four fit across.
+                  "gap-1.5 px-2 text-[0.8125rem] sm:gap-2 sm:px-4 sm:text-sm",
+                  index === 0 && "border-l-0!",
+                  index === FILTERS.length - 1 && "sm:border-r!",
+                  on ? "bg-accent! text-accent-foreground" : "text-muted-foreground hover:text-foreground",
+                )}
                 key={option.id}
                 onClick={() => setFilter(option.id)}
-                size="sm"
                 type="button"
-                variant={on ? "default" : "outline"}
+                variant="ghost"
               >
                 {option.label}
-                <span className="tabular-nums opacity-70">{total}</span>
+                <span className="tabular-nums text-muted-foreground">{total}</span>
               </Button>
             );
           })}
         </div>
-        <p className="text-sm text-muted-foreground">
-          {computer
-            ? "The designer opens over this page."
-            : "Open a page’s designer on a computer (1024px or wider)."}
-        </p>
-      </div>
+        {computer ? null : (
+          <p className="flex items-center border-l px-4 text-sm text-muted-foreground max-sm:w-full max-sm:border-t max-sm:border-l-0 max-sm:py-3">
+            Open a page’s designer on a computer (1024px or wider).
+          </p>
+        )}
+      </EdgeBar>
       <DataList data-edge-top="">
         {shown.length === 0 ? (
           <DataListItem className={ROW}>
@@ -277,7 +248,6 @@ export function SitePageDesignList({
           })
         )}
       </DataList>
-      <HowPublishingWorks />
       {open
         ? createPortal(
             <SitePageDesignEditor data={drafts[open]} live={live} onClose={close} page={open} />,
@@ -355,14 +325,24 @@ export function SitePageDesignListSkeleton() {
   return (
     <>
       <Totals counts={null} />
-      <div className="flex flex-wrap items-center justify-between gap-3 bg-muted/40" data-edge-note="">
-        <div className="flex flex-wrap gap-1.5">
-          {FILTERS.map((option) => (
-            <Skeleton className="h-8 w-24 rounded-full" key={option.id} />
+      <EdgeBar>
+        <div className="flex max-sm:w-full max-sm:*:flex-1">
+          {FILTERS.map((option, index) => (
+            <span
+              className={cn(
+                EDGE_FILTER,
+                "flex items-center justify-center gap-1.5 px-2 text-[0.8125rem] text-muted-foreground sm:gap-2 sm:px-4 sm:text-sm",
+                index === 0 && "border-l-0!",
+                index === FILTERS.length - 1 && "sm:border-r!",
+              )}
+              key={option.id}
+            >
+              {option.label}
+              <Skeleton className="h-4 w-3" />
+            </span>
           ))}
         </div>
-        <Skeleton className="h-4 w-56" />
-      </div>
+      </EdgeBar>
       <DataList data-edge-top="">
         {SITE_PAGES.map((page) => (
           <DataListItem className={cn(ROW, "flex-wrap")} key={page.key}>
@@ -381,7 +361,6 @@ export function SitePageDesignListSkeleton() {
           </DataListItem>
         ))}
       </DataList>
-      <HowPublishingWorks />
     </>
   );
 }
