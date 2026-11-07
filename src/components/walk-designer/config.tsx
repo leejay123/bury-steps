@@ -6,6 +6,11 @@ import {
   type Config,
 } from "@puckeditor/core";
 import { createContext, useContext, useEffect, useRef, useState, type ReactNode } from "react";
+import { Button } from "@/components/ui/button";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import { WALK_WORDING_DEFAULTS } from "@/lib/walk-wording";
+import { STATUS_MESSAGE_FIELDS } from "@/lib/walk-design-copy";
 import {
   PreviewAudience,
   WalkPartsProvider,
@@ -506,6 +511,95 @@ function MessagesPlaceControl() {
   );
 }
 
+const MESSAGE_TOKENS = [
+  { token: "{opens}", label: "when clock-in opens" },
+  { token: "{opensDay}", label: "that day" },
+  { token: "{start}", label: "start time" },
+  { token: "{finish}", label: "finish time" },
+  { token: "{count}", label: "how many people" },
+] as const;
+
+/**
+ * Clock-in and cancelled wording, stored on the page (root) so Status, the
+ * Details status band, and the Messages block all edit the same lines.
+ */
+function RootMessageWording() {
+  const values = usePuck((s) => (s.appState.data.root?.props ?? {}) as Record<string, unknown>);
+  const dispatch = usePuck((s) => s.dispatch);
+  const areas = useRef<Record<string, HTMLTextAreaElement | null>>({});
+
+  function patch(key: string, value: string) {
+    dispatch({
+      type: "setData",
+      data: (previous) => ({
+        root: {
+          ...previous.root,
+          props: { ...(previous.root?.props ?? {}), [key]: value },
+        },
+      }),
+    });
+  }
+
+  function insert(key: string, token: string) {
+    const current = String(values[key] ?? "");
+    const area = areas.current[key];
+    const from = area?.selectionStart ?? current.length;
+    const to = area?.selectionEnd ?? current.length;
+    const next = `${current.slice(0, from)}${token}${current.slice(to)}`;
+    patch(key, next);
+    requestAnimationFrame(() => {
+      const el = areas.current[key];
+      if (!el) return;
+      const pos = from + token.length;
+      el.focus();
+      el.setSelectionRange(pos, pos);
+    });
+  }
+
+  return (
+    <div className="flex flex-col gap-3">
+      <p className="text-xs text-muted-foreground">
+        Leave a line blank to keep the usual wording. Insert a placeholder to fill in the time or number for that walk.
+      </p>
+      {STATUS_MESSAGE_FIELDS.map((field) => (
+        <div className="flex flex-col gap-1.5" key={field.prop}>
+          <Label htmlFor={`walk-msg-${field.prop}`}>{field.label}</Label>
+          <Textarea
+            id={`walk-msg-${field.prop}`}
+            onChange={(event) => patch(field.prop, event.target.value)}
+            placeholder={WALK_WORDING_DEFAULTS[field.key]}
+            ref={(el) => {
+              areas.current[field.prop] = el;
+            }}
+            value={String(values[field.prop] ?? "")}
+          />
+          <p className="flex flex-wrap gap-1">
+            {MESSAGE_TOKENS.map((item) => (
+              <Button
+                aria-label={`Insert ${item.token} (${item.label})`}
+                key={item.token}
+                onClick={() => insert(field.prop, item.token)}
+                size="xs"
+                title={item.label}
+                type="button"
+                variant="outline"
+              >
+                {item.token}
+              </Button>
+            ))}
+          </p>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+const messageWordingField = {
+  type: "custom" as const,
+  label: "Message wording",
+  render: () => <RootMessageWording />,
+};
+
 /** Reads the selected block's settings (for the fold headings' summaries). */
 function useSelectedProps(): Record<string, unknown> {
   return (usePuck((s) => s.selectedItem?.props) ?? {}) as Record<
@@ -690,6 +784,12 @@ const FOLDS: {
       "bigTitle",
       "titleMessages",
     ],
+  },
+  {
+    key: "_messagesSection",
+    more: "_messagesMore",
+    main: ["messageWording"],
+    extra: [],
   },
   {
     key: "_mapSection",
@@ -2381,24 +2481,7 @@ export const walkDesignConfig: Config = {
           render: () => <MessagesPlaceControl />,
         },
         look: { ...messageLookField, label: "Look" },
-        memberBefore: {
-          type: "textarea",
-          label: "Members, before clock-in opens. {opens}, {opensDay}.",
-        },
-        memberMissed: {
-          type: "textarea",
-          label: "Members who didn't clock in, after the walk",
-        },
-        visitorFinished: { type: "textarea", label: "Visitors, after the walk" },
-        organiserFinished: {
-          type: "textarea",
-          label: "Organisers, after the walk",
-        },
-        cancelledTitle: { type: "textarea", label: "Cancelled: heading" },
-        cancelledNext: {
-          type: "textarea",
-          label: "Cancelled: what to do next",
-        },
+        messageWording: messageWordingField,
       },
       defaultProps: { look: "as-is" },
       render: ({ look, puck }) => (
@@ -2614,6 +2697,12 @@ export const walkDesignConfig: Config = {
                   .filter(Boolean)
                   .join(" · "),
         ),
+        _messagesSection: foldSection(
+          "Messages",
+          "The words in the walk's messages, including when they show in the Status band.",
+          () => "Wording and placeholders",
+        ),
+        messageWording: messageWordingField,
         showTitle: { type: "radio", label: "Show the title", options: yesNo },
         titleLook: {
           type: "select",
@@ -3676,28 +3765,29 @@ export const walkDesignConfig: Config = {
         upcoming: {
           type: "text",
           label: "Upcoming (Name · the rest). {opens} is when clock-in opens.",
+          placeholder: `${WALK_WORDING_DEFAULTS.upcomingLabel} · ${WALK_WORDING_DEFAULTS.upcomingLine}`,
         },
         open: {
           type: "text",
           label: "Clock-in open (Name · the rest). {start} is the start time.",
+          placeholder: `${WALK_WORDING_DEFAULTS.openLabel} · ${WALK_WORDING_DEFAULTS.openLine}`,
         },
         live: {
           type: "text",
           label: "In progress (Name · the rest). {finish} is the finish time.",
+          placeholder: `${WALK_WORDING_DEFAULTS.liveLabel} · ${WALK_WORDING_DEFAULTS.liveLine}`,
         },
         finished: {
           type: "text",
           label: "Finished (Name · the rest). {count} is how many came.",
+          placeholder: `${WALK_WORDING_DEFAULTS.finishedLabel} · ${WALK_WORDING_DEFAULTS.finishedAttended}`,
         },
-        cancelled: { type: "text", label: "Cancelled (Name · the rest)" },
-        messageNote: {
-          type: "custom",
-          render: () => (
-            <p className="text-xs text-muted-foreground">
-              Clock-in and cancelled messages are on the Messages block.
-            </p>
-          ),
+        cancelled: {
+          type: "text",
+          label: "Cancelled (Name · the rest)",
+          placeholder: `${WALK_WORDING_DEFAULTS.cancelledLabel} · ${WALK_WORDING_DEFAULTS.cancelledLine}`,
         },
+        messageWording: messageWordingField,
       },
       defaultProps: { variant: "box" },
       render: ({ variant, puck: _puck, ...wording }) => (

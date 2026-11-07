@@ -70,11 +70,12 @@ describe("extractWalkDesignCopy", () => {
     expect(extracted.wording?.memberBefore).toBe("Wait until {opens}.");
   });
 
-  it("reads message wording from the Messages block, over Status", () => {
+  it("reads message wording from the page, over Status and Messages", () => {
     const extracted = extractWalkDesignCopy({
+      root: { props: { memberBefore: "Wait until {opens}." } },
       content: [
         { type: "Status", props: { upcoming: "Soon · Opens at {opens}", memberBefore: "Old." } },
-        { type: "Messages", props: { look: "as-is", memberBefore: "Wait until {opens}." } },
+        { type: "Messages", props: { look: "as-is", memberBefore: "Also old." } },
       ],
     });
     expect(extracted.wording?.upcomingLabel).toBe("Soon");
@@ -83,14 +84,14 @@ describe("extractWalkDesignCopy", () => {
 });
 
 describe("withSiteCopy", () => {
-  it("fills empty Before, How this group works, Status and Messages from the live copy", () => {
+  it("fills empty Before, How this group works, Status and message wording from the live copy", () => {
     const filled = withSiteCopy(
       {
+        root: { props: {} },
         content: [
           { type: "Before", props: { look: "card" } },
           { type: "HowItWorks", props: { look: "card" } },
           { type: "Status", props: { variant: "box" } },
-          { type: "Messages", props: { look: "as-is" } },
         ],
       },
       copy,

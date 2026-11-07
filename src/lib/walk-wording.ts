@@ -1,8 +1,8 @@
 /**
  * The words a walk page uses for where the walk is up to (the status line,
  * the countdown, and the walk's messages), editable in the walk page
- * designer: status lines on the Status block, messages on the Messages
- * block. Each can hold placeholders, filled in for the
+ * designer: status lines on the Status block, messages on Status, the
+ * Details card, or the Messages block. Each can hold placeholders, filled in for the
  * walk: {opens}, {opensDay}, {start}, {finish}, {count}, {n}.
  * Only changed wording is saved; anything left blank uses the default.
  */

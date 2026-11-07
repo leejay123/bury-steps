@@ -91,6 +91,22 @@ function statusPropsHaveWording(props: Record<string, unknown>): boolean {
   return statusLinePropsHaveWording(props) || messagePropsHaveWording(props);
 }
 
+function rootPropsOf(data: unknown): Record<string, unknown> | null {
+  if (!data || typeof data !== "object") return null;
+  const root = (data as { root?: { props?: unknown } }).root;
+  if (!root || typeof root !== "object") return null;
+  if (!root.props || typeof root.props !== "object") return null;
+  return root.props as Record<string, unknown>;
+}
+
+function ensureRootProps(data: unknown): Record<string, unknown> | null {
+  if (!data || typeof data !== "object") return null;
+  const rec = data as { root?: { props?: Record<string, unknown> } };
+  if (!rec.root || typeof rec.root !== "object") rec.root = { props: {} };
+  if (!rec.root.props || typeof rec.root.props !== "object") rec.root.props = {};
+  return rec.root.props;
+}
+
 /** Overlay Status-block fields onto the site wording (blank keeps the current line). */
 export function wordingFromStatusProps(
   props: Record<string, unknown>,
@@ -158,8 +174,13 @@ export function extractWalkDesignCopy(data: unknown, base?: WalkWording): Extrac
       messageProps = props;
     }
   });
-  if (statusProps || messageProps) {
-    found.wording = wordingFromStatusProps({ ...(statusProps ?? {}), ...(messageProps ?? {}) }, base);
+  const root = rootPropsOf(data);
+  const rootMessages = root && messagePropsHaveWording(root) ? root : null;
+  if (statusProps || messageProps || rootMessages) {
+    found.wording = wordingFromStatusProps(
+      { ...(statusProps ?? {}), ...(messageProps ?? {}), ...(rootMessages ?? {}) },
+      base,
+    );
   }
   return found;
 }
@@ -170,10 +191,10 @@ export function extractWalkDesignCopy(data: unknown, base?: WalkWording): Extrac
  */
 export function withSiteCopy<T>(data: T, copy: WalkDesignSiteCopy): T {
   const cloned = structuredClone(data);
-  let hasMessages = false;
-  walkBlocks(cloned, (type) => {
-    if (type === "Messages") hasMessages = true;
-  });
+  const root = ensureRootProps(cloned);
+  if (root && !messagePropsHaveWording(root)) {
+    Object.assign(root, messagePropsFromWording(copy.wording));
+  }
   walkBlocks(cloned, (type, props) => {
     if (type === "Before") {
       const tips = readTips(props);
@@ -189,12 +210,6 @@ export function withSiteCopy<T>(data: T, copy: WalkDesignSiteCopy): T {
     }
     if (type === "Status" && !statusLinePropsHaveWording(props)) {
       Object.assign(props, statusLinePropsFromWording(copy.wording));
-    }
-    if (type === "Status" && !hasMessages && !messagePropsHaveWording(props)) {
-      Object.assign(props, messagePropsFromWording(copy.wording));
-    }
-    if (type === "Messages" && !messagePropsHaveWording(props)) {
-      Object.assign(props, messagePropsFromWording(copy.wording));
     }
   });
   return cloned;
