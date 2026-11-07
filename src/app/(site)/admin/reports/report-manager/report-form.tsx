@@ -21,6 +21,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import type { InvolvedMember, ReportView, WalkOption } from "./types";
+import { ReportRetentionToggle } from "./report-retention-toggle";
 import { DrawerFormFooter, useKeepFormOnError } from "@/components/drawer-form";
 
 /** A form-section label: icon + text, consistent across every field here. */
@@ -397,6 +398,14 @@ function ReportFields({
             rows={2}
           />
         </div>
+        {report ? (
+          // Editing only: kept here rather than on the report's page. Saves as soon as
+          // it's ticked, separately from Save changes.
+          <div className="flex flex-col gap-1.5">
+            <p className="text-sm font-medium">Automatic deletion</p>
+            <ReportRetentionToggle locked={report.retentionLocked} reportId={report.id} />
+          </div>
+        ) : null}
       </div>
     </div>
   );

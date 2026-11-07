@@ -19,7 +19,6 @@ import { cn } from "@/lib/utils";
 import { AdminPageIntro } from "../../admin-page-intro";
 import { SettingsSection } from "../../settings/settings-page";
 import { EditForm } from "../report-manager/report-form";
-import { ReportRetentionToggle } from "../report-manager/report-retention-toggle";
 import type { ReportView, WalkOption } from "../report-manager/types";
 
 const TEXT = "typeset typeset-docs block wrap-break-word";
@@ -122,11 +121,6 @@ export function ReportPage({
       {report.organiserNotes ? (
         <SettingsSection title="Organiser notes">
           <DescriptionText className={TEXT} text={report.organiserNotes} />
-        </SettingsSection>
-      ) : null}
-      {canEdit ? (
-        <SettingsSection title="Automatic deletion">
-          <ReportRetentionToggle locked={report.retentionLocked} reportId={report.id} />
         </SettingsSection>
       ) : null}
 
