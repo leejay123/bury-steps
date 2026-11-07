@@ -3599,9 +3599,46 @@ export const walkDesignConfig: Config = {
             ["phases", "Before · During · After"],
           ]),
         },
+        upcoming: {
+          type: "text",
+          label: "Upcoming (Name · the rest). {opens} is when clock-in opens.",
+        },
+        open: {
+          type: "text",
+          label: "Clock-in open (Name · the rest). {start} is the start time.",
+        },
+        live: {
+          type: "text",
+          label: "In progress (Name · the rest). {finish} is the finish time.",
+        },
+        finished: {
+          type: "text",
+          label: "Finished (Name · the rest). {count} is how many came.",
+        },
+        cancelled: { type: "text", label: "Cancelled (Name · the rest)" },
+        memberBefore: {
+          type: "text",
+          label: "Members, before clock-in opens. {opens}, {opensDay}.",
+        },
+        memberMissed: {
+          type: "text",
+          label: "Members who didn't clock in, after the walk",
+        },
+        visitorFinished: { type: "text", label: "Visitors, after the walk" },
+        organiserFinished: {
+          type: "text",
+          label: "Organisers, after the walk",
+        },
+        cancelledTitle: { type: "text", label: "Cancelled: heading" },
+        cancelledNext: {
+          type: "text",
+          label: "Cancelled: what to do next",
+        },
       },
       defaultProps: { variant: "box" },
-      render: ({ variant }) => <StatusBlock variant={variant} />,
+      render: ({ variant, puck: _puck, ...wording }) => (
+        <StatusBlock variant={variant} wording={wording} />
+      ),
     },
     ClockIn: { label: "Clock-in panel", render: () => <ClockInBlock /> },
     PeopleStack: {
@@ -3681,6 +3718,16 @@ export const walkDesignConfig: Config = {
     HowItWorks: {
       label: "How this group works",
       fields: {
+        steps: {
+          type: "array",
+          label: "Steps — title and a short line (Title | Body)",
+          arrayFields: {
+            title: { type: "text", label: "Title" },
+            body: { type: "textarea", label: "Short line" },
+          },
+          defaultItemProps: { title: "", body: "" },
+          getItemSummary: (item: { title?: string }) => item.title || "Step",
+        },
         look: {
           type: "select",
           label: "Look",
@@ -3730,6 +3777,7 @@ export const walkDesignConfig: Config = {
         title: "",
         showTo: "visitors",
         showHeading: true,
+        steps: [],
       },
       // The Card look (for visitors) is the page's own card, heading and all.
       resolveFields: (data, { fields }) => {
@@ -3741,12 +3789,13 @@ export const walkDesignConfig: Config = {
         if (card || data.props.showHeading === false) delete shown.title;
         return shown as typeof fields;
       },
-      render: ({ look, title, showTo, showHeading, puck }) => (
+      render: ({ look, title, showTo, showHeading, steps, puck }) => (
         <HowItWorksBlock
           editing={Boolean(puck?.isEditing)}
           look={look}
           showHeading={showHeading}
           showTo={showTo}
+          steps={steps}
           title={title}
         />
       ),
@@ -3887,6 +3936,13 @@ export const walkDesignConfig: Config = {
     Before: {
       label: "Before you set off",
       fields: {
+        tips: {
+          type: "array",
+          label: "Tips — one per line, shown while clock-in is still closed",
+          arrayFields: { text: { type: "textarea", label: "Tip" } },
+          defaultItemProps: { text: "" },
+          getItemSummary: (item: { text?: string }) => item.text || "Tip",
+        },
         look: {
           type: "select",
           label: "Look",
@@ -3919,7 +3975,7 @@ export const walkDesignConfig: Config = {
         },
         title: { type: "text", label: "Heading (blank: Before you set off)" },
       },
-      defaultProps: { look: "card", title: "", showHeading: true },
+      defaultProps: { look: "card", title: "", showHeading: true, tips: [] },
       // The Card look is the page's own card, heading and all.
       resolveFields: (data, { fields }) => {
         const card = (data.props.look ?? "card") === "card";
@@ -3928,8 +3984,8 @@ export const walkDesignConfig: Config = {
         if (card || data.props.showHeading === false) delete shown.title;
         return shown as typeof fields;
       },
-      render: ({ look, title, showHeading }) => (
-        <BeforeBlock look={look} showHeading={showHeading} title={title} />
+      render: ({ look, title, showHeading, tips }) => (
+        <BeforeBlock look={look} showHeading={showHeading} tips={tips} title={title} />
       ),
     },
     Attended: {

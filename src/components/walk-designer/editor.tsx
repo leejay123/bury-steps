@@ -8,6 +8,8 @@ import { Puck, type Data } from "@puckeditor/core";
 import { toast } from "sonner";
 import { X } from "lucide-react";
 import { saveWalkDesign } from "@/server/actions";
+import { extractWalkDesignCopy, withSiteCopy } from "@/lib/walk-design-copy";
+import { WalkWordingProvider, useWalkWording } from "@/components/walk-wording-context";
 import { WalkClockInPreview, WalkClockPreview } from "@/hooks/use-walk-clock";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { effectiveEndsAt, walkOpensAt } from "@/lib/walk-window";
@@ -152,12 +154,28 @@ export function WalkDesignEditor({
   onClose: () => void;
   parts: WalkIdeaParts;
 }) {
+  const siteWording = useWalkWording();
+  const siteCopy = useMemo(
+    () => ({
+      tips: parts.tips,
+      steps: parts.howItWorksSteps ?? [],
+      wording: siteWording,
+    }),
+    [parts.howItWorksSteps, parts.tips, siteWording],
+  );
+  const prepare = (data: Data) => withSiteCopy(withJoinDefault(data), siteCopy);
   const [audience, setAudience] = useState<WalkDesignAudience>("organiser");
   const [saved, setSaved] = useState<WalkDesigns>(designs);
+  const [draftWording, setDraftWording] = useState(siteWording);
   const [start, setStart] = useState<{ key: number; data: Data }>(() => ({
     key: 0,
-    data: withJoinDefault(
-      isPuckData(designs.organiser) ? designs.organiser : DEFAULT_WALK_DESIGN(),
+    data: withSiteCopy(
+      withJoinDefault(isPuckData(designs.organiser) ? designs.organiser : DEFAULT_WALK_DESIGN()),
+      {
+        tips: parts.tips,
+        steps: parts.howItWorksSteps ?? [],
+        wording: siteWording,
+      },
     ),
   }));
   // What's in the editor right now (published or not), for Copy to.
@@ -173,8 +191,9 @@ export function WalkDesignEditor({
   function open(next: WalkDesignAudience) {
     setAudience(next);
     const existing = saved[next];
-    const data = withJoinDefault(isPuckData(existing) ? existing : defaultDesignFor(next));
+    const data = prepare(isPuckData(existing) ? existing : defaultDesignFor(next));
     current.current = data;
+    setDraftWording(extractWalkDesignCopy(data, siteWording).wording ?? siteWording);
     setStart((was) => ({ key: was.key + 1, data }));
   }
 
@@ -196,8 +215,9 @@ export function WalkDesignEditor({
       (item) => item.id === id,
     );
     if (!preset) return;
-    const data = withJoinDefault(preset.data());
+    const data = prepare(preset.data());
     current.current = data;
+    setDraftWording(extractWalkDesignCopy(data, siteWording).wording ?? siteWording);
     setStart((was) => ({ key: was.key + 1, data }));
     toast.info(`Started from "${preset.label}". Publish to save it.`);
   }
@@ -327,6 +347,7 @@ export function WalkDesignEditor({
           <WalkClockInPreview.Provider
             value={clockedIn === "real" ? null : clockedIn}
           >
+            <WalkWordingProvider wording={draftWording}>
             <PreviewAudience.Provider value={audience}>
               <WalkPartsProvider parts={preview}>
                 <Puck
@@ -342,12 +363,15 @@ export function WalkDesignEditor({
                   key={`${audience}-${start.key}`}
                   onChange={(data) => {
                     current.current = data;
+                    const extracted = extractWalkDesignCopy(data, siteWording);
+                    setDraftWording(extracted.wording ?? siteWording);
                   }}
                   onPublish={publish}
                   overrides={{ iframe: PuckFrameStyles }}
                 />
               </WalkPartsProvider>
             </PreviewAudience.Provider>
+            </WalkWordingProvider>
           </WalkClockInPreview.Provider>
         </WalkClockPreview.Provider>
       </div>

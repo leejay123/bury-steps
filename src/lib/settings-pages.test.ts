@@ -47,11 +47,6 @@ describe("settings page registry", () => {
       title: "Data retention",
       danger: false,
     });
-    expect(settingsHeaderTrail("/admin/settings/site-wording/walk-page-cards")).toEqual({
-      group: "Homepage",
-      title: "Walk page cards",
-      danger: false,
-    });
     expect(settingsHeaderTrail("/admin/settings/reset")?.danger).toBe(true);
   });
 });

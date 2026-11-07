@@ -1,7 +1,7 @@
 /**
  * The words a walk page uses for where the walk is up to (the status line,
- * the countdown, and the walk's messages), editable in Settings → Site
- * wording → Walk page cards. Each can hold placeholders, filled in for the
+ * the countdown, and the walk's messages), editable on the Status block in
+ * the walk page designer. Each can hold placeholders, filled in for the
  * walk: {opens}, {opensDay}, {start}, {finish}, {count}, {n}.
  * Only changed wording is saved; anything left blank uses the default.
  */

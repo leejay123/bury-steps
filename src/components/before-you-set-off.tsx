@@ -4,7 +4,7 @@ import { DEFAULT_BEFORE_YOU_SET_OFF_TIPS } from "@/lib/homepage-copy";
 export function BeforeYouSetOff({
   tips = DEFAULT_BEFORE_YOU_SET_OFF_TIPS,
 }: {
-  /** Editable in Settings → Site wording → Walk page cards — see @/lib/homepage-copy. */
+  /** Editable on the Before you set off block in the walk page designer. */
   tips?: readonly string[];
 }) {
   return (

@@ -63,8 +63,11 @@ import { WalkDescription } from "@/components/walk-description";
 import { useWalkEssentials } from "@/components/walk-essentials-context";
 import { essentialIcon, walkEssentialItems } from "@/lib/walk-essentials";
 import { useWalkNow } from "@/components/walk-header-styles";
-import { useWalkWording } from "@/components/walk-wording-context";
+import { WalkWordingProvider, useWalkWording } from "@/components/walk-wording-context";
 import { walkCountdown } from "@/lib/walk-wording";
+import { wordingFromStatusProps } from "@/lib/walk-design-copy";
+import { BeforeYouSetOff } from "@/components/before-you-set-off";
+import { HowWalksWork } from "@/components/how-walks-work";
 import type { WalkIdeaParts } from "@/components/walk-idea-layouts";
 import { MemberShareMenu } from "@/components/member-share-menu";
 import { WalkActionsBar } from "@/components/walk-manage-menu";
@@ -1657,7 +1660,7 @@ function Title({
       const countdownText = counting
         ? ` · ${`${info.countdown.value} ${info.countdown.unit}`.trim()}`
         : "";
-      // The wording is from Settings → Site wording → Walk page cards.
+      // The wording is edited on the Status block in the walk page designer.
       const statusText = `${info.now.eyebrow} · ${info.now.line}${countdownText}`;
       const bandStatus = (
         <div
@@ -2747,10 +2750,19 @@ export type StatusVariant =
   | "numbers"
   | "phases";
 
-export function StatusBlock({ variant = "box" }: { variant?: StatusVariant }) {
+export function StatusBlock({
+  variant = "box",
+  wording,
+}: {
+  variant?: StatusVariant;
+  wording?: Record<string, string>;
+}) {
   const p = useWalkParts();
+  const site = useWalkWording();
   if (!p) return <Placeholder label={`Status · ${variant}`} />;
-  return <Status p={p} variant={variant} />;
+  const drawn = <Status p={p} variant={variant} />;
+  if (!wording) return drawn;
+  return <WalkWordingProvider wording={wordingFromStatusProps(wording, site)}>{drawn}</WalkWordingProvider>;
 }
 
 function Status({ p, variant }: { p: WalkIdeaParts; variant: StatusVariant }) {
@@ -3077,38 +3089,47 @@ const WIDE_STEP_LOOKS: readonly string[] = [
   "number-cards",
 ];
 
+function tipLines(tips: { text?: string }[] | undefined, fallback: readonly string[]): string[] {
+  const fromBlock = (tips ?? []).map((row) => (row.text ?? "").trim()).filter(Boolean);
+  return fromBlock.length > 0 ? fromBlock : [...fallback];
+}
+
 /**
  * Before you set off, in a chosen look. It shows when the walk page's own
- * card would (turned on in Settings, the walk not cancelled or finished);
- * "card" is that card exactly as it is.
+ * card would (the walk not cancelled or finished); "card" is that card.
+ * Tips are edited on this block in the walk page designer.
  */
 export function BeforeBlock({
   look = "card",
   title = "",
   showHeading = true,
+  tips,
 }: {
   look?: BeforeLook;
   title?: string;
   /** Off: no heading at all (the Card look keeps its own). */
   showHeading?: boolean;
+  tips?: { text?: string }[];
 }) {
   const p = useWalkParts();
   if (!p) return <Placeholder label={`Before you set off · ${look}`} />;
   if (!p.before) return null;
-  if (look === "card") return <>{p.before}</>;
+  const lines = tipLines(tips, p.tips);
+  if (look === "card") return <BeforeYouSetOff tips={lines} />;
   if (WIDE_STEP_LOOKS.includes(look))
     return (
       <StepsLooks
         heading={showHeading ? title.trim() || "Before you set off" : ""}
         look={look as Exclude<BeforeLook, "card">}
         p={p}
-        steps={p.tips.map((tip) => ({ title: tip, body: "" }))}
+        steps={lines.map((tip) => ({ title: tip, body: "" }))}
       />
     );
   return (
     <BeforeTips
       heading={showHeading ? title.trim() || "Before you set off" : ""}
       look={look}
+      lines={lines}
       p={p}
     />
   );
@@ -3118,15 +3139,17 @@ function BeforeTips({
   p,
   look,
   heading,
+  lines,
 }: {
   p: WalkIdeaParts;
   look: Exclude<BeforeLook, "card">;
   /** Blank: no heading. */
   heading: string;
+  lines: readonly string[];
 }) {
   const { status } = useWalkInfo(p);
   if (status === "completed" || status === "cancelled") return null;
-  const tips = p.tips;
+  const tips = lines;
   if (look === "compact")
     return (
       <p className="text-sm text-muted-foreground">
@@ -3437,6 +3460,7 @@ export function HowItWorksBlock({
   title = "",
   showTo = "visitors",
   showHeading = true,
+  steps: blockSteps,
 }: {
   /** Off: no heading at all (the Card look for visitors keeps its own). */
   showHeading?: boolean;
@@ -3445,17 +3469,32 @@ export function HowItWorksBlock({
   title?: string;
   /** Who sees it: signed-out visitors (the default), members, or everyone. */
   showTo?: HowItWorksAudience;
+  steps?: { title?: string; body?: string }[];
 }) {
   const p = useWalkParts();
   if (!p)
     return <Placeholder label={`How this group works (${showTo}) · ${look}`} />;
-  const steps = p.howItWorksSteps ?? [];
-  // The page's own card (visitors only, when on in Settings), as it is.
-  if (look === "card" && showTo === "visitors" && p.howItWorks)
-    return <>{p.howItWorks}</>;
+  const fromBlock = (blockSteps ?? [])
+    .map((row) => ({ title: (row.title ?? "").trim(), body: (row.body ?? "").trim() }))
+    .filter((row) => row.title || row.body);
+  const steps = fromBlock.length > 0 ? fromBlock : [...(p.howItWorksSteps ?? [])];
+  if (look === "card" && showTo === "visitors") {
+    if (steps.length === 0) {
+      return editing ? (
+        <Placeholder label="How this group works: add the steps in this block" />
+      ) : p.howItWorks ? (
+        <>{p.howItWorks}</>
+      ) : null;
+    }
+    return (
+      <div className="contents" data-guest-home="">
+        <HowWalksWork steps={steps} />
+      </div>
+    );
+  }
   if (steps.length === 0)
     return editing ? (
-      <Placeholder label="How this group works: no steps yet (Settings → Walk page cards)" />
+      <Placeholder label="How this group works: add the steps in this block" />
     ) : null;
   const drawn = (
     <StepsLooks

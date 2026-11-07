@@ -6,7 +6,6 @@ import {
   ListChecks,
   Mail,
   Paintbrush,
-  PanelsTopLeft,
   Settings2,
   SlidersHorizontal,
   TrendingUp,
@@ -18,7 +17,6 @@ import {
 export const SETTINGS_PAGE_ICONS: Record<string, LucideIcon> = {
   "/admin/settings/branding": LayoutGrid,
   "/admin/settings/page-designs": Paintbrush,
-  "/admin/settings/site-wording/walk-page-cards": PanelsTopLeft,
   "/admin/settings/notices": Bell,
   "/admin/settings/emails": Mail,
   "/admin/settings/progress": TrendingUp,

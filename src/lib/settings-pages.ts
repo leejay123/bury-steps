@@ -49,13 +49,6 @@ export const SETTINGS_PAGE_GROUPS: SettingsPageGroup[] = [
         keywords: "homepage about contact privacy terms apps quotes faq wording designer puck",
         permission: "permDisplay",
       },
-      {
-        href: "/admin/settings/site-wording/walk-page-cards",
-        title: "Walk page cards",
-        description: "Edit the shared wording on walk pages. Layout and which blocks show are set in the walk page designer.",
-        keywords: "tips steps before you set off how walks work walk page design wording status",
-        permission: "permDisplay",
-      },
     ],
   },
   {

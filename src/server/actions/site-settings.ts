@@ -1,10 +1,11 @@
 "use server";
 
 import { PAGE_TOP_STYLES, type PageTopStyle } from "@/lib/site-theme";
-import { changedWalkWording, MAX_WALK_WORDING } from "@/lib/walk-wording";
+import { changedWalkWording, MAX_WALK_WORDING, parseWalkWording } from "@/lib/walk-wording";
 import { z } from "zod";
 import { parseTabStyle } from "@/lib/tab-style";
 import { WALK_PAGE_CHOICE_TAG } from "@/lib/walk-page-choice";
+import { extractWalkDesignCopy } from "@/lib/walk-design-copy";
 import {
   splitWalkPageChoice,
   parseWalkPageSections,
@@ -1683,7 +1684,10 @@ async function saveWalkDesignWork(input: { audience: string; data: string }): Pr
     return { ok: false, error: "That design couldn't be read. Try again." };
   }
   try {
-    const row = await prisma.siteSetting.findUnique({ where: { id: SITE_SETTING_ID }, select: { walkPageDesigns: true } });
+    const row = await prisma.siteSetting.findUnique({
+      where: { id: SITE_SETTING_ID },
+      select: { walkPageDesigns: true, walkWording: true },
+    });
     const designs = (() => {
       try {
         return row?.walkPageDesigns ? (JSON.parse(row.walkPageDesigns) as Record<string, unknown>) : {};
@@ -1693,16 +1697,46 @@ async function saveWalkDesignWork(input: { audience: string; data: string }): Pr
     })();
     designs[audience] = design;
     const text = JSON.stringify(designs);
+    const extracted = extractWalkDesignCopy(design, parseWalkWording(row?.walkWording ?? null));
+    const extra: {
+      beforeYouSetOffTips?: string;
+      howWalksWorkSteps?: string;
+      walkWording?: ReturnType<typeof changedWalkWording>;
+    } = {};
+    if (extracted.tips) {
+      const tips = parseAboutList(extracted.tips.join("\n"));
+      if (tips === "invalid") {
+        return {
+          ok: false,
+          error: `"Before you set off" needs 1–${MAX_ABOUT_LIST_ITEMS} tips, each up to ${MAX_ABOUT_LIST_ITEM} characters.`,
+        };
+      }
+      extra.beforeYouSetOffTips = serializeAboutList(tips);
+    }
+    if (extracted.steps) {
+      const steps = parseAboutRules(serializeAboutRules(extracted.steps));
+      if (steps === "invalid") {
+        return {
+          ok: false,
+          error: `"How this group works" needs 1–${MAX_ABOUT_RULES} steps as a title and a short line.`,
+        };
+      }
+      extra.howWalksWorkSteps = serializeAboutRules(steps);
+    }
+    if (extracted.wording) extra.walkWording = changedWalkWording(extracted.wording);
     await prisma.siteSetting.upsert({
       where: { id: SITE_SETTING_ID },
-      create: { id: SITE_SETTING_ID, primaryColor: DEFAULT_PRIMARY_COLOR, walkPageDesigns: text },
-      update: { walkPageDesigns: text },
+      create: { id: SITE_SETTING_ID, primaryColor: DEFAULT_PRIMARY_COLOR, walkPageDesigns: text, ...extra },
+      update: { walkPageDesigns: text, ...extra },
     });
+    revalidateTag(WALK_PAGE_CHOICE_TAG, { expire: 0 });
+    if (extra.beforeYouSetOffTips || extra.howWalksWorkSteps || extra.walkWording) {
+      revalidateTag(HOMEPAGE_CACHE_TAG, { expire: 0 });
+      revalidatePath("/", "layout");
+    }
   } catch (err) {
     return logActionError("saveWalkDesign", err, "Could not save the design. Try again.");
   }
-  // Walk pages only (they read the designs through this tag).
-  revalidateTag(WALK_PAGE_CHOICE_TAG, { expire: 0 });
   return { ok: true, message: "Design saved. Walk pages use it when Layout is set to Designed." };
 }
 const saveWalkDesignGuarded = guardArgs(

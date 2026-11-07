@@ -4,8 +4,8 @@ import { createContext, useContext } from "react";
 import { WALK_WORDING_DEFAULTS, type WalkWording } from "@/lib/walk-wording";
 
 /**
- * The walk page's status lines, countdown and messages (Settings → Site
- * wording → Walk page cards), handed down once from the root layout.
+ * The walk page's status lines, countdown and messages (edited on the Status
+ * block in the walk page designer), handed down once from the root layout.
  */
 const WalkWordingContext = createContext<WalkWording>(WALK_WORDING_DEFAULTS);
 
