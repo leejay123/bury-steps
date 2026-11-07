@@ -1,8 +1,8 @@
 "use client";
 
-import type { ReactNode } from "react";
+import { useEffect, type ReactNode } from "react";
 import { usePuck, type Data, type UiState, type Viewports } from "@puckeditor/core";
-import { Monitor, Smartphone, Tablet, X } from "lucide-react";
+import { Monitor, PanelLeft, PanelRight, Smartphone, Tablet, X } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 
@@ -40,6 +40,12 @@ const STATUS_TONE: Record<DesignerStatus["tone"], { pill: string; dot: string }>
   },
   live: { pill: "bg-muted text-foreground", dot: "bg-muted-foreground" },
 };
+
+/** The widest each panel can be dragged: never more than about a third of the window,
+ * so the page being designed always has room (Puck allows any width, and remembers it). */
+const PANEL_MAX = { left: 360, right: 420 } as const;
+const panelMax = (side: "left" | "right") =>
+  Math.min(PANEL_MAX[side], Math.round(window.innerWidth * 0.32));
 
 /** A segment of the bar: full height, split off by a line (as the site's edge strips). */
 const SEGMENT = "flex shrink-0 items-center border-l";
@@ -81,6 +87,22 @@ export function DesignerTopBar({
 }) {
   const { appState, dispatch } = usePuck();
   const viewports = appState.ui.viewports;
+  const ui = appState.ui;
+
+  // A panel dragged (or remembered) wider than its limit goes back to the limit.
+  useEffect(() => {
+    const left = ui.leftSideBarWidth;
+    const right = ui.rightSideBarWidth;
+    const next: Partial<typeof ui> = {};
+    if (left && left > panelMax("left")) next.leftSideBarWidth = panelMax("left");
+    if (right && right > panelMax("right")) next.rightSideBarWidth = panelMax("right");
+    if (Object.keys(next).length) dispatch({ type: "setUi", ui: next });
+  }, [ui.leftSideBarWidth, ui.rightSideBarWidth, dispatch]);
+
+  const panels = [
+    { label: "Blocks panel", icon: PanelLeft, on: ui.leftSideBarVisible, key: "leftSideBarVisible" as const },
+    { label: "Settings panel", icon: PanelRight, on: ui.rightSideBarVisible, key: "rightSideBarVisible" as const },
+  ];
   const setWidth = (width: number | "100%") =>
     dispatch({ type: "setUi", ui: { viewports: { ...viewports, current: { width, height: "auto" } } } });
 
@@ -120,6 +142,29 @@ export function DesignerTopBar({
           </div>
           {children}
         </div>
+        {/* Show or hide the left (blocks, outline) and right (settings) panels. */}
+        <div aria-label="Panels" className="flex" role="group">
+          {panels.map((panel) => {
+            const Icon = panel.icon;
+            return (
+              <button
+                aria-label={`${panel.on ? "Hide" : "Show"} the ${panel.label.toLowerCase()}`}
+                aria-pressed={panel.on}
+                className={cn(
+                  SEGMENT,
+                  "px-3 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-inset",
+                  panel.on ? "bg-accent text-accent-foreground" : "text-muted-foreground hover:bg-accent/60 hover:text-foreground",
+                )}
+                key={panel.key}
+                onClick={() => dispatch({ type: "setUi", ui: { [panel.key]: !panel.on } })}
+                title={`${panel.on ? "Hide" : "Show"} the ${panel.label.toLowerCase()}`}
+                type="button"
+              >
+                <Icon aria-hidden className="size-4" />
+              </button>
+            );
+          })}
+        </div>
         <div aria-label="Preview size" className="flex" role="group">
           {SIZES.map((size) => {
             const on = viewports.current.width === size.width;
@@ -128,6 +173,7 @@ export function DesignerTopBar({
               <button
                 aria-label={size.label}
                 aria-pressed={on}
+                title={size.label}
                 className={cn(
                   SEGMENT,
                   "gap-2 px-3 text-sm font-medium lg:px-4 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-inset",

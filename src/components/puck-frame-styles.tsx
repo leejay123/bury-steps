@@ -35,6 +35,19 @@ export function PuckFrameStyles({
       style.textContent = text;
       frame.head.prepend(style);
     }
+    // The designer's marks on the page: Puck tints a block blue under the pointer, which
+    // hid the page being designed. A thin outline instead, and a clear one once selected.
+    if (!frame.head.querySelector("style[data-bs-designer]")) {
+      const marks = frame.createElement("style");
+      marks.setAttribute("data-bs-designer", "");
+      marks.textContent = `:root {
+  --puck-color-selection-bg: transparent;
+  --puck-color-selection-border: color-mix(in srgb, #2563eb 45%, transparent);
+  --puck-slot-component-color-border-selected: #2563eb;
+  --puck-slot-component-border-width: 1.5px;
+}`;
+      frame.head.append(marks);
+    }
   }, [frame]);
   return <>{children}</>;
 }

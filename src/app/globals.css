@@ -1190,3 +1190,33 @@ html[data-page-kind="home"] #main-content {
 
 /* The shadcn.io design uses shadcn.io's own text sizes everywhere (Tailwind's scale), not the Branding text-size settings. */
 :root[data-design="shadcnio"] { --text-headline-n: 72 !important; --text-section-n: 36 !important; --text-intro-n: 18 !important; --text-body-n: 14 !important; }
+
+/* The page and walk designers (Puck): its panels in the site's own font, colours, borders
+   and corners instead of Puck's blue-and-grey defaults, in light and dark. Puck's tokens
+   live in a CSS layer on :root, so these (on the designer, unlayered) win. */
+[data-designer] {
+  --puck-font-family: var(--font-site), ui-sans-serif, system-ui, sans-serif;
+  --puck-color-surface: var(--background);
+  --puck-color-surface-muted: var(--muted);
+  --puck-color-surface-subtle: color-mix(in oklab, var(--muted) 45%, var(--background));
+  --puck-color-surface-inverse: var(--foreground);
+  --puck-color-border: var(--border);
+  --puck-color-border-muted: var(--border);
+  --puck-color-border-hover: var(--muted-foreground);
+  --puck-color-text: var(--foreground);
+  --puck-color-text-secondary: var(--muted-foreground);
+  --puck-color-text-muted: var(--muted-foreground);
+  --puck-color-text-inverse: var(--background);
+  --puck-color-interactive: var(--foreground);
+  --puck-color-interactive-hover: var(--foreground);
+  --puck-color-interactive-active: var(--foreground);
+  --puck-color-interactive-subtle: var(--muted);
+  --puck-color-interactive-soft: var(--muted);
+  --puck-color-interactive-soft-hover: var(--accent);
+  --puck-color-interactive-neutral-hover: var(--accent);
+  --puck-color-focus-ring: var(--ring);
+  --puck-color-selection-bg: transparent;
+  --puck-color-selection-border: color-mix(in srgb, #2563eb 45%, transparent);
+  --puck-radius-m: calc(var(--radius) - 2px);
+  --puck-radius-l: var(--radius);
+}

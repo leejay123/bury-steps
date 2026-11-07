@@ -305,6 +305,7 @@ export function WalkDesignEditor({
     // the site's pop-up lists sit at z-[80], under this.
     <div
       className="fixed inset-0 z-[90] flex flex-col bg-background"
+      data-designer=""
       role="dialog"
       aria-label="Walk page designer"
       aria-modal="true"

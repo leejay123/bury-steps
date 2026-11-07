@@ -73,6 +73,7 @@ export function SitePageDesignEditor({
   return (
     <div
       className="fixed inset-0 z-[90] flex flex-col bg-background"
+      data-designer=""
       role="dialog"
       aria-label={`${meta?.title ?? "Page"} designer`}
       aria-modal="true"
