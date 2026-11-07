@@ -48,10 +48,10 @@ export async function sidebarGroups(): Promise<SidebarGroup[] | null> {
         href: "/admin/settings",
         label: "Settings",
         icon: "settings",
-        children: [
-          { href: "/admin/settings", label: "All settings" },
-          ...SETTINGS_PAGE_GROUPS.flatMap((group) => group.pages.map((page) => ({ href: page.href, label: page.title }))),
-        ],
+        // Settings itself opens the main settings page, so no "All settings" row.
+        children: SETTINGS_PAGE_GROUPS.flatMap((group) =>
+          group.pages.map((page) => ({ href: page.href, label: page.title })),
+        ),
       });
     groups.push({ title: "Organisers", links });
   }
@@ -70,10 +70,9 @@ export async function sidebarGroups(): Promise<SidebarGroup[] | null> {
  * has every page.
  */
 export function staticSidebarGroups(progressEnabled: boolean): SidebarGroup[] {
-  const settings = [
-    { href: "/admin/settings", label: "All settings" },
-    ...SETTINGS_PAGE_GROUPS.flatMap((group) => group.pages.map((page) => ({ href: page.href, label: page.title }))),
-  ];
+  const settings = SETTINGS_PAGE_GROUPS.flatMap((group) =>
+    group.pages.map((page) => ({ href: page.href, label: page.title })),
+  );
   return [
     {
       title: "Dashboard",
