@@ -13,8 +13,10 @@ import { WalkMembers } from "@/components/walk-members";
 import { BeforeYouSetOff } from "@/components/before-you-set-off";
 import { useHydrated } from "@/hooks/use-hydrated";
 import { useClockedInPreview, useWalkClock } from "@/hooks/use-walk-clock";
-import { formatWalkDate } from "@/lib/dates";
-import { effectiveEndsAt, formatInProgressCountdown, walkStatus, windowState } from "@/lib/walk-window";
+import { formatTime, formatWalkDate, formatWalkDay } from "@/lib/dates";
+import { fillWording } from "@/lib/walk-wording";
+import { useWalkWording } from "@/components/walk-wording-context";
+import { effectiveEndsAt, formatInProgressCountdown, walkOpensAt, walkStatus, windowState } from "@/lib/walk-window";
 import { Button } from "@/components/ui/button";
 import type { WalkMemberName } from "@/lib/walk-members";
 
@@ -73,6 +75,7 @@ export function WalkLivePanel({
   const start = new Date(startsAt);
   const now = useWalkClock({ cancelledAt: null, durationMins, endedAt, startsAt });
   const attendedRule = useContext(AttendedRuleContext);
+  const words = useWalkWording();
   const walk = { cancelledAt: null, durationMins, endedAt: endedAt ? new Date(endedAt) : null, startsAt: start };
   const status = walkStatus(walk, now);
   const state = windowState(start, durationMins, now, walk.endedAt);
@@ -107,6 +110,23 @@ export function WalkLivePanel({
     );
 
   if (membersOnly) {
+    // Before clock-in opens nobody can clock in, organisers and owners
+    // included, so the list could only say "0 people have clocked in". Say
+    // when it opens instead, in the walk's own wording (the Status block's
+    // "before clock-in opens" message), in the site's empty box. Anyone an
+    // organiser has already added by hand still shows to organisers.
+    if (state === "too-early" && !(organiserView && memberNames.length > 0)) {
+      const opensAt = walkOpensAt(start);
+      return (
+        <EmptyState
+          description={fillWording(words.memberBefore, {
+            opens: formatTime(opensAt),
+            opensDay: formatWalkDay(opensAt),
+          })}
+          title="Clock-in isn't open yet"
+        />
+      );
+    }
     // The design can take the list away once someone clocks out.
     const gone = attendedRule === "on-walk" && Boolean(clockedOutAt);
     return organiserView || (alreadyClockedInAt && !gone) ? (
@@ -219,7 +239,9 @@ export function WalkLivePanel({
     return (
       <>
         {beforeYouSetOffEnabled ? <BeforeYouSetOff tips={beforeYouSetOffTips} /> : null}
-        {organiserNames}
+        {/* Nobody can clock in yet, so no "0 people have clocked in" (the
+            notice at the top says when it opens); anyone added by hand shows. */}
+        {memberNames.length > 0 ? organiserNames : null}
       </>
     );
   }
