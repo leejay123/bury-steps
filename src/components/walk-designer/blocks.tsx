@@ -1386,12 +1386,12 @@ export function MessagesBlock({
   // The messages show in the Status band instead.
   if (p.noticesInBand)
     return editing ? (
-      <Placeholder label="Messages show in the Details card's Status band — to show them here instead, set Where the walk's messages go to Where I put the Messages block in the Page settings (click an empty part of the page)" />
+      <Placeholder label="Messages show in the Details card's Status band — to show them here instead, set Where they show (on the right) to Here, as this block" />
     ) : null;
   // The messages show as the strip under the header instead.
   if (p.noticesInStrip)
     return editing ? (
-      <Placeholder label="Messages show at the top of the page — to show them here instead, set Where the walk's messages go to Where I put the Messages block in the Page settings (click an empty part of the page)" />
+      <Placeholder label="Messages show at the top of the page — to show them here instead, set Where they show (on the right) to Here, as this block" />
     ) : null;
   return (
     <MessagesOrSample className={MESSAGE_LOOK[look]} editing={editing} p={p} />

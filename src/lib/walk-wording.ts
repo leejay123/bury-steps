@@ -1,7 +1,8 @@
 /**
  * The words a walk page uses for where the walk is up to (the status line,
- * the countdown, and the walk's messages), editable on the Status block in
- * the walk page designer. Each can hold placeholders, filled in for the
+ * the countdown, and the walk's messages), editable in the walk page
+ * designer: status lines on the Status block, messages on the Messages
+ * block. Each can hold placeholders, filled in for the
  * walk: {opens}, {opensDay}, {start}, {finish}, {count}, {n}.
  * Only changed wording is saved; anything left blank uses the default.
  */
@@ -38,7 +39,7 @@ export type WalkWording = Record<WalkWordingKey, string>;
 
 export const MAX_WALK_WORDING = 200;
 
-/** The settings page's groups: each line's name and when it shows. */
+/** Groups for the wording fields: status lines, countdown, and messages. */
 export const WALK_WORDING_GROUPS: {
   title: string;
   description: string;

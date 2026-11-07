@@ -79,14 +79,16 @@ function readSteps(props: Record<string, unknown>): AboutRule[] | null {
   return steps;
 }
 
+function statusLinePropsHaveWording(props: Record<string, unknown>): boolean {
+  return STATUS_LINE_FIELDS.some((field) => String(props[field.prop] ?? "").trim());
+}
+
+function messagePropsHaveWording(props: Record<string, unknown>): boolean {
+  return STATUS_MESSAGE_FIELDS.some((field) => String(props[field.prop] ?? "").trim());
+}
+
 function statusPropsHaveWording(props: Record<string, unknown>): boolean {
-  for (const field of STATUS_LINE_FIELDS) {
-    if (String(props[field.prop] ?? "").trim()) return true;
-  }
-  for (const field of STATUS_MESSAGE_FIELDS) {
-    if (String(props[field.prop] ?? "").trim()) return true;
-  }
-  return false;
+  return statusLinePropsHaveWording(props) || messagePropsHaveWording(props);
 }
 
 /** Overlay Status-block fields onto the site wording (blank keeps the current line). */
@@ -109,15 +111,24 @@ export function wordingFromStatusProps(
   return parseWalkWording(next);
 }
 
-export function statusPropsFromWording(wording: WalkWording): Record<string, string> {
+export function statusLinePropsFromWording(wording: WalkWording): Record<string, string> {
   const props: Record<string, string> = {};
   for (const field of STATUS_LINE_FIELDS) {
     props[field.prop] = joinStatusLine(wording[field.name], wording[field.rest]);
   }
+  return props;
+}
+
+export function messagePropsFromWording(wording: WalkWording): Record<string, string> {
+  const props: Record<string, string> = {};
   for (const field of STATUS_MESSAGE_FIELDS) {
     props[field.prop] = wording[field.key];
   }
   return props;
+}
+
+export function statusPropsFromWording(wording: WalkWording): Record<string, string> {
+  return { ...statusLinePropsFromWording(wording), ...messagePropsFromWording(wording) };
 }
 
 export type ExtractedWalkDesignCopy = {
@@ -126,9 +137,11 @@ export type ExtractedWalkDesignCopy = {
   wording: WalkWording | null;
 };
 
-/** First Before / How this group works / Status block that has copy. */
+/** First Before / How this group works / Status / Messages block that has copy. */
 export function extractWalkDesignCopy(data: unknown, base?: WalkWording): ExtractedWalkDesignCopy {
   const found: ExtractedWalkDesignCopy = { tips: null, steps: null, wording: null };
+  let statusProps: Record<string, unknown> | null = null;
+  let messageProps: Record<string, unknown> | null = null;
   walkBlocks(data, (type, props) => {
     if (type === "Before" && found.tips === null) {
       const tips = readTips(props);
@@ -138,10 +151,16 @@ export function extractWalkDesignCopy(data: unknown, base?: WalkWording): Extrac
       const steps = readSteps(props);
       if (steps && steps.length > 0) found.steps = steps;
     }
-    if (type === "Status" && found.wording === null && statusPropsHaveWording(props)) {
-      found.wording = wordingFromStatusProps(props, base);
+    if (type === "Status" && statusProps === null && statusPropsHaveWording(props)) {
+      statusProps = props;
+    }
+    if (type === "Messages" && messageProps === null && messagePropsHaveWording(props)) {
+      messageProps = props;
     }
   });
+  if (statusProps || messageProps) {
+    found.wording = wordingFromStatusProps({ ...(statusProps ?? {}), ...(messageProps ?? {}) }, base);
+  }
   return found;
 }
 
@@ -151,6 +170,10 @@ export function extractWalkDesignCopy(data: unknown, base?: WalkWording): Extrac
  */
 export function withSiteCopy<T>(data: T, copy: WalkDesignSiteCopy): T {
   const cloned = structuredClone(data);
+  let hasMessages = false;
+  walkBlocks(cloned, (type) => {
+    if (type === "Messages") hasMessages = true;
+  });
   walkBlocks(cloned, (type, props) => {
     if (type === "Before") {
       const tips = readTips(props);
@@ -164,8 +187,14 @@ export function withSiteCopy<T>(data: T, copy: WalkDesignSiteCopy): T {
         props.steps = copy.steps.map((step) => ({ title: step.title, body: step.body }));
       }
     }
-    if (type === "Status" && !statusPropsHaveWording(props)) {
-      Object.assign(props, statusPropsFromWording(copy.wording));
+    if (type === "Status" && !statusLinePropsHaveWording(props)) {
+      Object.assign(props, statusLinePropsFromWording(copy.wording));
+    }
+    if (type === "Status" && !hasMessages && !messagePropsHaveWording(props)) {
+      Object.assign(props, messagePropsFromWording(copy.wording));
+    }
+    if (type === "Messages" && !messagePropsHaveWording(props)) {
+      Object.assign(props, messagePropsFromWording(copy.wording));
     }
   });
   return cloned;

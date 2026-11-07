@@ -69,16 +69,28 @@ describe("extractWalkDesignCopy", () => {
     expect(extracted.wording?.upcomingLine).toBe("Opens at {opens}");
     expect(extracted.wording?.memberBefore).toBe("Wait until {opens}.");
   });
+
+  it("reads message wording from the Messages block, over Status", () => {
+    const extracted = extractWalkDesignCopy({
+      content: [
+        { type: "Status", props: { upcoming: "Soon · Opens at {opens}", memberBefore: "Old." } },
+        { type: "Messages", props: { look: "as-is", memberBefore: "Wait until {opens}." } },
+      ],
+    });
+    expect(extracted.wording?.upcomingLabel).toBe("Soon");
+    expect(extracted.wording?.memberBefore).toBe("Wait until {opens}.");
+  });
 });
 
 describe("withSiteCopy", () => {
-  it("fills empty Before, How this group works and Status from the live copy", () => {
+  it("fills empty Before, How this group works, Status and Messages from the live copy", () => {
     const filled = withSiteCopy(
       {
         content: [
           { type: "Before", props: { look: "card" } },
           { type: "HowItWorks", props: { look: "card" } },
           { type: "Status", props: { variant: "box" } },
+          { type: "Messages", props: { look: "as-is" } },
         ],
       },
       copy,
@@ -86,7 +98,10 @@ describe("withSiteCopy", () => {
     expect(extractWalkDesignCopy(filled)).toEqual({
       tips: ["Bring water.", "Wear shoes."],
       steps: [{ title: "Join", body: "Make an account." }],
-      wording: expect.objectContaining({ upcomingLabel: "Coming up" }),
+      wording: expect.objectContaining({
+        upcomingLabel: "Coming up",
+        memberBefore: copy.wording.memberBefore,
+      }),
     });
   });
 

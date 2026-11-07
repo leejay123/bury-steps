@@ -34,6 +34,13 @@ import {
   AccordionTrigger,
 } from "@/components/ui/accordion";
 import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
   TabStyleProvider,
   Tabs,
   TabsContent,
@@ -456,6 +463,48 @@ const TITLE_LOOKS: [string, string][] = [
  * this instead of an input, and stores nothing).
  */
 const usePuck = createUsePuck();
+
+const MESSAGE_PLACE_OPTIONS = [
+  { value: "block", label: "Here, as this block" },
+  { value: "top", label: "At the top, page width" },
+  { value: "band", label: "In the Details card's Status band" },
+] as const;
+
+/** Page setting “Where the walk's messages go”, shown on the Messages block. */
+function MessagesPlaceControl() {
+  const messagesAt = usePuck((s) => {
+    const value = (s.appState.data.root?.props as { messagesAt?: string } | undefined)?.messagesAt;
+    return value === "strip" ? "top" : (value ?? "block");
+  });
+  const dispatch = usePuck((s) => s.dispatch);
+  return (
+    <Select
+      onValueChange={(next) => {
+        dispatch({
+          type: "setData",
+          data: (previous) => ({
+            root: {
+              ...previous.root,
+              props: { ...(previous.root?.props ?? {}), messagesAt: next },
+            },
+          }),
+        });
+      }}
+      value={messagesAt}
+    >
+      <SelectTrigger className="w-full">
+        <SelectValue />
+      </SelectTrigger>
+      <SelectContent className="z-[100]">
+        {MESSAGE_PLACE_OPTIONS.map((option) => (
+          <SelectItem key={option.value} value={option.value}>
+            {option.label}
+          </SelectItem>
+        ))}
+      </SelectContent>
+    </Select>
+  );
+}
 
 /** Reads the selected block's settings (for the fold headings' summaries). */
 function useSelectedProps(): Record<string, unknown> {
@@ -2325,7 +2374,32 @@ export const walkDesignConfig: Config = {
     },
     Messages: {
       label: "Messages",
-      fields: { look: { ...messageLookField, label: "Look" } },
+      fields: {
+        place: {
+          type: "custom",
+          label: "Where they show",
+          render: () => <MessagesPlaceControl />,
+        },
+        look: { ...messageLookField, label: "Look" },
+        memberBefore: {
+          type: "textarea",
+          label: "Members, before clock-in opens. {opens}, {opensDay}.",
+        },
+        memberMissed: {
+          type: "textarea",
+          label: "Members who didn't clock in, after the walk",
+        },
+        visitorFinished: { type: "textarea", label: "Visitors, after the walk" },
+        organiserFinished: {
+          type: "textarea",
+          label: "Organisers, after the walk",
+        },
+        cancelledTitle: { type: "textarea", label: "Cancelled: heading" },
+        cancelledNext: {
+          type: "textarea",
+          label: "Cancelled: what to do next",
+        },
+      },
       defaultProps: { look: "as-is" },
       render: ({ look, puck }) => (
         <MessagesBlock editing={Boolean(puck?.isEditing)} look={look} />
@@ -3616,23 +3690,13 @@ export const walkDesignConfig: Config = {
           label: "Finished (Name · the rest). {count} is how many came.",
         },
         cancelled: { type: "text", label: "Cancelled (Name · the rest)" },
-        memberBefore: {
-          type: "text",
-          label: "Members, before clock-in opens. {opens}, {opensDay}.",
-        },
-        memberMissed: {
-          type: "text",
-          label: "Members who didn't clock in, after the walk",
-        },
-        visitorFinished: { type: "text", label: "Visitors, after the walk" },
-        organiserFinished: {
-          type: "text",
-          label: "Organisers, after the walk",
-        },
-        cancelledTitle: { type: "text", label: "Cancelled: heading" },
-        cancelledNext: {
-          type: "text",
-          label: "Cancelled: what to do next",
+        messageNote: {
+          type: "custom",
+          render: () => (
+            <p className="text-xs text-muted-foreground">
+              Clock-in and cancelled messages are on the Messages block.
+            </p>
+          ),
         },
       },
       defaultProps: { variant: "box" },
