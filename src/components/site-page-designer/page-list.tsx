@@ -162,7 +162,8 @@ export function SitePageDesignList({
     <>
       <Totals counts={counts} />
       <EdgeBar>
-        <div aria-label="Show" className="flex max-sm:w-full max-sm:*:flex-1" role="group">
+        {/* The four filters share the strip's whole width equally. */}
+        <div aria-label="Show" className="flex w-full *:flex-1" role="group">
           {FILTERS.map((option, index) => {
             const on = filter === option.id;
             const total = option.id === "all" ? SITE_PAGES.length : counts[option.id];
@@ -174,7 +175,6 @@ export function SitePageDesignList({
                   // Narrower on a phone, so all four fit across.
                   "gap-1.5 px-2 text-[0.8125rem] sm:gap-2 sm:px-4 sm:text-sm",
                   index === 0 && "border-l-0!",
-                  index === FILTERS.length - 1 && "sm:border-r!",
                   on ? "bg-accent! text-accent-foreground" : "text-muted-foreground hover:text-foreground",
                 )}
                 key={option.id}
@@ -189,7 +189,7 @@ export function SitePageDesignList({
           })}
         </div>
         {computer ? null : (
-          <p className="flex items-center border-l px-4 text-sm text-muted-foreground max-sm:w-full max-sm:border-t max-sm:border-l-0 max-sm:py-3">
+          <p className="flex w-full items-center border-t px-4 py-3 text-sm text-muted-foreground">
             Open a page’s designer on a computer (1024px or wider).
           </p>
         )}
@@ -326,14 +326,13 @@ export function SitePageDesignListSkeleton() {
     <>
       <Totals counts={null} />
       <EdgeBar>
-        <div className="flex max-sm:w-full max-sm:*:flex-1">
+        <div className="flex w-full *:flex-1">
           {FILTERS.map((option, index) => (
             <span
               className={cn(
                 EDGE_FILTER,
                 "flex items-center justify-center gap-1.5 px-2 text-[0.8125rem] text-muted-foreground sm:gap-2 sm:px-4 sm:text-sm",
                 index === 0 && "border-l-0!",
-                index === FILTERS.length - 1 && "sm:border-r!",
               )}
               key={option.id}
             >
