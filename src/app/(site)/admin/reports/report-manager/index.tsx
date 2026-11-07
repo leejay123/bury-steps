@@ -44,6 +44,7 @@ type DrawerMode =
 export function AccidentReportManager({
   reports,
   walks,
+  createWalks,
   hasAnyReports,
   linkFilter,
   sortOrder,
@@ -59,6 +60,8 @@ export function AccidentReportManager({
   /** Rows for the current link/sort filters — search is client-only (no PII in the URL). */
   reports: ReportView[];
   walks: WalkOption[];
+  /** The walks a new report can be about (Edit keeps `walks`). */
+  createWalks: WalkOption[];
   hasAnyReports: boolean;
   linkFilter: "all" | "linked" | "unlinked";
   sortOrder: "desc" | "asc";
@@ -237,7 +240,7 @@ export function AccidentReportManager({
                 key="add"
                 onPendingChange={setIsPending}
                 onSaved={() => setMode(null)}
-                walks={walks}
+                walks={createWalks}
               />
             ) : null}
             {viewing ? (

@@ -26,7 +26,7 @@ const TEXT = "typeset typeset-docs block wrap-break-word";
 
 /**
  * One accident report as its own page (design A): the page top, a strip with the way back,
- * Edit and Print, the details as three cells, then a band per part of the write-up.
+ * Edit and Print, the details in a row of cells, then a band per part of the write-up.
  */
 export function ReportPage({
   canEdit,
@@ -78,7 +78,9 @@ export function ReportPage({
         </div>
       </EdgeBar>
 
-      <div className="grid gap-4 sm:grid-cols-3" data-edge-stats="">
+      {/* Every box on one row from tablet up; on a phone two side by side,
+          then Recorded by across the full width, with lines between. */}
+      <div className="grid grid-cols-2 gap-4 md:grid-cols-3" data-edge-stats="">
         <div className="flex flex-col gap-1">
           <p className="text-sm text-muted-foreground">When</p>
           <p className="font-medium">{when}</p>
@@ -88,7 +90,7 @@ export function ReportPage({
           <p className="font-medium">{report.walkTitle || "Not linked to a walk"}</p>
           {report.walkLocation ? <p className="text-sm text-muted-foreground">{report.walkLocation}</p> : null}
         </div>
-        <div className="flex flex-col gap-1">
+        <div className="col-span-2 flex flex-col gap-1 md:col-span-1">
           <p className="text-sm text-muted-foreground">Recorded by</p>
           <p className="font-medium">{createdBy}</p>
         </div>

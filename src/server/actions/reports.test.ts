@@ -64,9 +64,19 @@ const ADMIN = {
   permCacheReset: true,
 };
 
+const FINISHED_ATTENDED_WALK = {
+  id: "walk-1",
+  cancelledAt: null,
+  startsAt: new Date(Date.now() - 3 * 60 * 60_000),
+  durationMins: 60,
+  endedAt: null,
+  _count: { attendances: 2 },
+};
+
 function reportForm(fields: Record<string, string> = {}): FormData {
   const formData = new FormData();
   formData.set("happenedAt", "2026-01-05T14:00");
+  formData.set("walkId", "walk-1");
   formData.set("whatHappened", "Someone tripped on a root.");
   formData.set("whoInvolved", "A member");
   formData.set("whatWeDid", "Checked on them, no injury.");
@@ -78,6 +88,8 @@ beforeEach(() => {
   vi.clearAllMocks();
   requireAdmin.mockResolvedValue(ADMIN);
   prismaMock.accidentReport.findMany.mockResolvedValue([]);
+  prismaMock.walk.findUnique.mockReset();
+  prismaMock.walk.findUnique.mockResolvedValue(FINISHED_ATTENDED_WALK);
   isOwner.mockImplementation(async (userId: string) => userId === "admin-1");
   actorStillOwner.mockImplementation(async (userId: string) => userId === "admin-1");
 });
@@ -100,12 +112,30 @@ describe("addAccidentReport", () => {
     expect(result.ok).toBe(false);
   });
 
-  it("treats walkId 'none' the same as not selecting a walk", async () => {
-    prismaMock.accidentReport.create.mockResolvedValueOnce({ involvedMembers: [] });
-    await addAccidentReport(null, reportForm({ walkId: "none" }));
-    expect(prismaMock.accidentReport.create).toHaveBeenCalledWith(
-      expect.objectContaining({ data: expect.objectContaining({ walkId: null }) }),
-    );
+  it.each(["none", ""])("rejects a report with no walk (walkId %j)", async (walkId) => {
+    const result = await addAccidentReport(null, reportForm({ walkId }));
+    expect(result).toEqual({ ok: false, error: "Choose the walk this report is about." });
+    expect(prismaMock.accidentReport.create).not.toHaveBeenCalled();
+  });
+
+  it("rejects a finished walk nobody attended", async () => {
+    prismaMock.walk.findUnique.mockResolvedValueOnce({
+      ...FINISHED_ATTENDED_WALK,
+      _count: { attendances: 0 },
+    });
+    const result = await addAccidentReport(null, reportForm());
+    expect(result).toEqual({ ok: false, error: "Choose a finished walk that people attended." });
+    expect(prismaMock.accidentReport.create).not.toHaveBeenCalled();
+  });
+
+  it("rejects a cancelled walk", async () => {
+    prismaMock.walk.findUnique.mockResolvedValueOnce({
+      ...FINISHED_ATTENDED_WALK,
+      cancelledAt: new Date(),
+    });
+    const result = await addAccidentReport(null, reportForm());
+    expect(result).toEqual({ ok: false, error: "Choose a finished walk that people attended." });
+    expect(prismaMock.accidentReport.create).not.toHaveBeenCalled();
   });
 
   it("saves the report, attributed to the acting admin", async () => {
@@ -133,6 +163,10 @@ describe("addAccidentReport", () => {
     prismaMock.accidentReport.create.mockResolvedValueOnce({
       involvedMembers: [{ user: { firstName: "Jane", lastName: "Doe" } }],
     });
+    // Tagged members must have attended the report's walk (checked on each save).
+    prismaMock.attendance.findMany
+      .mockResolvedValueOnce([{ userId: "member-1" }] as never)
+      .mockResolvedValueOnce([{ userId: "member-1" }] as never);
     const first = reportForm({ whoInvolved: "" });
     first.append("involvedMemberIds", "member-1");
     await addAccidentReport(null, first);
@@ -164,6 +198,10 @@ describe("addAccidentReport", () => {
         { user: { firstName: "Chris", lastName: "Berman" } },
       ],
     });
+    prismaMock.attendance.findMany.mockResolvedValueOnce([
+      { userId: "member-1" },
+      { userId: "member-2" },
+    ] as never);
     const formData = reportForm({ whoInvolved: "", numberedForMemberId: "member-2" });
     formData.append("involvedMemberIds", "member-1");
     formData.append("involvedMemberIds", "member-2");
@@ -216,6 +254,7 @@ describe("addAccidentReport", () => {
 
   it("accepts a tagged member alone, with no free text, and saves the link", async () => {
     prismaMock.user.findUnique.mockResolvedValueOnce({ firstName: "Jane", lastName: "Doe" });
+    prismaMock.attendance.findMany.mockResolvedValueOnce([{ userId: "member-1" }] as never);
     prismaMock.accidentReport.create.mockResolvedValueOnce({
       involvedMembers: [{ user: { firstName: "Jane", lastName: "Doe" } }],
     });
@@ -237,6 +276,7 @@ describe("addAccidentReport", () => {
 
   it("deduplicates repeated involvedMemberIds", async () => {
     prismaMock.user.findUnique.mockResolvedValueOnce({ firstName: "Jane", lastName: "Doe" });
+    prismaMock.attendance.findMany.mockResolvedValueOnce([{ userId: "member-1" }] as never);
     prismaMock.accidentReport.create.mockResolvedValueOnce({ involvedMembers: [] });
     const formData = reportForm();
     formData.append("involvedMemberIds", "member-1");
@@ -258,30 +298,29 @@ describe("addAccidentReport", () => {
       startsAt: new Date(Date.now() + 60_000),
       durationMins: 90,
       endedAt: null,
+      _count: { attendances: 0 },
     });
 
     const result = await addAccidentReport(null, reportForm({ walkId: "walk-1" }));
 
-    expect(result).toEqual({
-      ok: false,
-      error: "Link the report to a walk that has started, or leave it unlinked.",
-    });
+    expect(result).toEqual({ ok: false, error: "Choose a finished walk that people attended." });
     expect(prismaMock.accidentReport.create).not.toHaveBeenCalled();
   });
 
-  it("allows linking to a walk that is still in progress", async () => {
+  it("rejects a walk that is still in progress, even with people on it", async () => {
     prismaMock.walk.findUnique.mockResolvedValueOnce({
       id: "walk-1",
       cancelledAt: null,
       startsAt: new Date(Date.now() - 30 * 60_000),
       durationMins: 90,
       endedAt: null,
+      _count: { attendances: 3 },
     });
-    prismaMock.accidentReport.create.mockResolvedValueOnce({ involvedMembers: [] });
 
     const result = await addAccidentReport(null, reportForm({ walkId: "walk-1" }));
 
-    expect(result).toEqual({ ok: true, message: "Accident report saved." });
+    expect(result).toEqual({ ok: false, error: "Choose a finished walk that people attended." });
+    expect(prismaMock.accidentReport.create).not.toHaveBeenCalled();
   });
 
   it("rejects linking to a walk that no longer exists", async () => {
@@ -291,14 +330,7 @@ describe("addAccidentReport", () => {
     expect(prismaMock.accidentReport.create).not.toHaveBeenCalled();
   });
 
-  it("allows linking to a completed walk", async () => {
-    prismaMock.walk.findUnique.mockResolvedValueOnce({
-      id: "walk-1",
-      cancelledAt: null,
-      startsAt: new Date(Date.now() - 3 * 60 * 60_000),
-      durationMins: 60,
-      endedAt: null,
-    });
+  it("allows linking to a completed walk people attended", async () => {
     prismaMock.accidentReport.create.mockResolvedValueOnce({ involvedMembers: [] });
 
     const result = await addAccidentReport(null, reportForm({ walkId: "walk-1" }));
@@ -310,13 +342,6 @@ describe("addAccidentReport", () => {
   });
 
   it("rejects tagged members who did not clock in to the linked walk", async () => {
-    prismaMock.walk.findUnique.mockResolvedValueOnce({
-      id: "walk-1",
-      cancelledAt: null,
-      startsAt: new Date(Date.now() - 3 * 60 * 60_000),
-      durationMins: 60,
-      endedAt: null,
-    });
     prismaMock.attendance.findMany.mockResolvedValueOnce([]);
     const formData = reportForm({ walkId: "walk-1", whoInvolved: "" });
     formData.append("involvedMemberIds", "member-1");

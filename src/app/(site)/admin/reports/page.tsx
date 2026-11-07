@@ -87,6 +87,7 @@ async function getReportsView(link: LinkFilter, sort: ReturnType<typeof parseSor
         durationMins: true,
         endedAt: true,
         cancelledAt: true,
+        _count: { select: { attendances: true } },
       },
     }),
   ]);
@@ -99,12 +100,17 @@ async function getReportsView(link: LinkFilter, sort: ReturnType<typeof parseSor
     return status === "completed" || status === "in-progress";
   });
 
+  // A new report must be about a finished walk that people actually attended.
+  const reportableWalks = walks.filter(
+    (walk) => walkStatus(walk) === "completed" && walk._count.attendances > 0,
+  );
+
   const permissions = {
     canCreate: admin.permReportsCreate,
     canEdit: admin.permReportsEdit,
     canViewMembers: admin.permMembersView,
   };
-  return { canDelete, permissions, totalReports, reports, linkableWalks };
+  return { canDelete, permissions, totalReports, reports, linkableWalks, reportableWalks };
 }
 
 async function AccidentReportsPageContent({
@@ -117,7 +123,7 @@ async function AccidentReportsPageContent({
   const sort = parseSort(params.sort);
   const view = await getReportsView(link, sort);
   if (!view) notFound();
-  const { canDelete, permissions, totalReports, reports, linkableWalks } = view;
+  const { canDelete, permissions, totalReports, reports, linkableWalks, reportableWalks } = view;
 
   return (
     <div className="flex flex-col gap-6 px-4 py-6 md:px-6">
@@ -131,6 +137,11 @@ async function AccidentReportsPageContent({
         canDelete={canDelete}
         canEdit={permissions.canEdit}
         canViewMembers={permissions.canViewMembers}
+        createWalks={reportableWalks.map((walk) => ({
+          id: walk.id,
+          title: walk.title,
+          startsAt: walk.startsAt.toISOString(),
+        }))}
         hasAnyReports={totalReports > 0}
         linkFilter={link}
         reports={reports.map((report) => ({

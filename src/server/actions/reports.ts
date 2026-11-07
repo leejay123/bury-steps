@@ -49,6 +49,32 @@ async function assertLinkableWalkId(
   return { ok: true };
 }
 
+/**
+ * A new report must be about a finished walk that people attended — the
+ * same walks the form offers, enforced here against a tampered walkId.
+ * Editing an existing report keeps the wider rule above.
+ */
+async function assertReportableWalkId(
+  walkId: string | undefined,
+): Promise<{ ok: true } | { ok: false; error: string }> {
+  if (!walkId) return { ok: false, error: "Choose the walk this report is about." };
+  const walk = await prisma.walk.findUnique({
+    where: { id: walkId },
+    select: {
+      cancelledAt: true,
+      startsAt: true,
+      durationMins: true,
+      endedAt: true,
+      _count: { select: { attendances: true } },
+    },
+  });
+  if (!walk) return { ok: false, error: "That walk is no longer there." };
+  if (walkStatus(walk) !== "completed" || walk._count.attendances === 0) {
+    return { ok: false, error: "Choose a finished walk that people attended." };
+  }
+  return { ok: true };
+}
+
 /** When a walk is linked, tagged members must have clocked in to that walk
  * — matches the checklist UI and stops a tampered id list from formally
  * linking people who were never on the walk. */
@@ -145,8 +171,8 @@ async function addAccidentReportWork(
     return { ok: false, error: "That date and time could not be read. Try again." };
   }
 
-  const linkable = await assertLinkableWalkId(parsed.data.walkId);
-  if (!linkable.ok) return linkable;
+  const reportable = await assertReportableWalkId(parsed.data.walkId);
+  if (!reportable.ok) return reportable;
   const onWalk = await assertInvolvedMembersOnWalk(parsed.data.walkId, involvedMemberIds);
   if (!onWalk.ok) return onWalk;
 

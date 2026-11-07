@@ -1063,6 +1063,8 @@ html:is([data-remembered-in], [data-guest-dash]):not([data-page-kind="home"], [d
 /* A two-column stat row on a phone: the right-hand cell already meets the card edge. */
 @media (max-width: 47.98rem) {
   html:is([data-remembered-in], [data-guest-dash]):not([data-page-kind="home"], [data-page-kind="plain"]) [data-slot="docs-page"] [data-edge-stats] > *:nth-child(2n) { border-inline-end: 0 !important; }
+  /* Two by two: a line between the rows too. */
+  html:is([data-remembered-in], [data-guest-dash]):not([data-page-kind="home"], [data-page-kind="plain"]) [data-slot="docs-page"] [data-edge-stats].grid-cols-2 > *:nth-child(n + 3) { border-top: 1px solid var(--border) !important; }
 }
 
 /* A designed walk joins the page card (Page settings → Inside the page card).

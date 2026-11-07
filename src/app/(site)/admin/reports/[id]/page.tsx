@@ -1,6 +1,7 @@
 import { Suspense } from "react";
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
+import { cn } from "@/lib/utils";
 import { displayName, getOptionalAdmin, getOptionalUser, memberDisplayName } from "@/lib/auth";
 import { prisma } from "@/lib/db";
 import { walkStatus } from "@/lib/walk-window";
@@ -109,11 +110,11 @@ function ReportPageFallback() {
           <Skeleton className="h-4 w-28" />
         </div>
       </EdgeBar>
-      <div className="grid gap-4 sm:grid-cols-3" data-edge-stats="">
+      <div className="grid grid-cols-2 gap-4 md:grid-cols-3" data-edge-stats="">
         {["When", "Walk", "Recorded by"].map((label) => (
-          <div className="flex flex-col gap-1" key={label}>
+          <div className={cn("flex flex-col gap-1", label === "Recorded by" && "col-span-2 md:col-span-1")} key={label}>
             <p className="text-sm text-muted-foreground">{label}</p>
-            <Skeleton className="h-5 w-40" />
+            <Skeleton className="h-5 w-full max-w-40" />
           </div>
         ))}
       </div>
