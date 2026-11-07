@@ -1,0 +1,1080 @@
+{
+  "organiser": {
+    "root": {
+      "props": {
+        "messagesAt": "band",
+        "messagesLook": "as-is",
+        "join": "inset"
+      }
+    },
+    "content": [
+      {
+        "type": "Details",
+        "props": {
+          "facts": "tiles",
+          "map": "bottom",
+          "tone": "plain",
+          "showTitle": true,
+          "showActions": true,
+          "showEssentials": true,
+          "showDescription": true,
+          "ribbon": "none",
+          "timeline": true,
+          "bigTitle": false,
+          "id": "Details-7c4433fb-570f-4e2e-99a0-40989b3d02a0",
+          "factsArrange": "scroll",
+          "layout": {
+            "width": "page",
+            "frame": "none",
+            "showOn": "all",
+            "buttons": "always",
+            "heading": "",
+            "shadows": "none",
+            "boxes": "as-is",
+            "messages": "as-is",
+            "spaceAbove": "normal",
+            "spaceBelow": "normal"
+          },
+          "mapButtons": "below",
+          "mapHeight": "medium",
+          "phoneFacts": "table",
+          "phoneFactsArrange": "same",
+          "tabletFactsArrange": "same",
+          "showEmptyFacts": false,
+          "essentials": {
+            "look": "pills",
+            "arrange": "scroll",
+            "heading": true,
+            "showEmpty": false,
+            "headingText": ""
+          },
+          "mapNote": true,
+          "mapTitle": true,
+          "preciseAt": "above-facts",
+          "preciseLook": "dashed",
+          "ribbonAt": "top",
+          "statusLook": "badge-line",
+          "statusAt": "below",
+          "mapButtonsLook": "icons",
+          "mapFit": "inset",
+          "mapCorners": "rounded",
+          "inset": "auto",
+          "factsBox": "none",
+          "timelineBox": "none",
+          "descriptionBox": "grey",
+          "factLines": "between",
+          "tabletFactsBox": "same",
+          "phoneFactsBox": "same",
+          "ribbonStyle": "plain",
+          "ribbonText": "",
+          "descriptionTitle": "Description",
+          "timelineTitle": "",
+          "factsTitle": "",
+          "titleBox": "none",
+          "titleMessages": "none",
+          "descriptionAt": "title",
+          "factsAs": "none",
+          "titleLook": "band",
+          "factsGap": "none",
+          "bandStyle": "outline",
+          "titleSpace": "normal",
+          "factsAt": "title",
+          "titleGap": "normal",
+          "titleOrder": "timeline,description,facts",
+          "titleParts": [
+            {
+              "part": "countdown",
+              "space": "none"
+            },
+            {
+              "part": "createdby",
+              "space": "8"
+            },
+            {
+              "part": "clockin",
+              "space": "16"
+            },
+            {
+              "part": "timeline",
+              "space": "24"
+            },
+            {
+              "part": "precise",
+              "space": "16"
+            },
+            {
+              "part": "essentials",
+              "space": "16"
+            },
+            {
+              "part": "description",
+              "space": "16"
+            }
+          ],
+          "factsBorder": true,
+          "timelineLook": "bar",
+          "timelineOpens": true,
+          "timelineStart": true,
+          "timelineEnd": true,
+          "tabletFactsAs": "none",
+          "phoneFactsAs": "none",
+          "_essentialsSection": false,
+          "_titleSection": false,
+          "_mapSection": false,
+          "_preciseSection": false,
+          "_factsSection": false,
+          "_timelineSection": false,
+          "_descriptionSection": false,
+          "_layoutSection": true,
+          "_titleMore": true,
+          "titleExtrasAt": "list",
+          "clockinLook": "dashed",
+          "countdownLook": "band",
+          "sideParts": [],
+          "actionsAt": "beside",
+          "mapLook": "overlay",
+          "mapTitleStyle": "one-line",
+          "createdByLook": "plain",
+          "factsFold": "all",
+          "factsFoldOpen": true,
+          "_factsMore": true,
+          "factsLimit": "2"
+        }
+      },
+      {
+        "type": "Accordion",
+        "props": {
+          "items": [
+            {
+              "content": [
+                {
+                  "type": "Facts",
+                  "props": {
+                    "id": "Facts-e2f3f030-8534-4b38-8051-82d94aadeba1",
+                    "box": "none",
+                    "tabletBox": "same",
+                    "phoneBox": "same",
+                    "lines": "between",
+                    "heading": "",
+                    "gap": "normal",
+                    "variant": "grid",
+                    "arrange": "fill",
+                    "phoneVariant": "same",
+                    "phoneArrange": "same",
+                    "tabletVariant": "same",
+                    "tabletArrange": "same",
+                    "showEmpty": false,
+                    "design": "spec-sheet",
+                    "border": true,
+                    "layout": {
+                      "frame": "none",
+                      "heading": "",
+                      "showOn": "all",
+                      "buttons": "as-is",
+                      "shadows": "keep",
+                      "messages": "as-is",
+                      "boxes": "as-is",
+                      "spaceAbove": "normal",
+                      "spaceBelow": "normal"
+                    },
+                    "icons": true
+                  }
+                }
+              ],
+              "label": "Walk Details",
+              "icon": "auto",
+              "showTo": "everyone",
+              "open": false
+            },
+            {
+              "label": "Attended",
+              "icon": "auto",
+              "open": false,
+              "content": [
+                {
+                  "type": "Attended",
+                  "props": {
+                    "id": "Attended-f86ce469-370f-4737-b97a-6128e93572d7",
+                    "rule": "clocked-in",
+                    "layout": {
+                      "frame": "none",
+                      "heading": "",
+                      "showOn": "all",
+                      "buttons": "as-is",
+                      "shadows": "keep",
+                      "messages": "as-is",
+                      "boxes": "as-is",
+                      "spaceAbove": "normal",
+                      "spaceBelow": "normal"
+                    }
+                  }
+                }
+              ],
+              "showTo": "members"
+            },
+            {
+              "content": [
+                {
+                  "type": "Journey",
+                  "props": {
+                    "id": "Journey-1aca482b-e416-491f-b3eb-0f30a73e9ba8",
+                    "layout": {
+                      "frame": "none",
+                      "heading": "",
+                      "showOn": "all",
+                      "buttons": "as-is",
+                      "shadows": "keep",
+                      "messages": "as-is",
+                      "boxes": "as-is",
+                      "spaceAbove": "normal",
+                      "spaceBelow": "normal"
+                    }
+                  }
+                }
+              ],
+              "label": "Journey",
+              "icon": "auto",
+              "showTo": "members",
+              "open": false
+            },
+            {
+              "content": [
+                {
+                  "type": "Weather",
+                  "props": {
+                    "id": "Weather-de3f1bc2-a246-4585-9579-e1766ec93d9c",
+                    "layout": {
+                      "frame": "none",
+                      "heading": "",
+                      "showOn": "all",
+                      "buttons": "as-is",
+                      "shadows": "keep",
+                      "messages": "as-is",
+                      "boxes": "as-is",
+                      "spaceAbove": "normal",
+                      "spaceBelow": "normal"
+                    }
+                  }
+                }
+              ],
+              "label": "Weather",
+              "icon": "auto",
+              "showTo": "everyone",
+              "open": false
+            },
+            {
+              "content": [
+                {
+                  "type": "Before",
+                  "props": {
+                    "id": "Before-48fe1093-f38b-4751-b22d-dc5364748070",
+                    "look": "boxed-numbers",
+                    "title": "",
+                    "showHeading": false,
+                    "layout": {
+                      "frame": "none",
+                      "heading": "",
+                      "showOn": "all",
+                      "buttons": "as-is",
+                      "shadows": "keep",
+                      "messages": "as-is",
+                      "boxes": "as-is",
+                      "spaceAbove": "normal",
+                      "spaceBelow": "normal"
+                    },
+                    "tips": [
+                      {
+                        "text": "Wear comfortable shoes and dress for the weather."
+                      },
+                      {
+                        "text": "Bring a bottle of water — snacks too, for longer walks."
+                      },
+                      {
+                        "text": "Aim to arrive at the meeting point a few minutes early."
+                      },
+                      {
+                        "text": "New to the group? Say hello when you arrive — everyone was new once."
+                      }
+                    ]
+                  }
+                }
+              ],
+              "label": "Before you set off",
+              "icon": "auto",
+              "showTo": "everyone",
+              "open": false
+            },
+            {
+              "content": [
+                {
+                  "type": "HowItWorks",
+                  "props": {
+                    "id": "HowItWorks-e15cc5f9-462a-4fa0-b1c1-505c6f81460a",
+                    "look": "boxed-numbers",
+                    "title": "",
+                    "showTo": "everyone",
+                    "showHeading": false,
+                    "layout": {
+                      "frame": "none",
+                      "heading": "",
+                      "showOn": "all",
+                      "buttons": "as-is",
+                      "shadows": "keep",
+                      "messages": "as-is",
+                      "boxes": "as-is",
+                      "spaceAbove": "normal",
+                      "spaceBelow": "normal"
+                    },
+                    "steps": [
+                      {
+                        "title": "Create an account",
+                        "body": "Sign up with email or Google so we know who is on the walk."
+                      },
+                      {
+                        "title": "Come to the meeting point",
+                        "body": "The time and place are on this page. Walks are self-paced — come as you are."
+                      },
+                      {
+                        "title": "Clock in when you arrive",
+                        "body": "That is how the walk leader knows you are there. You will do that after you sign in."
+                      }
+                    ]
+                  }
+                }
+              ],
+              "label": "How this group works",
+              "icon": "auto",
+              "showTo": "visitors",
+              "open": false
+            }
+          ],
+          "look": "cards",
+          "icon": "plus",
+          "single": true,
+          "layout": {
+            "frame": "none",
+            "heading": "",
+            "showOn": "all",
+            "buttons": "as-is",
+            "shadows": "keep",
+            "messages": "as-is",
+            "boxes": "as-is",
+            "spaceAbove": "normal",
+            "spaceBelow": "normal"
+          },
+          "id": "Accordion-22b59b6d-8550-4e06-9f72-93c60f3ac9bf",
+          "fullWidth": true,
+          "emptyEdge": true
+        }
+      }
+    ],
+    "zones": {}
+  },
+  "member": {
+    "root": {
+      "props": {
+        "messagesAt": "band",
+        "messagesLook": "hidden",
+        "join": "inset"
+      }
+    },
+    "content": [
+      {
+        "type": "Details",
+        "props": {
+          "facts": "tiles",
+          "map": "bottom",
+          "tone": "plain",
+          "showTitle": true,
+          "showActions": true,
+          "showEssentials": true,
+          "showDescription": true,
+          "ribbon": "none",
+          "timeline": true,
+          "bigTitle": false,
+          "id": "Details-7c4433fb-570f-4e2e-99a0-40989b3d02a0",
+          "factsArrange": "scroll",
+          "layout": {
+            "width": "page",
+            "frame": "none",
+            "showOn": "all",
+            "buttons": "always",
+            "heading": "",
+            "shadows": "none",
+            "boxes": "as-is",
+            "messages": "as-is",
+            "spaceAbove": "normal",
+            "spaceBelow": "normal"
+          },
+          "mapButtons": "below",
+          "mapHeight": "medium",
+          "phoneFacts": "table",
+          "phoneFactsArrange": "same",
+          "tabletFactsArrange": "same",
+          "showEmptyFacts": false,
+          "essentials": {
+            "look": "pills",
+            "arrange": "scroll",
+            "heading": true,
+            "showEmpty": false,
+            "headingText": ""
+          },
+          "mapNote": true,
+          "mapTitle": true,
+          "preciseAt": "above-facts",
+          "preciseLook": "dashed",
+          "ribbonAt": "top",
+          "statusLook": "badge-line",
+          "statusAt": "below",
+          "mapButtonsLook": "icons",
+          "mapFit": "inset",
+          "mapCorners": "rounded",
+          "inset": "auto",
+          "factsBox": "none",
+          "timelineBox": "none",
+          "descriptionBox": "grey",
+          "factLines": "between",
+          "tabletFactsBox": "same",
+          "phoneFactsBox": "same",
+          "ribbonStyle": "plain",
+          "ribbonText": "",
+          "descriptionTitle": "Description",
+          "timelineTitle": "",
+          "factsTitle": "",
+          "titleBox": "none",
+          "titleMessages": "none",
+          "descriptionAt": "title",
+          "factsAs": "none",
+          "titleLook": "band",
+          "factsGap": "none",
+          "bandStyle": "outline",
+          "titleSpace": "normal",
+          "factsAt": "title",
+          "titleGap": "normal",
+          "titleOrder": "timeline,description,facts",
+          "titleParts": [
+            {
+              "part": "countdown",
+              "space": "none"
+            },
+            {
+              "part": "createdby",
+              "space": "8"
+            },
+            {
+              "part": "clockin",
+              "space": "16"
+            },
+            {
+              "part": "timeline",
+              "space": "24"
+            },
+            {
+              "part": "precise",
+              "space": "16"
+            },
+            {
+              "part": "essentials",
+              "space": "16"
+            },
+            {
+              "part": "description",
+              "space": "16"
+            }
+          ],
+          "factsBorder": true,
+          "timelineLook": "bar",
+          "timelineOpens": true,
+          "timelineStart": true,
+          "timelineEnd": true,
+          "tabletFactsAs": "none",
+          "phoneFactsAs": "none",
+          "_essentialsSection": false,
+          "_titleSection": true,
+          "_mapSection": false,
+          "_preciseSection": false,
+          "_factsSection": false,
+          "_timelineSection": false,
+          "_descriptionSection": false,
+          "_layoutSection": false,
+          "_titleMore": true,
+          "titleExtrasAt": "list",
+          "clockinLook": "dashed",
+          "countdownLook": "band",
+          "sideParts": [],
+          "actionsAt": "beside",
+          "mapLook": "overlay",
+          "mapTitleStyle": "one-line",
+          "createdByLook": "plain",
+          "factsFold": "all",
+          "factsFoldOpen": true,
+          "_factsMore": true,
+          "factsLimit": "2"
+        }
+      },
+      {
+        "type": "Accordion",
+        "props": {
+          "items": [
+            {
+              "content": [
+                {
+                  "type": "Facts",
+                  "props": {
+                    "id": "Facts-e2f3f030-8534-4b38-8051-82d94aadeba1",
+                    "box": "none",
+                    "tabletBox": "same",
+                    "phoneBox": "same",
+                    "lines": "between",
+                    "heading": "",
+                    "gap": "normal",
+                    "variant": "grid",
+                    "arrange": "fill",
+                    "phoneVariant": "same",
+                    "phoneArrange": "same",
+                    "tabletVariant": "same",
+                    "tabletArrange": "same",
+                    "showEmpty": false,
+                    "design": "spec-sheet",
+                    "border": true,
+                    "layout": {
+                      "frame": "none",
+                      "heading": "",
+                      "showOn": "all",
+                      "buttons": "as-is",
+                      "shadows": "keep",
+                      "messages": "as-is",
+                      "boxes": "as-is",
+                      "spaceAbove": "normal",
+                      "spaceBelow": "normal"
+                    },
+                    "icons": true
+                  }
+                }
+              ],
+              "label": "Walk Details",
+              "icon": "auto",
+              "showTo": "everyone",
+              "open": false
+            },
+            {
+              "label": "Attended",
+              "icon": "auto",
+              "open": false,
+              "content": [
+                {
+                  "type": "Attended",
+                  "props": {
+                    "id": "Attended-f86ce469-370f-4737-b97a-6128e93572d7",
+                    "rule": "clocked-in",
+                    "layout": {
+                      "frame": "none",
+                      "heading": "",
+                      "showOn": "all",
+                      "buttons": "as-is",
+                      "shadows": "keep",
+                      "messages": "as-is",
+                      "boxes": "as-is",
+                      "spaceAbove": "normal",
+                      "spaceBelow": "normal"
+                    }
+                  }
+                }
+              ],
+              "showTo": "members"
+            },
+            {
+              "content": [
+                {
+                  "type": "Journey",
+                  "props": {
+                    "id": "Journey-1aca482b-e416-491f-b3eb-0f30a73e9ba8",
+                    "layout": {
+                      "frame": "none",
+                      "heading": "",
+                      "showOn": "all",
+                      "buttons": "as-is",
+                      "shadows": "keep",
+                      "messages": "as-is",
+                      "boxes": "as-is",
+                      "spaceAbove": "normal",
+                      "spaceBelow": "normal"
+                    }
+                  }
+                }
+              ],
+              "label": "Journey",
+              "icon": "auto",
+              "showTo": "members",
+              "open": false
+            },
+            {
+              "content": [
+                {
+                  "type": "Weather",
+                  "props": {
+                    "id": "Weather-de3f1bc2-a246-4585-9579-e1766ec93d9c",
+                    "layout": {
+                      "frame": "none",
+                      "heading": "",
+                      "showOn": "all",
+                      "buttons": "as-is",
+                      "shadows": "keep",
+                      "messages": "as-is",
+                      "boxes": "as-is",
+                      "spaceAbove": "normal",
+                      "spaceBelow": "normal"
+                    }
+                  }
+                }
+              ],
+              "label": "Weather",
+              "icon": "auto",
+              "showTo": "everyone",
+              "open": false
+            },
+            {
+              "content": [
+                {
+                  "type": "Before",
+                  "props": {
+                    "id": "Before-48fe1093-f38b-4751-b22d-dc5364748070",
+                    "look": "boxed-numbers",
+                    "title": "",
+                    "showHeading": false,
+                    "layout": {
+                      "frame": "none",
+                      "heading": "",
+                      "showOn": "all",
+                      "buttons": "as-is",
+                      "shadows": "keep",
+                      "messages": "as-is",
+                      "boxes": "as-is",
+                      "spaceAbove": "normal",
+                      "spaceBelow": "normal"
+                    }
+                  }
+                }
+              ],
+              "label": "Before you set off",
+              "icon": "auto",
+              "showTo": "everyone",
+              "open": false
+            },
+            {
+              "content": [
+                {
+                  "type": "HowItWorks",
+                  "props": {
+                    "id": "HowItWorks-e15cc5f9-462a-4fa0-b1c1-505c6f81460a",
+                    "look": "boxed-numbers",
+                    "title": "",
+                    "showTo": "everyone",
+                    "showHeading": false,
+                    "layout": {
+                      "frame": "none",
+                      "heading": "",
+                      "showOn": "all",
+                      "buttons": "as-is",
+                      "shadows": "keep",
+                      "messages": "as-is",
+                      "boxes": "as-is",
+                      "spaceAbove": "normal",
+                      "spaceBelow": "normal"
+                    }
+                  }
+                }
+              ],
+              "label": "How this group works",
+              "icon": "auto",
+              "showTo": "visitors",
+              "open": false
+            }
+          ],
+          "look": "cards",
+          "icon": "plus",
+          "single": true,
+          "layout": {
+            "frame": "none",
+            "heading": "",
+            "showOn": "all",
+            "buttons": "as-is",
+            "shadows": "keep",
+            "messages": "as-is",
+            "boxes": "as-is",
+            "spaceAbove": "normal",
+            "spaceBelow": "normal"
+          },
+          "id": "Accordion-22b59b6d-8550-4e06-9f72-93c60f3ac9bf",
+          "fullWidth": true,
+          "emptyEdge": true
+        }
+      }
+    ],
+    "zones": {}
+  },
+  "visitor": {
+    "root": {
+      "props": {
+        "messagesAt": "band",
+        "messagesLook": "hidden",
+        "join": "inset"
+      }
+    },
+    "content": [
+      {
+        "type": "SignIn",
+        "props": {
+          "look": "icon",
+          "title": "",
+          "text": "",
+          "line": "",
+          "layout": {
+            "frame": "none",
+            "heading": "",
+            "showOn": "all",
+            "buttons": "as-is",
+            "shadows": "keep",
+            "messages": "as-is",
+            "boxes": "as-is",
+            "spaceAbove": "normal",
+            "spaceBelow": "normal"
+          },
+          "id": "SignIn-0ebf961a-ed13-4c62-ad3b-30caac6a91bd"
+        }
+      },
+      {
+        "type": "Details",
+        "props": {
+          "facts": "tiles",
+          "map": "bottom",
+          "tone": "plain",
+          "showTitle": true,
+          "showActions": true,
+          "showEssentials": true,
+          "showDescription": true,
+          "ribbon": "none",
+          "timeline": true,
+          "bigTitle": false,
+          "id": "Details-7c4433fb-570f-4e2e-99a0-40989b3d02a0",
+          "factsArrange": "scroll",
+          "layout": {
+            "width": "page",
+            "frame": "none",
+            "showOn": "all",
+            "buttons": "always",
+            "heading": "",
+            "shadows": "none",
+            "boxes": "as-is",
+            "messages": "as-is",
+            "spaceAbove": "normal",
+            "spaceBelow": "normal"
+          },
+          "mapButtons": "below",
+          "mapHeight": "medium",
+          "phoneFacts": "table",
+          "phoneFactsArrange": "same",
+          "tabletFactsArrange": "same",
+          "showEmptyFacts": false,
+          "essentials": {
+            "look": "pills",
+            "arrange": "scroll",
+            "heading": true,
+            "showEmpty": false,
+            "headingText": ""
+          },
+          "mapNote": true,
+          "mapTitle": true,
+          "preciseAt": "above-facts",
+          "preciseLook": "dashed",
+          "ribbonAt": "top",
+          "statusLook": "badge-line",
+          "statusAt": "below",
+          "mapButtonsLook": "icons",
+          "mapFit": "inset",
+          "mapCorners": "rounded",
+          "inset": "auto",
+          "factsBox": "none",
+          "timelineBox": "none",
+          "descriptionBox": "grey",
+          "factLines": "between",
+          "tabletFactsBox": "same",
+          "phoneFactsBox": "same",
+          "ribbonStyle": "plain",
+          "ribbonText": "",
+          "descriptionTitle": "Description",
+          "timelineTitle": "",
+          "factsTitle": "",
+          "titleBox": "none",
+          "titleMessages": "none",
+          "descriptionAt": "title",
+          "factsAs": "none",
+          "titleLook": "band",
+          "factsGap": "none",
+          "bandStyle": "outline",
+          "titleSpace": "normal",
+          "factsAt": "title",
+          "titleGap": "normal",
+          "titleOrder": "timeline,description,facts",
+          "titleParts": [
+            {
+              "part": "countdown",
+              "space": "none"
+            },
+            {
+              "part": "createdby",
+              "space": "8"
+            },
+            {
+              "part": "clockin",
+              "space": "16"
+            },
+            {
+              "part": "timeline",
+              "space": "24"
+            },
+            {
+              "part": "precise",
+              "space": "16"
+            },
+            {
+              "part": "essentials",
+              "space": "16"
+            },
+            {
+              "part": "description",
+              "space": "16"
+            }
+          ],
+          "factsBorder": true,
+          "timelineLook": "bar",
+          "timelineOpens": true,
+          "timelineStart": true,
+          "timelineEnd": true,
+          "tabletFactsAs": "none",
+          "phoneFactsAs": "none",
+          "_essentialsSection": false,
+          "_titleSection": true,
+          "_mapSection": false,
+          "_preciseSection": false,
+          "_factsSection": false,
+          "_timelineSection": false,
+          "_descriptionSection": false,
+          "_layoutSection": false,
+          "_titleMore": true,
+          "titleExtrasAt": "list",
+          "clockinLook": "dashed",
+          "countdownLook": "band",
+          "sideParts": [],
+          "actionsAt": "beside",
+          "mapLook": "overlay",
+          "mapTitleStyle": "one-line",
+          "createdByLook": "plain",
+          "factsFold": "all",
+          "factsFoldOpen": true,
+          "_factsMore": true,
+          "factsLimit": "2"
+        }
+      },
+      {
+        "type": "Accordion",
+        "props": {
+          "items": [
+            {
+              "content": [
+                {
+                  "type": "Facts",
+                  "props": {
+                    "id": "Facts-e2f3f030-8534-4b38-8051-82d94aadeba1",
+                    "box": "none",
+                    "tabletBox": "same",
+                    "phoneBox": "same",
+                    "lines": "between",
+                    "heading": "",
+                    "gap": "normal",
+                    "variant": "grid",
+                    "arrange": "fill",
+                    "phoneVariant": "same",
+                    "phoneArrange": "same",
+                    "tabletVariant": "same",
+                    "tabletArrange": "same",
+                    "showEmpty": false,
+                    "design": "spec-sheet",
+                    "border": true,
+                    "layout": {
+                      "frame": "none",
+                      "heading": "",
+                      "showOn": "all",
+                      "buttons": "as-is",
+                      "shadows": "keep",
+                      "messages": "as-is",
+                      "boxes": "as-is",
+                      "spaceAbove": "normal",
+                      "spaceBelow": "normal"
+                    },
+                    "icons": true
+                  }
+                }
+              ],
+              "label": "Walk Details",
+              "icon": "auto",
+              "showTo": "everyone",
+              "open": false
+            },
+            {
+              "label": "Attended",
+              "icon": "auto",
+              "open": false,
+              "content": [
+                {
+                  "type": "Attended",
+                  "props": {
+                    "id": "Attended-f86ce469-370f-4737-b97a-6128e93572d7",
+                    "rule": "clocked-in",
+                    "layout": {
+                      "frame": "none",
+                      "heading": "",
+                      "showOn": "all",
+                      "buttons": "as-is",
+                      "shadows": "keep",
+                      "messages": "as-is",
+                      "boxes": "as-is",
+                      "spaceAbove": "normal",
+                      "spaceBelow": "normal"
+                    }
+                  }
+                }
+              ],
+              "showTo": "members"
+            },
+            {
+              "content": [
+                {
+                  "type": "Journey",
+                  "props": {
+                    "id": "Journey-1aca482b-e416-491f-b3eb-0f30a73e9ba8",
+                    "layout": {
+                      "frame": "none",
+                      "heading": "",
+                      "showOn": "all",
+                      "buttons": "as-is",
+                      "shadows": "keep",
+                      "messages": "as-is",
+                      "boxes": "as-is",
+                      "spaceAbove": "normal",
+                      "spaceBelow": "normal"
+                    }
+                  }
+                }
+              ],
+              "label": "Journey",
+              "icon": "auto",
+              "showTo": "members",
+              "open": false
+            },
+            {
+              "content": [
+                {
+                  "type": "Weather",
+                  "props": {
+                    "id": "Weather-de3f1bc2-a246-4585-9579-e1766ec93d9c",
+                    "layout": {
+                      "frame": "none",
+                      "heading": "",
+                      "showOn": "all",
+                      "buttons": "as-is",
+                      "shadows": "keep",
+                      "messages": "as-is",
+                      "boxes": "as-is",
+                      "spaceAbove": "normal",
+                      "spaceBelow": "normal"
+                    }
+                  }
+                }
+              ],
+              "label": "Weather",
+              "icon": "auto",
+              "showTo": "everyone",
+              "open": false
+            },
+            {
+              "content": [
+                {
+                  "type": "Before",
+                  "props": {
+                    "id": "Before-48fe1093-f38b-4751-b22d-dc5364748070",
+                    "look": "boxed-numbers",
+                    "title": "",
+                    "showHeading": false,
+                    "layout": {
+                      "frame": "none",
+                      "heading": "",
+                      "showOn": "all",
+                      "buttons": "as-is",
+                      "shadows": "keep",
+                      "messages": "as-is",
+                      "boxes": "as-is",
+                      "spaceAbove": "normal",
+                      "spaceBelow": "normal"
+                    }
+                  }
+                }
+              ],
+              "label": "Before you set off",
+              "icon": "auto",
+              "showTo": "everyone",
+              "open": false
+            },
+            {
+              "content": [
+                {
+                  "type": "HowItWorks",
+                  "props": {
+                    "id": "HowItWorks-e15cc5f9-462a-4fa0-b1c1-505c6f81460a",
+                    "look": "boxed-numbers",
+                    "title": "",
+                    "showTo": "everyone",
+                    "showHeading": false,
+                    "layout": {
+                      "frame": "none",
+                      "heading": "",
+                      "showOn": "all",
+                      "buttons": "as-is",
+                      "shadows": "keep",
+                      "messages": "as-is",
+                      "boxes": "as-is",
+                      "spaceAbove": "normal",
+                      "spaceBelow": "normal"
+                    }
+                  }
+                }
+              ],
+              "label": "How this group works",
+              "icon": "auto",
+              "showTo": "visitors",
+              "open": false
+            }
+          ],
+          "look": "cards",
+          "icon": "plus",
+          "single": true,
+          "layout": {
+            "frame": "none",
+            "heading": "",
+            "showOn": "all",
+            "buttons": "as-is",
+            "shadows": "keep",
+            "messages": "as-is",
+            "boxes": "as-is",
+            "spaceAbove": "normal",
+            "spaceBelow": "normal"
+          },
+          "id": "Accordion-22b59b6d-8550-4e06-9f72-93c60f3ac9bf",
+          "fullWidth": true,
+          "emptyEdge": true
+        }
+      }
+    ],
+    "zones": {}
+  }
+}

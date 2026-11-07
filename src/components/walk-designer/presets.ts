@@ -1,5 +1,6 @@
 import type { Data } from "@puckeditor/core";
 import { READY_LAYOUTS } from "./ready-layouts";
+import mainTemplate from "./main-template.json";
 
 /**
  * Ready-made starting designs for the walk page designer, each following the
@@ -149,19 +150,20 @@ export const WALK_DESIGN_PRESETS: {
   },
 ];
 
-export const DEFAULT_WALK_DESIGN = () => WALK_DESIGN_PRESETS[0].data();
+/**
+ * The main walk template: the walk page as designed on the live site (7 Nov 2026),
+ * one per audience — a Details card and the sections accordion (visitors also get
+ * the Sign in box first). A walk page with no saved design uses it, and so does
+ * the designer for an audience that hasn't been designed yet. Its message wording
+ * is left out: that always comes from the site (Status / Details / Messages).
+ */
+const MAIN_TEMPLATE = mainTemplate as unknown as Record<"organiser" | "member" | "visitor", Data>;
 
-/** Where a new design starts: visitors' also has How this group works under the details. */
-export const defaultDesignFor = (
-  audience: "organiser" | "member" | "visitor",
-): Data =>
-  audience === "visitor"
-    ? page([
-        block("Details", { map: "top", facts: "grid" }),
-        block("HowItWorks"),
-        restTabs(true),
-      ])
-    : DEFAULT_WALK_DESIGN();
+export const DEFAULT_WALK_DESIGN = (): Data => structuredClone(MAIN_TEMPLATE.organiser);
+
+/** Where a design starts for each audience: the main walk template. */
+export const defaultDesignFor = (audience: "organiser" | "member" | "visitor"): Data =>
+  structuredClone(MAIN_TEMPLATE[audience]);
 
 /**
  * A ready-made page for every numbered design (1–81): the Back link, then

@@ -55,6 +55,7 @@ export function DesignerTopBar({
   children,
   closeLabel,
   note,
+  noteAlways = false,
   onClose,
   onPublish,
   secondary,
@@ -66,7 +67,10 @@ export function DesignerTopBar({
   /** Beside the title (the walk designer's audience switch). */
   children?: ReactNode;
   closeLabel: string;
+  /** One line under the title, on wide screens. */
   note?: ReactNode;
+  /** Show the note at every width (a question that needs answering). */
+  noteAlways?: boolean;
   onClose: () => void;
   onPublish: (data: Data) => void | Promise<void>;
   /** Before Publish (Discard draft). */
@@ -82,7 +86,7 @@ export function DesignerTopBar({
 
   return (
     <div className="shrink-0 border-b bg-background">
-      <div className="flex min-h-14 flex-wrap items-stretch">
+      <div className="flex min-h-14 items-stretch">
         <button
           aria-label={closeLabel}
           className="flex w-14 shrink-0 items-center justify-center border-r hover:bg-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-inset disabled:opacity-50"
@@ -92,9 +96,9 @@ export function DesignerTopBar({
         >
           <X aria-hidden className="size-4" />
         </button>
-        <div className="flex min-w-0 flex-1 flex-wrap items-center gap-x-4 gap-y-2 px-4 py-2">
+        <div className="flex min-w-0 flex-1 items-center gap-x-4 px-4 py-2">
           <div className="flex min-w-0 flex-col gap-0.5">
-            <span className="flex items-center gap-2">
+            <span className="flex min-w-0 items-center gap-2">
               <span className="truncate font-semibold">{title}</span>
               {status ? (
                 <span
@@ -108,7 +112,11 @@ export function DesignerTopBar({
                 </span>
               ) : null}
             </span>
-            {note ? <span className="text-xs text-muted-foreground">{note}</span> : null}
+            {note ? (
+              <span className={cn("truncate text-xs text-muted-foreground", !noteAlways && "hidden xl:block")}>
+                {note}
+              </span>
+            ) : null}
           </div>
           {children}
         </div>
@@ -118,10 +126,11 @@ export function DesignerTopBar({
             const Icon = size.icon;
             return (
               <button
+                aria-label={size.label}
                 aria-pressed={on}
                 className={cn(
                   SEGMENT,
-                  "gap-2 px-4 text-sm font-medium focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-inset",
+                  "gap-2 px-3 text-sm font-medium lg:px-4 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-inset",
                   on ? "bg-accent text-accent-foreground" : "text-muted-foreground hover:bg-accent/60 hover:text-foreground",
                 )}
                 key={size.label}
@@ -129,12 +138,12 @@ export function DesignerTopBar({
                 type="button"
               >
                 <Icon aria-hidden className="size-4" />
-                {size.label}
+                <span className="hidden lg:inline">{size.label}</span>
               </button>
             );
           })}
         </div>
-        <div className={cn(SEGMENT, "gap-2 px-4 py-2")}>
+        <div className={cn(SEGMENT, "gap-2 px-3 py-2 lg:px-4")}>
           {secondary}
           <Button disabled={busy} onClick={() => void onPublish(appState.data)} size="sm" type="button">
             Publish
@@ -149,7 +158,7 @@ export function DesignerTopBar({
 /** One labelled tool in the strip: a full-height segment, sharing the row equally. */
 export function DesignerStripItem({ children, first, label }: { children: ReactNode; first?: boolean; label: string }) {
   return (
-    <div className={cn("flex min-h-12 min-w-56 flex-1 items-center gap-3 px-4", !first && "border-l")}>
+    <div className={cn("flex min-h-12 min-w-52 flex-1 items-center gap-3 px-4", !first && "border-l")}>
       <span className="shrink-0 text-xs text-muted-foreground">{label}</span>
       <div className="min-w-0 flex-1">{children}</div>
     </div>

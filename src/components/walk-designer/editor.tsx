@@ -21,9 +21,7 @@ import { DESIGNER_UI, DESIGNER_VIEWPORTS, DesignerStripItem, DesignerTopBar } fr
 import {
   Select,
   SelectContent,
-  SelectGroup,
   SelectItem,
-  SelectLabel,
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
@@ -31,12 +29,7 @@ import type { WalkIdeaParts } from "@/components/walk-idea-layouts";
 import type { WalkDesignAudience, WalkDesigns } from "@/lib/walk-page-choice";
 import { walkDesignConfig } from "./config";
 import { PreviewAudience, WalkPartsProvider } from "./parts";
-import {
-  DEFAULT_WALK_DESIGN,
-  READY_PAGE_PRESETS,
-  WALK_DESIGN_PRESETS,
-  defaultDesignFor,
-} from "./presets";
+import { DEFAULT_WALK_DESIGN, defaultDesignFor } from "./presets";
 import { isPuckData } from "./render";
 import { PuckFrameStyles } from "@/components/puck-frame-styles";
 
@@ -92,7 +85,7 @@ function cancelledParts(parts: WalkIdeaParts): WalkIdeaParts {
     howItWorks: null,
     notices: (
       <Alert variant="destructive">
-        <AlertTitle>This walk has been cancelled</AlertTitle>
+        <AlertTitle>Walk cancelled</AlertTitle>
         <AlertDescription>
           Preview: the reason given when cancelling shows here.
         </AlertDescription>
@@ -214,17 +207,6 @@ export function WalkDesignEditor({
     toast.info(`Copied to ${name}. Press Publish to save it for them.`);
   }
 
-  function applyPreset(id: string) {
-    const preset = [...WALK_DESIGN_PRESETS, ...READY_PAGE_PRESETS].find(
-      (item) => item.id === id,
-    );
-    if (!preset) return;
-    const data = prepare(preset.data());
-    current.current = data;
-    setDraftWording(extractWalkDesignCopy(data, siteWording).wording ?? siteWording);
-    setStart((was) => ({ key: was.key + 1, data }));
-    toast.info(`Started from "${preset.label}". Publish to save it.`);
-  }
 
   async function publish(data: Data) {
     const result = await saveWalkDesign(audience, JSON.stringify(data));
@@ -244,37 +226,22 @@ export function WalkDesignEditor({
       onPublish={publish}
       strip={
         <>
-        <DesignerStripItem first label="Start from">
-          <Select onValueChange={applyPreset} value="">
-            <SelectTrigger aria-label="Start from a ready-made design" className="h-8 w-full">
-              <SelectValue placeholder="A ready-made design…" />
-            </SelectTrigger>
-            <SelectContent className="z-[100]">
-              <SelectGroup>
-                <SelectLabel>Starting points to build on</SelectLabel>
-                {WALK_DESIGN_PRESETS.map((preset) => (
-                  <SelectItem key={preset.id} value={preset.id}>
-                    {preset.label}
-                  </SelectItem>
-                ))}
-              </SelectGroup>
-              {/* A ready-made page for each numbered design, grouped as in Settings. */}
-              {[...new Set(READY_PAGE_PRESETS.map((preset) => preset.group))].map(
-                (group) => (
-                  <SelectGroup key={group}>
-                    <SelectLabel>{group}</SelectLabel>
-                    {READY_PAGE_PRESETS.filter(
-                      (preset) => preset.group === group,
-                    ).map((preset) => (
-                      <SelectItem key={preset.id} value={preset.id}>
-                        {preset.label}
-                      </SelectItem>
-                    ))}
-                  </SelectGroup>
-                ),
-              )}
-            </SelectContent>
-          </Select>
+        <DesignerStripItem first label="For">
+          <div aria-label="Who the design is for" className="flex flex-wrap items-center gap-1 rounded-lg bg-muted p-1" role="group">
+            {AUDIENCES.map((item) => (
+              <Button
+                aria-pressed={audience === item.id}
+                className="h-7 px-2.5 text-xs"
+                key={item.id}
+                onClick={() => open(item.id)}
+                size="sm"
+                type="button"
+                variant={audience === item.id ? "default" : "ghost"}
+              >
+                {item.label}
+              </Button>
+            ))}
+          </div>
         </DesignerStripItem>
         <DesignerStripItem label="Copy to">
           <Select
@@ -330,22 +297,7 @@ export function WalkDesignEditor({
         </>
       }
       title="Walk page"
-    >
-      <div aria-label="Who the design is for" className="flex items-center gap-1 rounded-lg bg-muted p-1" role="group">
-        {AUDIENCES.map((item) => (
-          <Button
-            aria-pressed={audience === item.id}
-            key={item.id}
-            onClick={() => open(item.id)}
-            size="sm"
-            type="button"
-            variant={audience === item.id ? "default" : "ghost"}
-          >
-            {item.label}
-          </Button>
-        ))}
-      </div>
-    </DesignerTopBar>
+    />
   );
 
   return (

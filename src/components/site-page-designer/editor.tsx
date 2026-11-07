@@ -98,6 +98,7 @@ export function SitePageDesignEditor({
                       ? "Throw this draft away? The live page stays as it is."
                       : "Close keeps a draft · the live page stays as it is until you publish."
                   }
+                  noteAlways={confirmingDiscard}
                   onClose={() => void close()}
                   onPublish={publish}
                   secondary={
