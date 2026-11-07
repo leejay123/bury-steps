@@ -10,7 +10,6 @@ import { Puck, type Data } from "@puckeditor/core";
 // rules (style-src in next.config.ts) block, filling the console with errors.
 import "@puckeditor/core/no-external.css";
 import { toast } from "sonner";
-import { X } from "lucide-react";
 import { saveWalkDesign } from "@/server/actions";
 import { extractWalkDesignCopy, withSiteCopy } from "@/lib/walk-design-copy";
 import { WalkWordingProvider, useWalkWording } from "@/components/walk-wording-context";
@@ -18,6 +17,7 @@ import { WalkClockInPreview, WalkClockPreview } from "@/hooks/use-walk-clock";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { effectiveEndsAt, walkOpensAt } from "@/lib/walk-window";
 import { Button } from "@/components/ui/button";
+import { DESIGNER_UI, DESIGNER_VIEWPORTS, DesignerStripItem, DesignerTopBar } from "@/components/designer-top-bar";
 import {
   Select,
   SelectContent,
@@ -236,6 +236,118 @@ export function WalkDesignEditor({
     toast.success(result?.message ?? "Design saved.");
   }
 
+  const topBar = (
+    <DesignerTopBar
+      closeLabel="Close the designer"
+      note="Publish saves this design for the people chosen here."
+      onClose={onClose}
+      onPublish={publish}
+      strip={
+        <>
+        <DesignerStripItem first label="Start from">
+          <Select onValueChange={applyPreset} value="">
+            <SelectTrigger aria-label="Start from a ready-made design" className="h-8 w-full">
+              <SelectValue placeholder="Start from a ready-made design…" />
+            </SelectTrigger>
+            <SelectContent className="z-[100]">
+              <SelectGroup>
+                <SelectLabel>Starting points to build on</SelectLabel>
+                {WALK_DESIGN_PRESETS.map((preset) => (
+                  <SelectItem key={preset.id} value={preset.id}>
+                    {preset.label}
+                  </SelectItem>
+                ))}
+              </SelectGroup>
+              {/* A ready-made page for each numbered design, grouped as in Settings. */}
+              {[...new Set(READY_PAGE_PRESETS.map((preset) => preset.group))].map(
+                (group) => (
+                  <SelectGroup key={group}>
+                    <SelectLabel>{group}</SelectLabel>
+                    {READY_PAGE_PRESETS.filter(
+                      (preset) => preset.group === group,
+                    ).map((preset) => (
+                      <SelectItem key={preset.id} value={preset.id}>
+                        {preset.label}
+                      </SelectItem>
+                    ))}
+                  </SelectGroup>
+                ),
+              )}
+            </SelectContent>
+          </Select>
+        </DesignerStripItem>
+        <DesignerStripItem label="Copy to">
+          <Select
+            onValueChange={(value) => copyTo(value as WalkDesignAudience)}
+            value=""
+          >
+            <SelectTrigger aria-label="Copy this design to" className="h-8 w-full">
+              <SelectValue placeholder="Copy this design to…" />
+            </SelectTrigger>
+            <SelectContent className="z-[100]">
+              {AUDIENCES.filter((item) => item.id !== audience).map((item) => (
+                <SelectItem key={item.id} value={item.id}>
+                  {item.label}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </DesignerStripItem>
+        <DesignerStripItem label="Preview">
+          <Select
+            onValueChange={(value) => setMoment(value as Moment)}
+            value={moment}
+          >
+            <SelectTrigger aria-label="Show the walk" className="h-8 w-full">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent className="z-[100]">
+              {MOMENTS.map((item) => (
+                <SelectItem key={item.id} value={item.id}>
+                  Preview: {item.label}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </DesignerStripItem>
+        <DesignerStripItem label="Clocked in">
+          <Select
+            onValueChange={(value) => setClockedIn(value as ClockedIn)}
+            value={clockedIn}
+          >
+            <SelectTrigger aria-label="Clocked in or not" className="h-8 w-full">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent className="z-[100]">
+              {CLOCKED_IN.map((item) => (
+                <SelectItem key={item.id} value={item.id}>
+                  {item.label}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </DesignerStripItem>
+        </>
+      }
+      title="Walk page"
+    >
+      <div aria-label="Who the design is for" className="flex items-center gap-1 rounded-lg bg-muted p-1" role="group">
+        {AUDIENCES.map((item) => (
+          <Button
+            aria-pressed={audience === item.id}
+            key={item.id}
+            onClick={() => open(item.id)}
+            size="sm"
+            type="button"
+            variant={audience === item.id ? "default" : "ghost"}
+          >
+            {item.label}
+          </Button>
+        ))}
+      </div>
+    </DesignerTopBar>
+  );
+
   return (
     // Its menus (ready-made designs, Preview, Clocked in) open at z-[100]:
     // the site's pop-up lists sit at z-[80], under this.
@@ -245,107 +357,6 @@ export function WalkDesignEditor({
       aria-label="Walk page designer"
       aria-modal="true"
     >
-      <div className="flex flex-wrap items-center gap-3 border-b px-4 py-2">
-        <span className="font-semibold">Walk page designer</span>
-        <div className="flex items-center gap-1 rounded-lg bg-muted p-1">
-          {AUDIENCES.map((item) => (
-            <Button
-              key={item.id}
-              onClick={() => open(item.id)}
-              size="sm"
-              type="button"
-              variant={audience === item.id ? "default" : "ghost"}
-            >
-              {item.label}
-            </Button>
-          ))}
-        </div>
-        <Select onValueChange={applyPreset} value="">
-          <SelectTrigger className="h-8 w-64">
-            <SelectValue placeholder="Start from a ready-made design…" />
-          </SelectTrigger>
-          <SelectContent className="z-[100]">
-            <SelectGroup>
-              <SelectLabel>Starting points to build on</SelectLabel>
-              {WALK_DESIGN_PRESETS.map((preset) => (
-                <SelectItem key={preset.id} value={preset.id}>
-                  {preset.label}
-                </SelectItem>
-              ))}
-            </SelectGroup>
-            {/* A ready-made page for each numbered design, grouped as in Settings. */}
-            {[...new Set(READY_PAGE_PRESETS.map((preset) => preset.group))].map(
-              (group) => (
-                <SelectGroup key={group}>
-                  <SelectLabel>{group}</SelectLabel>
-                  {READY_PAGE_PRESETS.filter(
-                    (preset) => preset.group === group,
-                  ).map((preset) => (
-                    <SelectItem key={preset.id} value={preset.id}>
-                      {preset.label}
-                    </SelectItem>
-                  ))}
-                </SelectGroup>
-              ),
-            )}
-          </SelectContent>
-        </Select>
-        <Select
-          onValueChange={(value) => copyTo(value as WalkDesignAudience)}
-          value=""
-        >
-          <SelectTrigger aria-label="Copy this design to" className="h-8 w-52">
-            <SelectValue placeholder="Copy this design to…" />
-          </SelectTrigger>
-          <SelectContent className="z-[100]">
-            {AUDIENCES.filter((item) => item.id !== audience).map((item) => (
-              <SelectItem key={item.id} value={item.id}>
-                {item.label}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-        <Select
-          onValueChange={(value) => setMoment(value as Moment)}
-          value={moment}
-        >
-          <SelectTrigger aria-label="Show the walk" className="h-8 w-52">
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent className="z-[100]">
-            {MOMENTS.map((item) => (
-              <SelectItem key={item.id} value={item.id}>
-                Preview: {item.label}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-        <Select
-          onValueChange={(value) => setClockedIn(value as ClockedIn)}
-          value={clockedIn}
-        >
-          <SelectTrigger aria-label="Clocked in or not" className="h-8 w-56">
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent className="z-[100]">
-            {CLOCKED_IN.map((item) => (
-              <SelectItem key={item.id} value={item.id}>
-                {item.label}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-        <Button
-          aria-label="Close the designer"
-          className="ml-auto"
-          onClick={onClose}
-          size="icon"
-          type="button"
-          variant="ghost"
-        >
-          <X />
-        </Button>
-      </div>
       <div className="min-h-0 flex-1">
         <WalkClockPreview.Provider value={pretendNow}>
           <WalkClockInPreview.Provider
@@ -370,8 +381,13 @@ export function WalkDesignEditor({
                     const extracted = extractWalkDesignCopy(data, siteWording);
                     setDraftWording(extracted.wording ?? siteWording);
                   }}
-                  onPublish={publish}
-                  overrides={{ iframe: PuckFrameStyles }}
+                  overrides={{
+                    iframe: PuckFrameStyles,
+                    // The one top bar (designer-top-bar.tsx) in place of Puck's own.
+                    header: () => topBar,
+                  }}
+                  ui={DESIGNER_UI}
+                  viewports={DESIGNER_VIEWPORTS}
                 />
               </WalkPartsProvider>
             </PreviewAudience.Provider>

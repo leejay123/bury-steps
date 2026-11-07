@@ -7,9 +7,9 @@ import { Puck, type Data } from "@puckeditor/core";
 // rules (style-src in next.config.ts) block, filling the console with errors.
 import "@puckeditor/core/no-external.css";
 import { toast } from "sonner";
-import { X } from "lucide-react";
 import { discardSitePageDraft, publishSitePageDesign, saveSitePageDraft } from "@/server/actions";
 import { Button } from "@/components/ui/button";
+import { DESIGNER_UI, DESIGNER_VIEWPORTS, DesignerTopBar, type DesignerStatus } from "@/components/designer-top-bar";
 import { SITE_PAGES, type PuckData, type SitePageKey } from "@/lib/site-page-designs";
 import { configForPage } from "./config";
 import { SitePageLiveProvider, type SitePageLive } from "./live";
@@ -25,11 +25,14 @@ export function SitePageDesignEditor({
   onClose,
   page,
   data,
+  status,
 }: {
   live: SitePageLive;
   onClose: () => void;
   page: SitePageKey;
   data: PuckData;
+  /** How the page stands now: an unpublished draft, published, or the live page. */
+  status?: DesignerStatus;
 }) {
   const meta = SITE_PAGES.find((item) => item.key === page);
   const current = useRef<Data>(data as Data);
@@ -74,78 +77,70 @@ export function SitePageDesignEditor({
       aria-label={`${meta?.title ?? "Page"} designer`}
       aria-modal="true"
     >
-      <div className="flex flex-wrap items-center gap-3 border-b px-4 py-2">
-        <span className="font-semibold">{meta?.title ?? "Page"} designer</span>
-        {confirmingDiscard ? (
-          <p className="text-sm text-muted-foreground">
-            Throw this draft away? The live page stays as it is.
-          </p>
-        ) : (
-          <p className="text-sm text-muted-foreground">
-            Edit, hide or reorder the sections. Publish to put this on the live page. Close keeps a
-            draft.
-          </p>
-        )}
-        {confirmingDiscard ? (
-          <div className="ml-auto flex flex-wrap items-center gap-2">
-            <Button
-              disabled={busy}
-              onClick={() => setConfirmingDiscard(false)}
-              size="sm"
-              type="button"
-              variant="outline"
-            >
-              Keep draft
-            </Button>
-            <Button
-              disabled={busy}
-              onClick={() => void discard()}
-              size="sm"
-              type="button"
-              variant="destructive"
-            >
-              {busy ? "Discarding…" : "Discard draft"}
-            </Button>
-          </div>
-        ) : (
-          <>
-            <Button
-              className="ml-auto"
-              disabled={busy}
-              onClick={() => setConfirmingDiscard(true)}
-              size="sm"
-              type="button"
-              variant="outline"
-            >
-              Discard draft
-            </Button>
-            <Button
-              aria-label="Close the designer"
-              disabled={busy}
-              onClick={() => void close()}
-              size="icon"
-              type="button"
-              variant="ghost"
-            >
-              <X />
-            </Button>
-          </>
-        )}
-      </div>
       <div className="min-h-0 flex-1">
         <SitePageLiveProvider value={live}>
           <Puck
             config={configForPage(page)}
             data={start}
-            headerTitle={meta?.title}
             height="100%"
             onChange={(next) => {
               current.current = next;
             }}
-            onPublish={publish}
             overrides={{
               iframe: (props) => <SitePagePreviewFrame {...props} page={page} />,
+              // The one top bar (designer-top-bar.tsx) in place of Puck's own.
+              header: () => (
+                <DesignerTopBar
+                  busy={busy}
+                  closeLabel="Close the designer (keeps a draft)"
+                  note={
+                    confirmingDiscard
+                      ? "Throw this draft away? The live page stays as it is."
+                      : "Close keeps a draft · the live page stays as it is until you publish."
+                  }
+                  onClose={() => void close()}
+                  onPublish={publish}
+                  secondary={
+                    confirmingDiscard ? (
+                      <>
+                        <Button
+                          disabled={busy}
+                          onClick={() => setConfirmingDiscard(false)}
+                          size="sm"
+                          type="button"
+                          variant="outline"
+                        >
+                          Keep draft
+                        </Button>
+                        <Button
+                          disabled={busy}
+                          onClick={() => void discard()}
+                          size="sm"
+                          type="button"
+                          variant="destructive"
+                        >
+                          {busy ? "Discarding…" : "Discard draft"}
+                        </Button>
+                      </>
+                    ) : (
+                      <Button
+                        disabled={busy}
+                        onClick={() => setConfirmingDiscard(true)}
+                        size="sm"
+                        type="button"
+                        variant="outline"
+                      >
+                        Discard draft
+                      </Button>
+                    )
+                  }
+                  status={status}
+                  title={`${meta?.title ?? "Page"} page`}
+                />
+              ),
             }}
+            ui={DESIGNER_UI}
+            viewports={DESIGNER_VIEWPORTS}
           />
         </SitePageLiveProvider>
       </div>

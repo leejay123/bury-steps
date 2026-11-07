@@ -250,7 +250,17 @@ export function SitePageDesignList({
       </DataList>
       {open
         ? createPortal(
-            <SitePageDesignEditor data={drafts[open]} live={live} onClose={close} page={open} />,
+            <SitePageDesignEditor
+              data={drafts[open]}
+              live={live}
+              onClose={close}
+              page={open}
+              status={{
+                draft: { label: "Draft", tone: "draft" as const },
+                published: { label: "Published", tone: "published" as const },
+                live: { label: "Live page", tone: "live" as const },
+              }[statuses[open]]}
+            />,
             document.body,
           )
         : null}
