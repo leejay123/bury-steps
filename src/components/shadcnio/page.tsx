@@ -86,7 +86,7 @@ export async function ShadcnHomePage({ theme }: { theme: SiteTheme }) {
               <main aria-label="Home">
                 <SitePageRender
                   data={homeDesign}
-                  live={{ data, facebookUrl, joinHref, logo }}
+                  live={{ data, facebookUrl, joinHref, logo, walkEssentials: theme.walkEssentials }}
                   page="home"
                 />
               </main>
