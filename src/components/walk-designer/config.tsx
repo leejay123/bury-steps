@@ -942,6 +942,7 @@ function hiddenDetailsSettings(props: DetailsProps): Set<string> {
   // Their looks and place only once they're in the title box list.
   if (!inTitle("clockin")) hide.add("clockinLook");
   if (!inTitle("countdown")) hide.add("countdownLook");
+  if (!inTitle("people")) hide.add("peopleLook");
   if (!inTitle("clockin") && !inTitle("countdown")) hide.add("titleExtrasAt");
   // Ribbon
   if (!props.ribbon || props.ribbon === "none") {
@@ -3233,6 +3234,8 @@ export const walkDesignConfig: Config = {
         createdByLook,
         clockinLook,
         countdownLook,
+        peopleLook,
+        countdownStyle,
         factsBorder,
         factsIcons,
         factsLimit,
@@ -3310,6 +3313,8 @@ export const walkDesignConfig: Config = {
           clockinLook={clockinLook}
           createdByLook={createdByLook}
           countdownLook={countdownLook}
+          peopleLook={peopleLook}
+          countdownStyle={countdownStyle}
           factsBorder={factsBorder}
           factsIcons={factsIcons}
           factsLimit={factsLimit}
