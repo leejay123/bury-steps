@@ -4182,17 +4182,14 @@ function CountdownLine({
 function PeopleLine({ p, look = "line" }: { p: WalkIdeaParts; look?: LineLook }) {
   const { status } = useWalkInfo(p);
   const count = p.attended?.count ?? null;
-  if (count === null) return null;
+  // Nobody yet: the Attended section already says so, so nothing here.
+  if (count === null || count === 0) return null;
   // Agreed wording (Nov 2026): where they are, not "clocked in".
   const text =
     status === "starting-soon" || status === "in-progress"
-      ? count === 0
-        ? "No one is on the walk yet"
-        : `${count} ${count === 1 ? "person is" : "people are"} on the walk`
+      ? `${count} ${count === 1 ? "person is" : "people are"} on the walk`
       : status === "completed"
-        ? count === 0
-          ? "No one walked"
-          : `${count} ${count === 1 ? "person" : "people"} walked`
+        ? `${count} ${count === 1 ? "person" : "people"} walked`
         : null;
   if (!text) return null;
   return (
@@ -4200,7 +4197,7 @@ function PeopleLine({ p, look = "line" }: { p: WalkIdeaParts; look?: LineLook })
       className={cn("flex items-center gap-2 [&_p]:text-sm", LINE_LOOK[look === "big" ? "grey" : look])}
       data-people=""
     >
-      {look === "pill" || look === "tick" || look === "badge" || look === "stacked" ? (
+      {look === "pill" || look === "tick" || look === "badge" || look === "stacked" || look === "underline" ? (
         <UsersRound aria-hidden className="size-3.5 shrink-0 text-muted-foreground" />
       ) : null}
       <p className="font-medium tabular-nums" suppressHydrationWarning>
@@ -4226,7 +4223,7 @@ function ClockInLook({
       )}
       data-clockin=""
     >
-      {look === "pill" || look === "tick" || look === "badge" ? (
+      {look === "pill" || look === "tick" || look === "badge" || look === "underline" ? (
         <CircleCheck
           aria-hidden
           className="size-3.5 shrink-0 text-muted-foreground"
