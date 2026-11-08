@@ -1248,23 +1248,47 @@ export type TimelineOptions = {
   end?: boolean;
 };
 
-type TimelineItem = { time: string; label: string };
+type TimelineItem = { time: string; label: string; at: Date };
+
+/**
+ * How far the bar is filled (0–100) with the times spread evenly under it:
+ * it reaches each time's label at that time, filling at its own pace between
+ * them (09:15 clock-in opens · 10:15 set off · 14:15 finish — halfway along
+ * at 10:15, not a fifth of the way).
+ */
+export function timelineFill(points: Date[], now: Date): number {
+  if (points.length === 0) return 0;
+  if (points.length === 1) return now >= points[0] ? 100 : 0;
+  const t = now.getTime();
+  const last = points.length - 1;
+  if (t <= points[0].getTime()) return 0;
+  if (t >= points[last].getTime()) return 100;
+  for (let i = 0; i < last; i++) {
+    const from = points[i].getTime();
+    const to = points[i + 1].getTime();
+    if (t < to) {
+      const share = to > from ? (t - from) / (to - from) : 1;
+      return ((i + share) / last) * 100;
+    }
+  }
+  return 100;
+}
 
 /**
  * The day's times: clock-in opens, set off and finish, in one of several
  * plain looks.
  */
 function Timeline({ p, o = {} }: { p: WalkIdeaParts; o?: TimelineOptions }) {
-  const { opens, start, end, progress } = useWalkInfo(p);
+  const { opens, start, end, clock } = useWalkInfo(p);
   const look = o.look ?? "bar";
   const items: TimelineItem[] = [
     ...(o.opens === false
       ? []
-      : [{ time: formatTime(opens), label: "Clock-in opens" }]),
+      : [{ time: formatTime(opens), label: "Clock-in opens", at: opens }]),
     ...(o.start === false
       ? []
-      : [{ time: formatTime(start), label: "Set off" }]),
-    ...(o.end === false ? [] : [{ time: formatTime(end), label: "Finish" }]),
+      : [{ time: formatTime(start), label: "Set off", at: start }]),
+    ...(o.end === false ? [] : [{ time: formatTime(end), label: "Finish", at: end }]),
   ];
   if (items.length === 0) return null;
   if (look === "cells")
@@ -1348,7 +1372,7 @@ function Timeline({ p, o = {} }: { p: WalkIdeaParts; o?: TimelineOptions }) {
       <div className="relative h-1.5 overflow-hidden rounded-full bg-muted">
         <div
           className="absolute inset-y-0 left-0 rounded-full bg-foreground/60"
-          style={{ width: `${progress}%` }}
+          style={{ width: `${timelineFill(items.map((item) => item.at), clock)}%` }}
         />
       </div>
       <div
@@ -4151,19 +4175,24 @@ function CountdownLine({
 
 /**
  * Clocked in / attended, as a title box part (instead of in the status band):
- * "3 clocked in" while clock-in is open and the walk is on, "12 attended" once
- * it's finished; nothing before, when cancelled, or when the count isn't shown
+ * "3 people are on the walk" while clock-in is open and the walk is on,
+ * "12 people walked" once it's finished; nothing before, when cancelled, or when the count isn't shown
  * to this person. In the same looks as Your clock-in.
  */
 function PeopleLine({ p, look = "line" }: { p: WalkIdeaParts; look?: LineLook }) {
   const { status } = useWalkInfo(p);
   const count = p.attended?.count ?? null;
   if (count === null) return null;
+  // Agreed wording (Nov 2026): where they are, not "clocked in".
   const text =
     status === "starting-soon" || status === "in-progress"
-      ? `${count} clocked in`
+      ? count === 0
+        ? "No one is on the walk yet"
+        : `${count} ${count === 1 ? "person is" : "people are"} on the walk`
       : status === "completed"
-        ? `${count} attended`
+        ? count === 0
+          ? "No one walked"
+          : `${count} ${count === 1 ? "person" : "people"} walked`
         : null;
   if (!text) return null;
   return (
