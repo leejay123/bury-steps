@@ -58,16 +58,17 @@ const MOMENTS: { id: Moment; label: string }[] = [
   { id: "now", label: "As it is now" },
   { id: "before", label: "Before clock-in opens" },
   { id: "open", label: "Clock-in open" },
-  { id: "under-way", label: "Under way" },
+  { id: "under-way", label: "In progress" },
   { id: "finished", label: "Finished" },
   { id: "cancelled", label: "Cancelled" },
 ];
 
-type ClockedIn = "real" | "in" | "not-in";
+type ClockedIn = "real" | "in" | "not-in" | "out";
 const CLOCKED_IN: { id: ClockedIn; label: string }[] = [
   { id: "real", label: "As it really is" },
   { id: "not-in", label: "Not clocked in" },
   { id: "in", label: "Clocked in" },
+  { id: "out", label: "Clocked out early" },
 ];
 
 /** The walk as if cancelled: the badge, status and messages say so, and there's no clocking in. */

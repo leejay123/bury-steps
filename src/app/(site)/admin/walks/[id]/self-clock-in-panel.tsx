@@ -6,7 +6,7 @@ import { MyClockInLine } from "@/components/my-clock-in-line";
 import { useClockedInPreview, useWalkClock } from "@/hooks/use-walk-clock";
 import { formatDateTime, formatTime, formatWalkDay } from "@/lib/dates";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { walkOpensAt, walkStatus, windowState } from "@/lib/walk-window";
+import { walkOpensAt, walkStatus, windowState, effectiveEndsAt } from "@/lib/walk-window";
 
 /**
  * The same clock-in a member gets, on the organiser walk page. Owners and
@@ -57,7 +57,12 @@ export function SelfClockInPanel({
   // on the walk; the full panel elsewhere says the rest.
   if (statusOnly)
     return (
-      <MyClockInLine clockedInAt={alreadyClockedInAt} clockedOutAt={clockedOutAt} completed={completed} />
+      <MyClockInLine
+        clockedInAt={alreadyClockedInAt}
+        clockedOutAt={clockedOutAt}
+        completed={completed}
+        endsAt={effectiveEndsAt(walk)}
+      />
     );
 
   if (compact) {
@@ -81,14 +86,12 @@ export function SelfClockInPanel({
         <div className="flex flex-col gap-1">
           <p className="font-medium">{completed ? "You attended this walk" : "You are clocked in"}</p>
           <p className="text-sm tabular-nums text-muted-foreground">
-            Recorded at {formatDateTime(new Date(alreadyClockedInAt))}
+            {completed
+              ? `Recorded ${formatTime(new Date(alreadyClockedInAt))} to ${formatTime(effectiveEndsAt(walk))} – start to finish`
+              : `Recorded at ${formatDateTime(new Date(alreadyClockedInAt))}`}
           </p>
         </div>
-        {completed ? (
-          <p className="text-sm text-muted-foreground">
-            This walk has finished, and you stayed for the whole thing.
-          </p>
-        ) : (
+        {completed ? null : (
           <div className="flex flex-wrap gap-2">
             <ClockOutButton token={token} />
           </div>
@@ -102,8 +105,7 @@ export function SelfClockInPanel({
       <div className="flex flex-col gap-1 rounded-lg border bg-muted/40 p-5">
         <p className="font-medium">You attended this walk</p>
         <p className="text-sm tabular-nums text-muted-foreground">
-          Clocked in at {formatDateTime(new Date(alreadyClockedInAt!))} · left at{" "}
-          {formatDateTime(new Date(clockedOutAt!))}
+          Recorded {formatTime(new Date(alreadyClockedInAt!))} to {formatTime(new Date(clockedOutAt!))} – left early
         </p>
       </div>
     );
@@ -125,13 +127,10 @@ export function SelfClockInPanel({
 
   return (
     <div className="flex flex-col gap-4">
+      {/* The same as members see: just the button (and a line if they clocked out). */}
       {leftEarly ? (
-        <p className="text-sm text-muted-foreground">
-          You left early. Clock in again if you’ve come back to the walk.
-        </p>
-      ) : (
-        <p className="text-sm text-muted-foreground">Clock in now, the same way a member does.</p>
-      )}
+        <p className="text-sm text-muted-foreground">You clocked out. Clock in again if you&rsquo;ve come back.</p>
+      ) : null}
       <ClockInDrawer
         emergencyContactName={emergencyContactName}
         emergencyContactPhone={emergencyContactPhone}

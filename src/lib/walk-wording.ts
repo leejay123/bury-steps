@@ -26,7 +26,7 @@ export const WALK_WORDING_DEFAULTS = {
   countdownMinutes: "{n} min to go",
   countdownLeft: "{n} min left",
   memberBefore: "Clock-in opens at {opens} on {opensDay}.",
-  memberMissed: "Finished. Missed clocking in? Ask an organiser to add you.",
+  memberMissed: "Missed clocking in? Ask an organiser to add you.",
   visitorFinished: "This walk has finished.",
   // Kept short: these show in the Details card's status band, which is narrow on a phone.
   organiserFinished: "Finished and locked. Add anyone missed under Attended.",

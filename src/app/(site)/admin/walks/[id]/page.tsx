@@ -32,7 +32,6 @@ import { walkShareUrl } from "@/lib/walk-slug";
 import { ensureWalkSlug } from "@/lib/walk-slug-server";
 import { RetentionLockToggle } from "./retention-lock-toggle";
 import { AddSomeoneInManage, WalkAttendanceSection } from "./walk-attendance-section";
-import { WalkCompletedNotice } from "./walk-completed-notice";
 import { WalkDetailActions } from "./walk-detail-actions";
 import { WalkDescription } from "@/components/walk-description";
 import { WalkJourneyManager } from "./walk-journey";
@@ -44,7 +43,6 @@ import { WalkStudioLayouts } from "@/components/walk-studio-layouts";
 import { WalkIdeaLayouts, type WalkIdeaParts } from "@/components/walk-idea-layouts";
 import { isWalkGalleryLayout, isWalkIdeaLayout, isWalkStudioLayout, isWalkTabsVariant, type WalkPageSectionId } from "@/lib/walk-page-sections";
 import { SITE_SETTING_ID } from "@/lib/theme";
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import type { WalkAttendanceRow } from "./walk-attendance";
@@ -186,12 +184,6 @@ async function WalkDetailPageContent({ id }: { id: string }) {
           title={walk.title}
         />
         <WalksBackLink href={ADMIN_WALKS_HISTORY_HREF} label="History" />
-        <Alert variant="destructive">
-          <AlertTitle>{theme.walkWording.cancelledTitle}</AlertTitle>
-          <AlertDescription>
-            {walk.cancelledReason || "Check with an organiser who has Walks access for details."}
-          </AlertDescription>
-        </Alert>
         <Card className="gap-4">
           <CardHeader>
             <h1 className="text-2xl leading-none font-semibold" data-slot="card-title">
@@ -262,37 +254,9 @@ async function WalkDetailPageContent({ id }: { id: string }) {
 
   // The page's parts, placed by the walk page layout chosen in Settings →
   // Site wording → Walk page cards (one column, or two with tabs).
-  const notices = (
-    <>
-      {/* Only tells someone what THEY can still do about it — an
-          organiser without any of Edit/Cancel/Attendance can't act on any
-          of what this mentions, so it stays silent for them rather than
-          describing tools they don't have (the status badge above already
-          says "Completed"). Live with the walk clock so a page left open
-          still picks up the finished state. */}
-      <WalkCompletedNotice
-        cancelledAt={walk.cancelledAt?.toISOString() ?? null}
-        durationMins={walk.durationMins}
-        endedAt={walk.endedAt?.toISOString() ?? null}
-        show={admin.permWalksEdit || admin.permWalksCancel || admin.permWalksAttendance}
-        startsAt={walk.startsAt.toISOString()}
-      />
-      {walk.cancelledAt ? (
-        <Alert variant="destructive">
-          <AlertTitle>{theme.walkWording.cancelledTitle}</AlertTitle>
-          <AlertDescription>
-            {walk.cancelledReason ? `Reason: ${walk.cancelledReason.replace(/[.!?]+$/, "")}. ` : ""}
-            Members can no longer clock in.
-            {admin.permWalksCancel
-              ? " Going ahead after all? Press Reopen walk."
-              : admin.permWalksEdit
-                ? " Going ahead after all? Press Edit and save."
-                : ""}
-          </AlertDescription>
-        </Alert>
-      ) : null}
-    </>
-  );
+  // Nothing here any more: the finished and cancelled boxes went (Nov 2026),
+  // the status band says it for everyone.
+  const notices = null;
   const detailsCard = (
     <>
       <Card className="gap-4">

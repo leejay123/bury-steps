@@ -1,8 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useContext, useEffect, useRef } from "react";
-import { AttendedRuleContext } from "@/components/walk-designer/attended-rule";
+import { useEffect, useRef } from "react";
 import { ClockInDrawer } from "./clock-in-drawer";
 import { ClockOutButton } from "@/components/clock-out-button";
 import { MyClockInLine } from "@/components/my-clock-in-line";
@@ -74,7 +73,6 @@ export function WalkLivePanel({
   const { alreadyClockedInAt, clockedOutAt } = useClockedInPreview(realClockedInAt, realClockedOutAt, startsAt);
   const start = new Date(startsAt);
   const now = useWalkClock({ cancelledAt: null, durationMins, endedAt, startsAt });
-  const attendedRule = useContext(AttendedRuleContext);
   const words = useWalkWording();
   const walk = { cancelledAt: null, durationMins, endedAt: endedAt ? new Date(endedAt) : null, startsAt: start };
   const status = walkStatus(walk, now);
@@ -106,7 +104,12 @@ export function WalkLivePanel({
 
   if (statusOnly)
     return (
-      <MyClockInLine clockedInAt={alreadyClockedInAt} clockedOutAt={clockedOutAt} completed={completed} />
+      <MyClockInLine
+        clockedInAt={alreadyClockedInAt}
+        clockedOutAt={clockedOutAt}
+        completed={completed}
+        endsAt={effectiveEndsAt(walk)}
+      />
     );
 
   if (membersOnly) {
@@ -127,27 +130,20 @@ export function WalkLivePanel({
         />
       );
     }
-    // The design can take the list away once someone clocks out.
-    const gone = attendedRule === "on-walk" && Boolean(clockedOutAt);
-    return organiserView || (alreadyClockedInAt && !gone) ? (
+    // Anyone who clocked in keeps seeing the list, even after clocking out.
+    return organiserView || alreadyClockedInAt ? (
       <WalkMembers completed={completed} names={memberNames} />
     ) : (
       // The site's empty box, like an empty attendance list.
       <EmptyState
         description={
-          gone
-            ? "You clocked out, so the list of who's on the walk is hidden."
-            : completed
-              ? "Only people who clocked in can see who was on this walk."
-              : "The list of who's on the walk shows once you've clocked in."
+          completed
+            ? "Only people who clocked in can see who was on this walk."
+            : "The list of who's on the walk shows once you've clocked in."
         }
         icon={Users}
         title={
-          gone
-            ? "You've clocked out"
-            : completed
-              ? "Only for people who walked"
-              : "Clock in to see who's on the walk"
+          completed ? "Only for people who walked" : "Clock in to see who's on the walk"
         }
       />
     );
@@ -177,19 +173,11 @@ export function WalkLivePanel({
               {completed ? "You attended this walk" : "You are clocked in"}
             </p>
             <p className="text-sm tabular-nums text-muted-foreground">
-              Recorded at {formatWalkDate(alreadyClockedInAt)}
+              {completed
+                ? `Recorded ${formatTime(new Date(alreadyClockedInAt))} to ${formatTime(effectiveEndsAt(walk))} – start to finish`
+                : `Recorded at ${formatWalkDate(alreadyClockedInAt)}`}
             </p>
           </div>
-          {completed ? (
-            <p className="text-sm text-muted-foreground">
-              This walk has finished, and you stayed for the whole thing — there’s nothing left to
-              do here.
-            </p>
-          ) : status === "in-progress" ? (
-            <p className="text-sm tabular-nums text-muted-foreground">
-              This walk is in progress{countdown ? ` · finishes in ${countdown}` : ""}.
-            </p>
-          ) : null}
           <div className="flex flex-wrap gap-2">
             {completed ? null : <ClockOutButton token={token} />}
             <Button asChild size="sm" variant="outline">
@@ -212,13 +200,10 @@ export function WalkLivePanel({
           <div className="flex flex-col gap-1">
             <p className="font-medium">You attended this walk</p>
             <p className="text-sm tabular-nums text-muted-foreground">
-              Clocked in at {formatWalkDate(alreadyClockedInAt!)} · left at{" "}
-              {formatWalkDate(clockedOutAt!)}
+              Recorded {formatTime(new Date(alreadyClockedInAt!))} to {formatTime(new Date(clockedOutAt!))} – left
+              early
             </p>
           </div>
-          <p className="text-sm text-muted-foreground">
-            You left before the walk finished. There&rsquo;s nothing left to do here.
-          </p>
           <div className="flex flex-wrap gap-2">
             <Button asChild size="sm" variant="outline">
               <Link href={walksHref}>Back to walks</Link>
@@ -267,7 +252,7 @@ export function WalkLivePanel({
           </h2>
           {leftEarly ? (
             <p className="text-sm text-muted-foreground outline-none" ref={statusRef} tabIndex={-1}>
-              You left early. Clock in again if you&rsquo;ve come back to the walk.
+              You clocked out. Clock in again if you&rsquo;ve come back.
             </p>
           ) : status === "in-progress" ? (
             <p className="text-sm tabular-nums text-muted-foreground">

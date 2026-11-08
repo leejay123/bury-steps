@@ -1,16 +1,13 @@
 "use client";
 
 import { useWalkWording } from "@/components/walk-wording-context";
-import { fillWording } from "@/lib/walk-wording";
-import { formatTime, formatWalkDay } from "@/lib/dates";
 import {
   canAddWalkToCalendar,
-  walkOpensAt,
   walkStatus,
   windowState,
 } from "@/lib/walk-window";
 import { useWalkClock } from "@/hooks/use-walk-clock";
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { WalkDescription } from "@/components/walk-description";
@@ -132,7 +129,6 @@ export function WalkShareStatusChrome({
   backMarker,
   refreshmentStop,
   cancelledAt,
-  cancelledReason = null,
   description,
   distance,
   durationMins,
@@ -203,37 +199,23 @@ export function WalkShareStatusChrome({
     endedAt: endedAt ? new Date(endedAt) : null,
     startsAt: new Date(startsAt),
   };
-  const words = useWalkWording();
   const status = walkStatus(walk, now);
   const completed = status === "completed";
   const windowStateNow = windowState(walk.startsAt, walk.durationMins, now, walk.endedAt);
-  const tooEarly = windowStateNow === "too-early";
   const closedNoClockIn = signedIn === true && !attended && windowStateNow === "closed";
-  const opensAt = walkOpensAt(walk.startsAt);
   const showCalendar = canAddWalkToCalendar(walk, now);
 
-  // Notices that depend on who's looking (status === "cancelled" is the same
-  // for everyone). Members can't have clocked in before clock-in opens.
-  const memberNotice =
-    !attended && tooEarly ? (
-      <Alert variant="info">
-        <AlertDescription>
-          {fillWording(words.memberBefore, { opens: formatTime(opensAt), opensDay: formatWalkDay(opensAt) })}
-        </AlertDescription>
-      </Alert>
-    ) : null;
+  // The only message left besides the status band's line (agreed Nov 2026):
+  // "Missed clocking in? Ask an organiser to add you." for a member who
+  // didn't clock in, once the walk has finished. When clock-in opens, that
+  // the walk has finished or been cancelled: the status band says it.
+  const memberNotice = null;
   const closedNotice = <WalkClosedNoClockInNotice />;
   // No buttons of its own: Sign in and Join are in the site header.
   const signInLookFromBlock = useContext(SignInLookContext);
   const signInLook = signInLookProp ?? signInLookFromBlock ?? "box";
   const signInPrompt = completed ? null : <SignInPrompt look={signInLook} />;
-  const guestNotice = completed ? (
-    <Alert variant="info">
-      <AlertDescription>{words.visitorFinished}</AlertDescription>
-    </Alert>
-  ) : withoutSignIn ? null : (
-    signInPrompt
-  );
+  const guestNotice = completed || withoutSignIn ? null : signInPrompt;
   // Just the sign-in box, for a designed page's top (visitors only).
   if (part === "sign-in")
     return status === "cancelled" || !signInPrompt || signedIn ? null : signedIn === undefined ? (
@@ -245,15 +227,7 @@ export function WalkShareStatusChrome({
     );
 
   const notices =
-    status === "cancelled" ? (
-      <Alert variant="destructive">
-        <AlertTitle>{words.cancelledTitle}</AlertTitle>
-        <AlertDescription>
-          {cancelledReason?.trim() ? `${cancelledReason.trim().replace(/[.!]?$/, ".")} ` : ""}
-          {words.cancelledNext}
-        </AlertDescription>
-      </Alert>
-    ) : signedIn === undefined && audience ? (
+    status === "cancelled" ? null : signedIn === undefined && audience ? (
       audience === "visitor" ? guestNotice : memberNotice
     ) : signedIn === undefined ? (
       <>

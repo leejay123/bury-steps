@@ -12,6 +12,8 @@ import { WalkActionsBar, WalkManageMenu } from "@/components/walk-manage-menu";
 import { WalkStatusBadge } from "@/components/walk-status-badge";
 import { useWalkWording } from "@/components/walk-wording-context";
 import { fillWording } from "@/lib/walk-wording";
+import { LiveCountdown } from "@/components/live-countdown";
+import type { CountdownStyle } from "@/lib/countdown-format";
 import { walkHeadlineFacts, type WalkHeadlineProps } from "@/components/walk-headline";
 
 export type WalkTiming = {
@@ -298,4 +300,61 @@ function timingDates(timing: WalkTiming) {
     endedAt: timing.endedAt ? new Date(timing.endedAt) : null,
     startsAt: new Date(timing.startsAt),
   };
+}
+
+/**
+ * The status band's line: the same fixed words for everyone (visitors, members,
+ * organisers and owners), with a live countdown to what comes next while there
+ * is one — Upcoming – Clock-in opens at 09:15 on Sun 8 Nov – 1h 49m 21s, and so
+ * on. Not editable: agreed wording (Nov 2026).
+ */
+export function walkStatusLine(
+  timing: WalkTiming,
+  now: Date,
+): { text: string; target: Date | null; suffix: string; live: boolean } {
+  const walk = {
+    cancelledAt: timing.cancelledAt ? new Date(timing.cancelledAt) : null,
+    durationMins: timing.durationMins,
+    endedAt: timing.endedAt ? new Date(timing.endedAt) : null,
+    startsAt: new Date(timing.startsAt),
+  };
+  const status = walkStatus(walk, now);
+  const opensAt = walkOpensAt(walk.startsAt);
+  const end = effectiveEndsAt(walk);
+  if (status === "cancelled") return { text: "This walk has been cancelled", target: null, suffix: "", live: false };
+  if (status === "upcoming")
+    return {
+      text: `Upcoming – Clock-in opens at ${formatTime(opensAt)} on ${formatWalkDay(opensAt)}`,
+      target: opensAt,
+      suffix: "",
+      live: false,
+    };
+  if (status === "starting-soon")
+    return {
+      text: `Clock-in is open – the walk starts at ${formatTime(walk.startsAt)}`,
+      target: walk.startsAt,
+      suffix: "",
+      live: true,
+    };
+  if (status === "in-progress")
+    return { text: `In progress – finishes at ${formatTime(end)}`, target: end, suffix: " left", live: true };
+  return { text: "This walk has finished", target: null, suffix: "", live: false };
+}
+
+/** The status band's line, with its live countdown in the chosen style. */
+export function WalkStatusText({ style, timing }: { style?: CountdownStyle; timing: WalkTiming }) {
+  const now = useWalkClock(timing);
+  const line = walkStatusLine(timing, now);
+  return (
+    <>
+      {line.text}
+      {line.target ? (
+        <>
+          {" – "}
+          <LiveCountdown style={style} target={line.target} />
+          {line.suffix}
+        </>
+      ) : null}
+    </>
+  );
 }

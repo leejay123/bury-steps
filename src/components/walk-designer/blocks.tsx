@@ -52,17 +52,16 @@ import {
   AccordionItem,
   AccordionTrigger,
 } from "@/components/ui/accordion";
-import { AttendedRuleContext, type AttendedRule } from "./attended-rule";
 import { keptFactsAs, titlePartsOf, type TitlePart } from "./design-rules";
 export { keptFactsAs, titlePartsOf, type TitlePart };
 import { effectiveEndsAt, walkOpensAt, walkStatus } from "@/lib/walk-window";
 import { useWalkClock } from "@/hooks/use-walk-clock";
-import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { WalkDescription } from "@/components/walk-description";
 import { useWalkEssentials } from "@/components/walk-essentials-context";
 import { essentialIcon, walkEssentialItems } from "@/lib/walk-essentials";
-import { useWalkNow } from "@/components/walk-header-styles";
+import { useWalkNow, WalkStatusText } from "@/components/walk-header-styles";
+import { isCountdownStyle, type CountdownStyle } from "@/lib/countdown-format";
 import { WalkWordingProvider, useWalkWording } from "@/components/walk-wording-context";
 import { walkCountdown } from "@/lib/walk-wording";
 import { wordingFromStatusProps } from "@/lib/walk-design-copy";
@@ -222,16 +221,8 @@ function Badge({ p, className }: { p: WalkIdeaParts; className?: string }) {
   );
 }
 
-function StatusLine({
-  p,
-  className,
-  withEyebrow = true,
-}: {
-  p: WalkIdeaParts;
-  className?: string;
-  /** Off beside the status badge, which already says it (no "In progress" twice). */
-  withEyebrow?: boolean;
-}) {
+/** The walk's status in one line: the same fixed words as the status band (walkStatusLine), with its live countdown. */
+function StatusLine({ p, className }: { p: WalkIdeaParts; className?: string }) {
   const { now } = useWalkInfo(p);
   return (
     <span
@@ -248,7 +239,9 @@ function StatusLine({
           now.live ? "bg-emerald-500" : "bg-muted-foreground/40",
         )}
       />
-      {withEyebrow ? `${now.eyebrow} · ${now.line}` : now.line}
+      <span>
+        <WalkStatusText timing={p.timing} />
+      </span>
     </span>
   );
 }
@@ -1480,6 +1473,7 @@ function Title({
   afterNote = null,
   underNote = null,
   bandCountdown = false,
+  bandCountdownStyle = "narrow",
   bandStyle = "grey",
   gap = "normal",
   actionsAt = "beside",
@@ -1497,6 +1491,8 @@ function Title({
   underNote?: ReactNode;
   /** Add the countdown to the band's line ("… · 7 days to go"). */
   bandCountdown?: boolean;
+  /** The status band countdown's style (Details card: Countdown style). */
+  bandCountdownStyle?: CountdownStyle;
   /** How much space inside the Status band look's box. */
   gap?: TitleGap;
   /** The Status band look's band: grey, outlined, grey with a dark bar, or a line under it. */
@@ -1650,18 +1646,11 @@ function Title({
         bandStyle === "outline" && "border-b",
         bandStyle === "bar" && "border-l-4 border-l-foreground bg-muted",
         bandStyle === "line" && "mx-4 border-b px-0 sm:mx-5 sm:px-0",
-        // A message in the band takes the place of the status and date.
-        "[&:has([data-messages]:not(:empty))>[data-band-status]]:hidden [&:has([data-sample])>[data-band-status]]:hidden",
       );
-      const counting =
-        bandCountdown &&
-        info.status !== "completed" &&
-        info.status !== "cancelled";
-      const countdownText = counting
-        ? ` · ${`${info.countdown.value} ${info.countdown.unit}`.trim()}`
-        : "";
-      // The wording is edited on the Status block in the walk page designer.
-      const statusText = `${info.now.eyebrow} · ${info.now.line}${countdownText}`;
+      // The fixed status line for everyone, its countdown ticking live
+      // (walkStatusLine). A message (Missed clocking in?…) shows under it.
+      void bandCountdown;
+      const statusText = <WalkStatusText style={bandCountdownStyle} timing={p.timing} />;
       const bandStatus = (
         <div
           className="flex flex-wrap items-center justify-between gap-x-4 gap-y-1.5 sm:gap-y-1"
@@ -1716,7 +1705,7 @@ function Title({
           <div className="flex min-w-0 flex-col gap-2">
             <div className="flex flex-wrap items-center gap-2">
               <Badge p={p} />
-              <StatusLine p={p} withEyebrow={false} />
+              <StatusLine p={p} />
             </div>
             {heading()}
             {note}
@@ -1808,6 +1797,10 @@ export type DetailsOptions = {
   titleExtrasAt?: "under-name" | "list";
   clockinLook?: LineLook;
   countdownLook?: LineLook;
+  /** Clocked in / attended (the title box part): its look, as Your clock-in's. */
+  peopleLook?: LineLook;
+  /** The status band countdown's style. */
+  countdownStyle?: string;
   factLines?: FactLines;
   phoneFactsBox?: PartBox | "same";
   tabletFactsBox?: ForDevice<PartBox>;
@@ -2109,7 +2102,6 @@ function Details({ p, o }: { p: WalkIdeaParts; o: DetailsOptions }) {
           <StatusLine
             className={dark ? "text-white/80" : undefined}
             p={p}
-            withEyebrow={statusLook === "line"}
           />
         ) : null}
       </div>
@@ -2250,6 +2242,7 @@ function Details({ p, o }: { p: WalkIdeaParts; o: DetailsOptions }) {
       <ClockInLook look={o.clockinLook}>{p.myClockIn}</ClockInLook>
     ) : null,
     createdby: createdByLine,
+    people: <PeopleLine look={o.peopleLook} p={p} />,
     countdown:
       // "In the status band": it's added to the band's line instead.
       o.countdownLook === "band" ? null : (
@@ -2374,6 +2367,7 @@ function Details({ p, o }: { p: WalkIdeaParts; o: DetailsOptions }) {
                 bandCountdown={
                   inTitle("countdown") && o.countdownLook === "band"
                 }
+                bandCountdownStyle={isCountdownStyle(o.countdownStyle) ? o.countdownStyle : "narrow"}
                 gap={o.titleGap}
                 p={p}
                 variant={titleLook}
@@ -3211,18 +3205,10 @@ function BeforeTips({
     </section>
   );
 }
-export function AttendedBlock({
-  rule = "clocked-in",
-}: {
-  rule?: AttendedRule;
-}) {
+export function AttendedBlock() {
   const p = useWalkParts();
   if (!p) return <Placeholder label="Attended (who's on the walk)" />;
-  return (
-    <AttendedRuleContext.Provider value={rule}>
-      {p.attended?.content ?? null}
-    </AttendedRuleContext.Provider>
-  );
+  return <>{p.attended?.content ?? null}</>;
 }
 export const JourneyBlock = withParts("Journey", (p) => (
   <>{p.journey?.content ?? null}</>
@@ -4163,6 +4149,38 @@ function CountdownLine({
   );
 }
 
+/**
+ * Clocked in / attended, as a title box part (instead of in the status band):
+ * "3 clocked in" while clock-in is open and the walk is on, "12 attended" once
+ * it's finished; nothing before, when cancelled, or when the count isn't shown
+ * to this person. In the same looks as Your clock-in.
+ */
+function PeopleLine({ p, look = "line" }: { p: WalkIdeaParts; look?: LineLook }) {
+  const { status } = useWalkInfo(p);
+  const count = p.attended?.count ?? null;
+  if (count === null) return null;
+  const text =
+    status === "starting-soon" || status === "in-progress"
+      ? `${count} clocked in`
+      : status === "completed"
+        ? `${count} attended`
+        : null;
+  if (!text) return null;
+  return (
+    <div
+      className={cn("flex items-center gap-2 [&_p]:text-sm", LINE_LOOK[look === "big" ? "grey" : look])}
+      data-people=""
+    >
+      {look === "pill" || look === "tick" || look === "badge" || look === "stacked" ? (
+        <UsersRound aria-hidden className="size-3.5 shrink-0 text-muted-foreground" />
+      ) : null}
+      <p className="font-medium tabular-nums" suppressHydrationWarning>
+        {text}
+      </p>
+    </div>
+  );
+}
+
 /** Your clock-in in a look; hidden whole until there's a line to show. */
 function ClockInLook({
   look = "line",
@@ -4240,7 +4258,7 @@ export function StatusBadgeBlock({ withLine = true }: { withLine?: boolean }) {
   return (
     <div className="flex flex-wrap items-center gap-2">
       <Badge p={p} />
-      {withLine ? <StatusLine p={p} withEyebrow={false} /> : null}
+      {withLine ? <StatusLine p={p} /> : null}
     </div>
   );
 }
@@ -4615,7 +4633,6 @@ export function MessagesOrSample({
 }) {
   const box = useRef<HTMLDivElement>(null);
   const [empty, setEmpty] = useState(false);
-  const { opens } = useWalkInfo(p);
   useEffect(() => {
     const el = box.current;
     if (!el) return;
@@ -4647,14 +4664,6 @@ export function MessagesOrSample({
       >
         {p.notices}
       </div>
-      {editing && empty ? (
-        <Alert data-sample="" variant="info">
-          <AlertDescription suppressHydrationWarning>
-            Preview only: messages show here, e.g. Clock-in opens at{" "}
-            {formatTime(opens)} on {formatWalkDay(opens)}.
-          </AlertDescription>
-        </Alert>
-      ) : null}
     </div>
   );
 }

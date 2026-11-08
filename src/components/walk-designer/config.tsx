@@ -5,12 +5,7 @@ import {
   type ComponentConfig,
   type Config,
 } from "@puckeditor/core";
-import { createContext, useContext, useEffect, useId, useRef, useState, type ReactNode } from "react";
-import { Button } from "@/components/ui/button";
-import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
-import { WALK_WORDING_DEFAULTS } from "@/lib/walk-wording";
-import { STATUS_MESSAGE_FIELDS } from "@/lib/walk-design-copy";
+import { createContext, useContext, useEffect, useRef, useState, type ReactNode } from "react";
 import {
   PreviewAudience,
   WalkPartsProvider,
@@ -414,6 +409,7 @@ const TITLE_PART_NAMES: Record<string, string> = {
   description: "Description",
   map: "Map",
   clockin: "Your clock-in",
+  people: "Clocked in / attended",
   countdown: "Countdown",
   createdby: "Created by",
 };
@@ -511,97 +507,7 @@ function MessagesPlaceControl() {
   );
 }
 
-const MESSAGE_TOKENS = [
-  { token: "{opens}", label: "when clock-in opens" },
-  { token: "{opensDay}", label: "that day" },
-  { token: "{start}", label: "start time" },
-  { token: "{finish}", label: "finish time" },
-  { token: "{count}", label: "how many people" },
-] as const;
 
-/**
- * Clock-in and cancelled wording, stored on the page (root) so Status, the
- * Details status band, and the Messages block all edit the same lines.
- */
-function RootMessageWording() {
-  const values = usePuck((s) => (s.appState.data.root?.props ?? {}) as Record<string, unknown>);
-  const dispatch = usePuck((s) => s.dispatch);
-  const areas = useRef<Record<string, HTMLTextAreaElement | null>>({});
-  // Its own ids: the same boxes show on Status, the Details card and Messages, and a
-  // shared id sent a label's click to a hidden copy.
-  const uid = useId();
-
-  function patch(key: string, value: string) {
-    dispatch({
-      type: "setData",
-      data: (previous) => ({
-        root: {
-          ...previous.root,
-          props: { ...(previous.root?.props ?? {}), [key]: value },
-        },
-      }),
-    });
-  }
-
-  function insert(key: string, token: string) {
-    const current = String(values[key] ?? "");
-    const area = areas.current[key];
-    const from = area?.selectionStart ?? current.length;
-    const to = area?.selectionEnd ?? current.length;
-    const next = `${current.slice(0, from)}${token}${current.slice(to)}`;
-    patch(key, next);
-    requestAnimationFrame(() => {
-      const el = areas.current[key];
-      if (!el) return;
-      const pos = from + token.length;
-      el.focus();
-      el.setSelectionRange(pos, pos);
-    });
-  }
-
-  return (
-    <div className="flex flex-col gap-3">
-      <p className="text-xs text-muted-foreground">
-        Leave a line blank to keep the usual wording. Insert a placeholder to fill in the time or number for that walk.
-      </p>
-      {STATUS_MESSAGE_FIELDS.map((field) => (
-        <div className="flex flex-col gap-1.5" key={field.prop}>
-          <Label htmlFor={`${uid}-walk-msg-${field.prop}`}>{field.label}</Label>
-          <Textarea
-            id={`${uid}-walk-msg-${field.prop}`}
-            onChange={(event) => patch(field.prop, event.target.value)}
-            placeholder={WALK_WORDING_DEFAULTS[field.key]}
-            ref={(el) => {
-              areas.current[field.prop] = el;
-            }}
-            value={String(values[field.prop] ?? "")}
-          />
-          <p className="flex flex-wrap gap-1">
-            {MESSAGE_TOKENS.map((item) => (
-              <Button
-                aria-label={`Insert ${item.token} (${item.label})`}
-                key={item.token}
-                onClick={() => insert(field.prop, item.token)}
-                size="xs"
-                title={item.label}
-                type="button"
-                variant="outline"
-              >
-                {item.token}
-              </Button>
-            ))}
-          </p>
-        </div>
-      ))}
-    </div>
-  );
-}
-
-const messageWordingField = {
-  type: "custom" as const,
-  label: "Message wording",
-  render: () => <RootMessageWording />,
-};
 
 /** Reads the selected block's settings (for the fold headings' summaries). */
 function useSelectedProps(): Record<string, unknown> {
@@ -774,6 +680,8 @@ const FOLDS: {
       "titleExtrasAt",
       "clockinLook",
       "countdownLook",
+      "countdownStyle",
+      "peopleLook",
       "createdByLook",
       "showActions",
       "actionsAt",
@@ -785,14 +693,7 @@ const FOLDS: {
       "statusLook",
       "statusAt",
       "bigTitle",
-      "titleMessages",
     ],
-  },
-  {
-    key: "_messagesSection",
-    more: "_messagesMore",
-    main: ["messageWording"],
-    extra: [],
   },
   {
     key: "_mapSection",
@@ -2311,7 +2212,6 @@ export const walkDesignConfig: Config = {
         "ReadyLayout",
         "BackLink",
         "SignIn",
-        "Messages",
         "Title",
         "WalkName",
         "StatusBadge",
@@ -2484,7 +2384,6 @@ export const walkDesignConfig: Config = {
           render: () => <MessagesPlaceControl />,
         },
         look: { ...messageLookField, label: "Look" },
-        messageWording: messageWordingField,
       },
       defaultProps: { look: "as-is" },
       render: ({ look, puck }) => (
@@ -2700,12 +2599,6 @@ export const walkDesignConfig: Config = {
                   .filter(Boolean)
                   .join(" · "),
         ),
-        _messagesSection: foldSection(
-          "Messages",
-          "The words in the walk's messages, including when they show in the Status band.",
-          () => "Wording and placeholders",
-        ),
-        messageWording: messageWordingField,
         showTitle: { type: "radio", label: "Show the title", options: yesNo },
         titleLook: {
           type: "select",
@@ -2754,6 +2647,7 @@ export const walkDesignConfig: Config = {
                 ["description", "Description"],
                 ["map", "Map"],
                 ["clockin", "Your clock-in (once clocked in)"],
+                ["people", "Clocked in / attended (e.g. 3 clocked in)"],
                 ["countdown", "Countdown (e.g. 3 days to go)"],
                 ["createdby", "Created by (moves it from under the name)"],
               ]),
@@ -2833,6 +2727,32 @@ export const walkDesignConfig: Config = {
             ["bar", "Grey bar down the side"],
           ]),
         },
+        peopleLook: {
+          type: "select",
+          label: "Clocked in / attended look",
+          options: options([
+            ["line", "Plain line"],
+            ["grey", "Grey background"],
+            ["pill", "Grey pill with an icon"],
+            ["outline", "Outlined box"],
+            ["bar", "Grey bar down the side"],
+            ["tick", "Plain, with an icon"],
+            ["badge", "Outlined badge with an icon"],
+            ["card", "White card"],
+            ["underline", "With a line under it"],
+            ["dashed", "Dashed grey box"],
+          ]),
+        },
+        countdownStyle: {
+          type: "select",
+          label: "Countdown style (the status band's live countdown)",
+          options: options([
+            ["digital", "Digital (01:49:21)"],
+            ["narrow", "Narrow (1h 49m 21s)"],
+            ["short", "Short (1 hr, 49 min, 21 sec)"],
+            ["long", "Long (1 hour, 49 minutes, 21 seconds)"],
+          ]),
+        },
         countdownLook: {
           type: "select",
           label: "Countdown look",
@@ -2874,24 +2794,6 @@ export const walkDesignConfig: Config = {
           options: yesNo,
         },
         actionsAt: actionsAtField,
-        titleMessages: {
-          type: "select",
-          label: "Messages in the title box",
-          options: [
-            { value: "none", label: "No" },
-            { value: "top-row", label: "At the top, as a row (table look)" },
-            {
-              value: "bottom-row",
-              label: "At the bottom, as a row (table look)",
-            },
-            { value: "top-boxes", label: "At the top, as message boxes" },
-            { value: "bottom-boxes", label: "At the bottom, as message boxes" },
-            {
-              value: "in-band",
-              label: "Inside the status band, plain (Status band title looks)",
-            },
-          ],
-        },
         _mapSection: foldSection(
           "Map",
           "The meeting point map inside the card.",
@@ -2938,6 +2840,7 @@ export const walkDesignConfig: Config = {
                 ["timeline", "The day's timeline"],
                 ["description", "Description"],
                 ["clockin", "Your clock-in (once clocked in)"],
+                ["people", "Clocked in / attended (e.g. 3 clocked in)"],
                 ["countdown", "Countdown (e.g. 3 days to go)"],
               ]),
             },
@@ -3250,6 +3153,8 @@ export const walkDesignConfig: Config = {
         titleExtrasAt: "list",
         clockinLook: "line",
         countdownLook: "line",
+        peopleLook: "line",
+        countdownStyle: "narrow",
         createdByLook: "plain",
         factsBorder: true,
         factsIcons: false,
@@ -3765,37 +3670,10 @@ export const walkDesignConfig: Config = {
             ["phases", "Before · During · After"],
           ]),
         },
-        upcoming: {
-          type: "text",
-          label: "Upcoming (Name · the rest). {opens} is when clock-in opens.",
-          placeholder: `${WALK_WORDING_DEFAULTS.upcomingLabel} · ${WALK_WORDING_DEFAULTS.upcomingLine}`,
-        },
-        open: {
-          type: "text",
-          label: "Clock-in open (Name · the rest). {start} is the start time.",
-          placeholder: `${WALK_WORDING_DEFAULTS.openLabel} · ${WALK_WORDING_DEFAULTS.openLine}`,
-        },
-        live: {
-          type: "text",
-          label: "In progress (Name · the rest). {finish} is the finish time.",
-          placeholder: `${WALK_WORDING_DEFAULTS.liveLabel} · ${WALK_WORDING_DEFAULTS.liveLine}`,
-        },
-        finished: {
-          type: "text",
-          label: "Finished (Name · the rest). {count} is how many came.",
-          placeholder: `${WALK_WORDING_DEFAULTS.finishedLabel} · ${WALK_WORDING_DEFAULTS.finishedAttended}`,
-        },
-        cancelled: {
-          type: "text",
-          label: "Cancelled (Name · the rest)",
-          placeholder: `${WALK_WORDING_DEFAULTS.cancelledLabel} · ${WALK_WORDING_DEFAULTS.cancelledLine}`,
-        },
-        messageWording: messageWordingField,
       },
       defaultProps: { variant: "box" },
-      render: ({ variant, puck: _puck, ...wording }) => (
-        <StatusBlock variant={variant} wording={wording} />
-      ),
+      // Its words are fixed now (Nov 2026); older saved wording is ignored.
+      render: ({ variant }) => <StatusBlock variant={variant} />,
     },
     ClockIn: { label: "Clock-in panel", render: () => <ClockInBlock /> },
     PeopleStack: {
@@ -4145,21 +4023,8 @@ export const walkDesignConfig: Config = {
         <BeforeBlock look={look} showHeading={showHeading} tips={tips} title={title} />
       ),
     },
-    Attended: {
-      label: "Attended",
-      fields: {
-        rule: {
-          type: "radio",
-          label: "Who sees the list (members)",
-          options: options([
-            ["clocked-in", "Anyone who clocked in (kept after clocking out)"],
-            ["on-walk", "Only while on the walk (gone when they clock out)"],
-          ]),
-        },
-      },
-      defaultProps: { rule: "clocked-in" },
-      render: ({ rule }) => <AttendedBlock rule={rule} />,
-    },
+    // Anyone who clocked in keeps seeing the list, even after clocking out.
+    Attended: { label: "Attended", render: () => <AttendedBlock /> },
     Journey: { label: "Journey", render: () => <JourneyBlock /> },
 
     // ── Layout ──────────────────────────────────────────────────────────
@@ -4835,19 +4700,6 @@ export const walkDesignConfig: Config = {
   // Page settings (shown on the right when no block is selected).
   root: {
     fields: {
-      messagesAt: {
-        type: "select",
-        label: "Where the walk's messages go",
-        options: [
-          { value: "block", label: "Where I put the Messages block" },
-          { value: "top", label: "At the top, page width (like a block)" },
-          {
-            value: "band",
-            label: "In the Details card's Status band (in place of its status)",
-          },
-        ],
-      },
-      messagesLook: { ...messageLookField, label: "Messages look" },
       join: {
         type: "radio" as const,
         label: "Inside the page card",
@@ -4857,25 +4709,23 @@ export const walkDesignConfig: Config = {
         ],
       },
     },
-    defaultProps: { messagesAt: "block", messagesLook: "as-is", join: "join" },
+    defaultProps: { join: "join" },
     render: ({
       children,
       puck,
-      messagesLook,
-      messagesAt,
       join,
     }: {
       children: React.ReactNode;
       puck?: { isEditing?: boolean };
-      messagesLook?: MessageLook;
-      messagesAt?: MessagesAt;
       join?: string;
     }) => (
       <PageRoot
         editing={Boolean(puck?.isEditing)}
         join={join}
-        messagesAt={messagesAt}
-        messagesLook={messagesLook}
+        // Agreed Nov 2026: the walk's messages always show in the Details
+        // card's status band, the same look every time (no Where / Look).
+        messagesAt="band"
+        messagesLook="as-is"
       >
         {children}
       </PageRoot>

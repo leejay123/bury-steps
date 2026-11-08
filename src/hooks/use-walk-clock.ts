@@ -10,18 +10,21 @@ const ONE_MINUTE_MS = 60_000;
 /**
  * A pretend "now" for every walk clock below it — only the walk page
  * designer sets it, so its preview can show a walk before clock-in opens,
- * while it's open, under way or finished. Real pages never have one.
+ * while it's open, in progress or finished. Real pages never have one.
  */
 export const WalkClockPreview = createContext<Date | null>(null);
 
 /** The designer's preview of whether "you" have clocked in (null: as it really is). */
-export const WalkClockInPreview = createContext<"in" | "not-in" | null>(null);
+export const WalkClockInPreview = createContext<"in" | "not-in" | "out" | null>(null);
 
 /** Clocked-in times, or the designer's pretend ones. */
 export function useClockedInPreview(alreadyClockedInAt: string | null, clockedOutAt: string | null, startsAt: string) {
   const pretend = useContext(WalkClockInPreview);
   if (pretend === null) return { alreadyClockedInAt, clockedOutAt };
-  return { alreadyClockedInAt: pretend === "in" ? startsAt : null, clockedOutAt: null };
+  if (pretend === "not-in") return { alreadyClockedInAt: null, clockedOutAt: null };
+  // "out": clocked in at the start, then left half an hour later.
+  const out = pretend === "out" ? new Date(new Date(startsAt).getTime() + 30 * 60_000).toISOString() : null;
+  return { alreadyClockedInAt: startsAt, clockedOutAt: out };
 }
 
 /**

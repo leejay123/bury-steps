@@ -222,6 +222,8 @@ function DetailsSkeleton({ p }: { p: Record<string, unknown> }) {
     map,
     // Only once clocked in: nothing to hold a place for.
     clockin: null,
+    // Clocked in / attended: like Your clock-in, only shown once known.
+    people: null,
     countdown: <SkLine className="w-28" size="sm" />,
   };
   const band = String(p.titleLook ?? "").startsWith("band");
