@@ -7,13 +7,10 @@ import { EDGE_FILTER, EdgeBar, EdgeFilters, EdgeSearch } from "@/components/edge
 import { InputGroup, InputGroupAddon, InputGroupInput } from "@/components/ui/input-group";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { QueryTabs } from "@/components/query-tabs";
 import { SkLine, WalkRowsSkeleton } from "@/components/list-skeletons";
 import { Skeleton } from "@/components/ui/skeleton";
 import { RememberedRows } from "@/components/remembered-rows";
 import { WalkTableCardSkeleton } from "@/components/walk-table-card";
-import { RememberedCount } from "@/components/remembered-text";
 
 /** Search box matching the real lists — shown while the rows load, not a grey bar. */
 export function ListSearch({ label, placeholder }: { label: string; placeholder: string }) {
@@ -61,12 +58,15 @@ function FilterSelect({
 
 /** The organisers' Walks list as it loads: the one table (no tabs), its search and Filter, and
  * the rows as many as last time — the same controls the loaded list uses. */
-export function WalkListChrome({ lines }: { lines?: { title: string; detail: string }[] } = {}) {
+export function WalkListChrome({
+  lines,
+  remember = "admin-walks",
+}: { lines?: { title: string; detail: string }[]; remember?: string } = {}) {
   return (
     <>
       {/* The shadcn.io design's table (walk-table-card.tsx), as its placeholder. */}
       <div className="hidden [html[data-design=shadcnio]_&]:contents">
-        <WalkTableCardSkeleton lines={lines} remember="admin-walks" />
+        <WalkTableCardSkeleton lines={lines} remember={remember} />
       </div>
       <div className="flex flex-col gap-4 has-[>[data-reveal-list][hidden]]:hidden [html[data-design=shadcnio]_&]:hidden">
         <div className="flex flex-col gap-3 sm:flex-row sm:items-end" data-edge-bar="">
@@ -93,7 +93,7 @@ export function WalkListChrome({ lines }: { lines?: { title: string; detail: str
             value="first"
           />
         </div>
-        <WalkRowsSkeleton remember="admin-walks" />
+        <WalkRowsSkeleton remember={remember} />
       </div>
     </>
   );
@@ -219,53 +219,8 @@ export function HistoryFilterChrome() {
 export function MemberWalksHold({ lines }: { lines?: { title: string; detail: string }[] } = {}) {
   return (
     <div className="contents" data-page-loading="">
-      <QueryTabs defaultValue="upcoming">
-        <div data-edge-bar="" data-edge-flush="" data-edge-top="">
-          <TabsList>
-            <TabsTrigger value="upcoming">
-              Upcoming
-              <RememberedCount remember="member-walks" />
-            </TabsTrigger>
-            <TabsTrigger value="all-walks">
-              All walks
-              <RememberedCount remember="member-walks-all" />
-            </TabsTrigger>
-          </TabsList>
-        </div>
-        <TabsContent className="mt-4" value="upcoming">
-          {/* The shadcn.io design's table (walk-table-card.tsx), which members use too, as its placeholder. */}
-          <div className="hidden [html[data-design=shadcnio]_&]:contents">
-            <WalkTableCardSkeleton lines={lines} remember="member-walks-rows" />
-          </div>
-          <div aria-busy="true" className="flex flex-col gap-4 has-[>[data-reveal-list][hidden]]:hidden [html[data-design=shadcnio]_&]:hidden">
-            <div className="flex flex-col gap-3 sm:flex-row sm:items-end" data-edge-bar="">
-              <ListSearch label="Search walks" placeholder="Search by walk or meeting point…" />
-              <FilterSelect
-                id="walk-status-hold"
-                label="Status"
-                options={[
-                  { value: "all", label: "All statuses" },
-                  { value: "upcoming", label: "Upcoming" },
-                  { value: "starting-soon", label: "Starting soon" },
-                  { value: "in-progress", label: "In progress" },
-                ]}
-                value="all"
-              />
-              <FilterSelect
-                id="walk-sort-hold"
-                label="Sort"
-                options={[
-                  { value: "asc", label: "Soonest first" },
-                  { value: "desc", label: "Latest first" },
-                ]}
-                value="asc"
-              />
-            </div>
-            {/* The same rows as the organisers' list, which members now use too. */}
-            <WalkRowsSkeleton remember="member-walks-rows" />
-          </div>
-      </TabsContent>
-    </QueryTabs>
+      {/* One list, no Upcoming / All walks tabs, as the organisers' Walks. */}
+      <WalkListChrome lines={lines} remember="member-walks-rows" />
       {/* Your recent walks, as the page draws them (walks/page.tsx and recent-walks-carousel.tsx):
           the heading with its View all button, then the carousel's cards (two across from
           tablets), and its ‹ › buttons when there's more than one. Hidden with no recent walks. */}

@@ -12,13 +12,10 @@ import { MemberWalksHold } from "@/components/list-chrome";
 import { RememberListCount } from "@/components/remember-list-count";
 import { LIST_PAGE_SIZE } from "@/lib/list-page-size";
 import { Button } from "@/components/ui/button";
-import { TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { QueryTabs } from "@/components/query-tabs";
 import { MemberWelcomeDialog } from "@/components/member-welcome-dialog";
 import { getAllWalksSiteWide, getWalkMemberCountsByWalkIds } from "@/lib/walk-members";
 import { AdminWalkTable } from "@/app/(site)/admin/admin-walk-table";
 import { RecentWalksCarousel } from "./recent-walks-carousel";
-import { LiveUpcomingCount } from "./live-upcoming-count";
 import { StoriesSlot } from "@/components/stories/stories-slot";
 import { PageTop } from "@/components/page-top";
 import { getUpcomingWalkLines } from "@/lib/upcoming-walk-lines";
@@ -41,7 +38,7 @@ export default function DashboardPage() {
     <div className="flex flex-col gap-8">
       <PageTop
         eyebrow="Dashboard"
-        intro="Upcoming walks you can clock in to. Cancelled walks are in All walks, alongside completed ones. Past walks you attended are in History."
+        intro="Every walk: the ones coming up, which you can clock in to, then finished and cancelled ones. Walks you attended are in History."
         title="Walks"
       >
         {/* Its own line, held open while it loads, so arriving doesn't push the list down. */}
@@ -264,56 +261,36 @@ function WalksBody({ view }: { view: WalksView }) {
   return (
     <>
       <RememberListCount count={upcoming.length} id="member-walks" max={100} />
-      <RememberListCount count={Math.min(upcoming.length, LIST_PAGE_SIZE)} id="member-walks-rows" />
+      <RememberListCount count={Math.min(upcoming.length + allWalks.length, LIST_PAGE_SIZE)} id="member-walks-rows" />
       <RememberListCount count={allWalks.length} id="member-walks-all" max={500} />
       <RememberListCount count={recent.length} id="member-recent" max={3} />
       <MemberWelcomeDialog firstName={view.firstName} hasNoWalks={view.showWelcome} userId={view.userId} />
 
-      <QueryTabs defaultValue="upcoming">
-        <div data-edge-bar="" data-edge-flush="" data-edge-top="">
-          <TabsList>
-            <TabsTrigger value="upcoming">
-              <LiveUpcomingCount walks={upcoming} />
-            </TabsTrigger>
-            <TabsTrigger value="all-walks">All walks ({allWalks.length})</TabsTrigger>
-          </TabsList>
-        </div>
-        <TabsContent
-          className="mt-4 data-[state=inactive]:hidden"
-          forceMount
-          value="upcoming"
-        >
-          {/* The same list as the organisers' Walks page (search, status,
-              sort, Clock in now), each row opening the walk's own page. */}
-          <AdminWalkTable
-            attendanceLabel="Clocked in"
-            emptyDescription="Your organiser will post the next one here."
-            emptyTitle="No walks scheduled yet"
-            scope="upcoming"
-            walks={upcoming.map((walk) => ({
-              id: walk.id,
-              href: walkSharePath(walk),
-              title: walk.title,
-              location: walk.location,
-              startsAt: walk.startsAt,
-              durationMins: walk.durationMins,
-              endedAt: walk.endedAt,
-              cancelledAt: null,
-              // Who's on the walk shows only once you've clocked in yourself.
-              attendanceCount: walk.clockedInAt ? walk.memberCount : 0,
-              selfClockedIn: Boolean(walk.clockedInAt),
-            }))}
-          />
-        </TabsContent>
-        <TabsContent className="mt-4" value="all-walks">
-          <AdminWalkTable
-            emptyDescription="Finished and cancelled walks show here."
-            emptyTitle="No past walks yet"
-            scope="past"
-            walks={allWalks.map((walk) => ({ ...walk, href: walk.href ?? null }))}
-          />
-        </TabsContent>
-      </QueryTabs>
+      {/* Every walk in one table, no Upcoming / All walks tabs (as the organisers' Walks):
+          coming up first (soonest first), then finished and cancelled (latest first); Filter
+          narrows it by status or changes the order. Each row opens the walk's own page. */}
+      <AdminWalkTable
+        attendanceLabel="Clocked in"
+        emptyDescription="Your organiser will post the next one here."
+        emptyTitle="No walks yet"
+        scope="all"
+        walks={[
+          ...upcoming.map((walk) => ({
+            id: walk.id,
+            href: walkSharePath(walk),
+            title: walk.title,
+            location: walk.location,
+            startsAt: walk.startsAt,
+            durationMins: walk.durationMins,
+            endedAt: walk.endedAt,
+            cancelledAt: null,
+            // Who's on the walk shows only once you've clocked in yourself.
+            attendanceCount: walk.clockedInAt ? walk.memberCount : 0,
+            selfClockedIn: Boolean(walk.clockedInAt),
+          })),
+          ...allWalks.map((walk) => ({ ...walk, href: walk.href ?? null })),
+        ]}
+      />
 
       {recent.length > 0 ? (
         <section className="flex flex-col gap-3">
