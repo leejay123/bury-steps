@@ -3,6 +3,8 @@
 import { useLayoutEffect, useRef, useState } from "react";
 import { Plus } from "lucide-react";
 import type { FaqCategoryView, FaqView } from "@/lib/faqs";
+import { cn } from "@/lib/utils";
+import { FaqCardsLook, FaqGroupedLook, FaqSearchLook, type FaqLook } from "./faq-looks";
 import { SectionHead, Section } from "./parts";
 
 // shadcn.io's FAQ classes, exactly (used with their permission).
@@ -11,13 +13,15 @@ const TAB_LIST = "cn-tabs-list group/tabs-list justify-center text-muted-foregro
 const TAB = "cn-tabs-trigger relative inline-flex flex-1 items-center justify-center whitespace-nowrap focus-visible:border-ring focus-visible:outline-1 focus-visible:outline-ring disabled:pointer-events-none disabled:opacity-50 aria-disabled:pointer-events-none aria-disabled:opacity-50 group-data-vertical/tabs:w-full group-data-vertical/tabs:justify-start dark:hover:text-foreground [&_svg]:pointer-events-none [&_svg]:shrink-0 group-data-[variant=line]/tabs-list:bg-transparent group-data-[variant=line]/tabs-list:data-active:bg-transparent dark:group-data-[variant=line]/tabs-list:data-active:bg-transparent data-active:bg-background dark:data-active:bg-input/30 dark:data-active:text-foreground after:absolute after:bg-foreground after:opacity-0 group-data-horizontal/tabs:after:inset-x-0 group-data-vertical/tabs:after:inset-y-0 group-data-vertical/tabs:after:-end-1 group-data-horizontal/tabs:after:bottom-[-5px] group-data-horizontal/tabs:after:h-0.5 group-data-vertical/tabs:after:w-0.5 group-data-[variant=line]/tabs-list:data-active:after:opacity-100 transition-none after:transition-none h-auto gap-3 rounded-none border-0 border-border text-start font-normal text-foreground/75 text-sm after:hidden hover:text-foreground data-active:font-medium data-active:text-foreground dark:text-foreground/75 dark:data-active:border-border dark:group-data-[variant=line]/tabs-list:data-active:border-border min-h-12 border-t border-l px-5 py-3 hover:bg-muted/50! data-active:bg-muted/60! lg:ps-12 lg:pe-6 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-inset";
 const PANEL = "cn-tabs-content flex-1 outline-none focus-visible:outline-3 focus-visible:outline-ring/50 focus-visible:outline-solid focus-visible:-outline-offset-3 min-w-0 [grid-area:1/1] data-inactive:invisible";
 const QUESTION = "cn-accordion-trigger group/accordion-trigger relative flex w-full flex-1 justify-between border-transparent outline-none aria-disabled:pointer-events-none aria-disabled:opacity-50 px-5 md:px-12 lg:ps-8 transition-none items-baseline gap-4 rounded-none border-0 py-5 font-normal hover:bg-muted/50 hover:no-underline **:data-[slot=accordion-trigger-icon]:hidden md:gap-6 md:py-6 [counter-increment:faq] before:w-5 before:shrink-0 before:font-mono before:text-muted-foreground before:text-xs before:tabular-nums before:content-[counter(faq,decimal-leading-zero)_/_''] group-aria-expanded/accordion-trigger:before:text-foreground focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-inset";
-const ANSWER = "cn-accordion-content-inner h-(--accordion-panel-height) data-ending-style:h-0 data-starting-style:h-0 [&_a]:underline [&_a]:underline-offset-3 [&_a]:hover:text-foreground [&_p:not(:last-child)]:mb-4 px-5 md:px-12 lg:ps-8 pt-0 pb-6 md:pb-7";
+const ANSWER_BASE = "cn-accordion-content-inner h-(--accordion-panel-height) data-ending-style:h-0 data-starting-style:h-0 [&_a]:underline [&_a]:underline-offset-3 [&_a]:hover:text-foreground [&_p:not(:last-child)]:mb-4 pt-0 pb-6 md:pb-7";
+const ANSWER_PAD = "px-5 md:px-12 lg:ps-8";
 
 /**
  * The FAQs as on shadcn.io: topics down the left (across the top on
  * phones), numbered questions on the right that open with a +.
  */
 export function ShadcnFaq({
+  look = "original",
   categories,
   faqs,
   facebookUrl,
@@ -31,6 +35,8 @@ export function ShadcnFaq({
   title?: string;
   lead?: string;
   rest?: string;
+  /** Which look (the page designer's choice); the original by default. */
+  look?: FaqLook;
 }) {
   const topics = categories.filter((category) => faqs.some((faq) => faq.categoryId === category.id));
   const [active, setActive] = useState(topics[0]?.id ?? "");
@@ -44,12 +50,20 @@ export function ShadcnFaq({
         lead={lead}
         rest={
           rest ??
-          (facebookUrl
+          // The other looks have their own "Still stuck?" with the link.
+          (facebookUrl && look === "original"
             ? "and anything else people ask. Still stuck? Ask in the Facebook group."
             : "and anything else people ask.")
         }
         title={title}
       />
+      {look === "search" ? (
+        <FaqSearchLook facebookUrl={facebookUrl} faqs={faqs} topics={topics} />
+      ) : look === "grouped" ? (
+        <FaqGroupedLook facebookUrl={facebookUrl} faqs={faqs} topics={topics} />
+      ) : look === "cards" ? (
+        <FaqCardsLook facebookUrl={facebookUrl} faqs={faqs} topics={topics} />
+      ) : (
       <div className={TABS} data-orientation="vertical" data-slot="tabs">
         <div className="border-b lg:flex lg:flex-col lg:border-e lg:border-b-0">
           <div aria-label="FAQ categories" aria-orientation="vertical" className={TAB_LIST} data-slot="tabs-list" data-variant="line" role="tablist">
@@ -117,6 +131,7 @@ export function ShadcnFaq({
           ))}
         </div>
       </div>
+      )}
     </Section>
   );
 }
@@ -126,7 +141,16 @@ export function ShadcnFaq({
  * their stylesheet animates the height from 0 to --accordion-panel-height
  * while it carries data-open or data-closed; it is hidden once shut.
  */
-function Answer({ open, children }: { open: boolean; children: React.ReactNode }) {
+export function Answer({
+  open,
+  children,
+  padding = ANSWER_PAD,
+}: {
+  open: boolean;
+  children: React.ReactNode;
+  /** Its side padding, lined up with the question above it. */
+  padding?: string;
+}) {
   const ref = useRef<HTMLDivElement>(null);
   const first = useRef(true);
   // Shut answers start hidden; after that the effect below owns `hidden`.
@@ -158,7 +182,7 @@ function Answer({ open, children }: { open: boolean; children: React.ReactNode }
       ref={ref}
       role="region"
     >
-      <div className={ANSWER}>{children}</div>
+      <div className={cn(ANSWER_BASE, padding)}>{children}</div>
     </div>
   );
 }

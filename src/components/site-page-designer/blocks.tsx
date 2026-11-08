@@ -26,6 +26,7 @@ import {
   Users,
 } from "lucide-react";
 import { ShadcnFaq } from "@/components/shadcnio/faq";
+import { isFaqLook } from "@/components/shadcnio/faq-looks";
 import { ShadcnReviews } from "@/components/shadcnio/reviews";
 import { ShadcnLegal, type ShadcnLegalIcon } from "@/components/shadcnio/legal";
 import { ShadcnContactForm } from "@/app/(site)/contact/contact-form";
@@ -351,6 +352,7 @@ export function HomeFaqBlock(props: Record<string, unknown>) {
       facebookUrl={facebookUrl}
       faqs={faqs}
       lead={asText(props.lead, "How to join, what to bring and how clock-in works,")}
+      look={isFaqLook(props.look) ? props.look : "original"}
       rest={asText(props.rest) || undefined}
       title={asText(props.title, "Frequently asked questions")}
     />

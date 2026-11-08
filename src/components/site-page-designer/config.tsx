@@ -148,6 +148,16 @@ export const homePageConfig = {
       label: "Questions",
       permissions: keep,
       fields: {
+        look: {
+          type: "select",
+          label: "Look",
+          options: [
+            { value: "original", label: "Original (topics down the side)" },
+            { value: "search", label: "Search and topics" },
+            { value: "grouped", label: "Grouped by topic" },
+            { value: "cards", label: "Answer cards (answers always showing)" },
+          ],
+        },
         title: text("Heading"),
         lead: text("Opening words"),
         rest: area("Rest of the intro"),

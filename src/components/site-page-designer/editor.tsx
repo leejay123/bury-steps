@@ -1,5 +1,6 @@
 "use client";
 
+import { DesignerNarrowCover } from "@/components/designer-narrow-cover";
 import { useRef, useState } from "react";
 import { Puck, type Data } from "@puckeditor/core";
 // Puck's styles up front, the copy with no outside font: otherwise Puck adds
@@ -78,6 +79,8 @@ export function SitePageDesignEditor({
       aria-label={`${meta?.title ?? "Page"} designer`}
       aria-modal="true"
     >
+      {/* Too narrow (a resized window): a message over it, nothing lost. */}
+      <DesignerNarrowCover />
       <div className="min-h-0 flex-1">
         <SitePageLiveProvider value={live}>
           <Puck
