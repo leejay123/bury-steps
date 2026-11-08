@@ -3,24 +3,58 @@ import type { ReactNode } from "react";
 
 /**
  * shadcn.io's own 404 layout (their markup and classes): the big grey kicker,
- * a title, a line, and two actions. Offline uses the same page so the two
- * always look alike.
+ * a title, a line, and two actions. Offline and every error page use the same
+ * page so they always look alike.
  */
+/** A button that goes somewhere, or (error pages' "Try again") does something. */
+export type StatusAction = { label: string } & ({ href: string } | { onClick: () => void });
+
 export function StatusMessagePage({
   kicker,
   title,
   description,
   primary,
   secondary,
+  fullScreen = true,
+  plainLinks = false,
 }: {
   kicker: string;
   title: string;
   description: ReactNode;
-  primary: { href: string; label: string };
-  secondary: { href: string; label: string };
+  primary: StatusAction;
+  secondary: StatusAction;
+  /** Off for an error inside the dashboard: the same look, sized to the page's column. */
+  fullScreen?: boolean;
+  /** Plain <a> links (a full page load), for the last-resort error page where the router itself broke. */
+  plainLinks?: boolean;
 }) {
+  const action = (a: StatusAction, className: string) => {
+    if ("onClick" in a)
+      return (
+        <button className={className} onClick={a.onClick} type="button">
+          {a.label}
+        </button>
+      );
+    if (plainLinks)
+      return (
+        <a className={className} href={a.href}>
+          {a.label}
+        </a>
+      );
+    return (
+      <Link className={className} href={a.href} prefetch={false}>
+        {a.label}
+      </Link>
+    );
+  };
   return (
-    <main className="style-nova theme-neutral radius-default flex min-h-dvh items-center justify-center bg-background py-12">
+    <main
+      className={
+        fullScreen
+          ? "style-nova theme-neutral radius-default flex min-h-dvh items-center justify-center bg-background py-12"
+          : "flex items-center justify-center py-16 sm:py-24"
+      }
+    >
       <div className="container flex flex-col items-center gap-6 text-center">
         <div className="flex flex-col items-center gap-2">
           <span className="font-bold text-6xl text-muted-foreground sm:text-8xl">{kicker}</span>
@@ -28,17 +62,9 @@ export function StatusMessagePage({
           <p className="max-w-xs text-lg text-muted-foreground">{description}</p>
         </div>
         <div className="flex flex-row-reverse items-center gap-4">
-          <Link className={`${BUTTON} cn-button-variant-default`} href={primary.href} prefetch={false}>
-            {primary.label}
-          </Link>
+          {action(primary, `${BUTTON} cn-button-variant-default`)}
           <span className="text-muted-foreground">or</span>
-          <Link
-            className={`${BUTTON} cn-button-variant-outline bg-background hover:bg-muted`}
-            href={secondary.href}
-            prefetch={false}
-          >
-            {secondary.label}
-          </Link>
+          {action(secondary, `${BUTTON} cn-button-variant-outline bg-background hover:bg-muted`)}
         </div>
       </div>
     </main>

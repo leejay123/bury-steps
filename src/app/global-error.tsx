@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect } from "react";
+import { StatusMessagePage } from "@/components/not-found";
 import "./globals.css";
 
 /**
@@ -9,7 +10,9 @@ import "./globals.css";
  * sits inside). This is the last line of defence: if it renders, something
  * broke badly enough that the header, nav and footer never mounted, so it
  * has to supply its own `<html>`/`<body>` and can't lean on anything from
- * `layout.tsx`, including Clerk, the theme, or the site nav.
+ * `layout.tsx`, including Clerk, the theme, or the site nav. It looks the
+ * same as the Offline page; its Home link is a plain one (a full page load),
+ * since the app's own routing may be what broke.
  */
 export default function GlobalError({
   error,
@@ -24,32 +27,15 @@ export default function GlobalError({
 
   return (
     <html lang="en-GB">
-      <body className="flex min-h-dvh flex-col items-center justify-center gap-4 bg-background px-4 text-center text-foreground antialiased">
-        <h1 className="text-xl font-semibold">Something went wrong</h1>
-        <p className="max-w-sm text-sm text-muted-foreground">
-          The page hit an unexpected error and couldn&apos;t load. Try again, or head back to the
-          homepage. Tell an organiser if it keeps happening.
-        </p>
-        <div className="flex flex-wrap items-center justify-center gap-2">
-          <button
-            className="inline-flex h-9 items-center justify-center rounded-md border px-4 text-sm font-medium hover:bg-accent"
-            onClick={reset}
-            type="button"
-          >
-            Try again
-          </button>
-          {/* A plain anchor, not next/link: this boundary only renders when
-              something broke badly enough to take the whole app router tree
-              down with it, so recovery should force a full page load rather
-              than hand control back to client-side routing. */}
-          {/* eslint-disable-next-line @next/next/no-html-link-for-pages */}
-          <a
-            className="inline-flex h-9 items-center justify-center rounded-md border px-4 text-sm font-medium hover:bg-accent"
-            href="/"
-          >
-            Home
-          </a>
-        </div>
+      <body className="bg-background text-foreground antialiased">
+        <StatusMessagePage
+          description="Nothing was saved. Try again in a moment. Tell an organiser if it keeps happening."
+          kicker="Error"
+          plainLinks
+          primary={{ label: "Try again", onClick: reset }}
+          secondary={{ href: "/", label: "Home" }}
+          title="Something went wrong"
+        />
       </body>
     </html>
   );
