@@ -6,10 +6,11 @@ import dynamic from "next/dynamic";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
-import { Paintbrush } from "lucide-react";
+import { Paintbrush, Search } from "lucide-react";
 import { discardSitePageDraft } from "@/server/actions";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
+import { ClearFiltersButton, EmptyState } from "@/components/empty-state";
 import { EDGE_FILTER, EdgeBar } from "@/components/edge-search";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
@@ -194,15 +195,17 @@ export function SitePageDesignList({
           </p>
         )}
       </EdgeBar>
-      <DataList data-edge-top="">
-        {shown.length === 0 ? (
-          <DataListItem className={ROW}>
-            <DataListBody>
-              <p className="text-sm text-muted-foreground">No pages here right now.</p>
-            </DataListBody>
-          </DataListItem>
-        ) : (
-          shown.map((page) => {
+      {shown.length === 0 ? (
+        // The site's empty box, as on every other list, with Clear filters.
+        <EmptyState
+          action={<ClearFiltersButton onClick={() => setFilter("all")} />}
+          description="Try a different filter, or show all pages."
+          icon={Search}
+          title="No matching pages"
+        />
+      ) : (
+        <DataList data-edge-top="">
+          {shown.map((page) => {
             const pageStatus = statuses[page.key];
             const draft = pageStatus === "draft";
             return (
@@ -245,9 +248,9 @@ export function SitePageDesignList({
                 ) : null}
               </DataListItem>
             );
-          })
-        )}
-      </DataList>
+          })}
+        </DataList>
+      )}
       {open
         ? createPortal(
             <SitePageDesignEditor
