@@ -2708,7 +2708,7 @@ export const walkDesignConfig: Config = {
             ["pill", "Grey pill with a tick"],
             ["outline", "Outlined box"],
             ["bar", "Grey bar down the side"],
-            ["tick", "Plain, with a tick"],
+            ["tick", "Plain, with an icon"],
             ["badge", "Outlined badge with a tick"],
             ["card", "White card"],
             ["stacked", "Two lines in a grey box, with a tick"],
