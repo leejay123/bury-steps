@@ -1220,3 +1220,11 @@ html[data-page-kind="home"] #main-content {
   --puck-radius-m: calc(var(--radius) - 2px);
   --puck-radius-l: var(--radius);
 }
+
+/* A designer panel can't be dragged wider than 360px (left) / 420px (right), or about a
+   third of the window: Puck sets no limit, and the layout grid takes the dragged width
+   live, so the cap goes here (the top bar also puts a saved width back). */
+[data-designer] [class*="_PuckLayout-inner_"] {
+  --puck-sidebar-left-width: min(var(--puck-user-sidebar-left-width, var(--puck-sidebar-width)), 360px, 32vw);
+  --puck-sidebar-right-width: min(var(--puck-user-sidebar-right-width, var(--puck-sidebar-width)), 420px, 32vw);
+}

@@ -16,7 +16,6 @@ import { WalkWordingProvider, useWalkWording } from "@/components/walk-wording-c
 import { WalkClockInPreview, WalkClockPreview } from "@/hooks/use-walk-clock";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { effectiveEndsAt, walkOpensAt } from "@/lib/walk-window";
-import { Button } from "@/components/ui/button";
 import { DESIGNER_UI, DESIGNER_VIEWPORTS, DesignerStripItem, DesignerTopBar } from "@/components/designer-top-bar";
 import {
   Select,
@@ -227,21 +226,18 @@ export function WalkDesignEditor({
       strip={
         <>
         <DesignerStripItem first label="For">
-          <div aria-label="Who the design is for" className="flex flex-wrap items-center gap-1 rounded-lg bg-muted p-1" role="group">
-            {AUDIENCES.map((item) => (
-              <Button
-                aria-pressed={audience === item.id}
-                className="h-7 px-2.5 text-xs"
-                key={item.id}
-                onClick={() => open(item.id)}
-                size="sm"
-                type="button"
-                variant={audience === item.id ? "default" : "ghost"}
-              >
-                {item.label}
-              </Button>
-            ))}
-          </div>
+          <Select onValueChange={(value) => open(value as WalkDesignAudience)} value={audience}>
+            <SelectTrigger aria-label="Who the design is for" className="h-8 w-full">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent className="z-[100]">
+              {AUDIENCES.map((item) => (
+                <SelectItem key={item.id} value={item.id}>
+                  {item.label}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
         </DesignerStripItem>
         <DesignerStripItem label="Copy to">
           <Select
