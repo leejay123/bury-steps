@@ -1833,6 +1833,9 @@ function FoldingView({
           className={cn(
             "items-center text-sm hover:no-underline",
             side && "px-4",
+            // Open, a boxed section has a line under its title, between it
+            // and what's inside (the plain Lines look draws its own).
+            framed && "data-[state=open]:shadow-[inset_0_-1px_0_var(--border)]",
             // Plus: the arrow swaps for a + that turns into × when open.
             icon === "plus" &&
               "[&>svg]:hidden [&[data-state=open]_[data-plus]]:rotate-45",

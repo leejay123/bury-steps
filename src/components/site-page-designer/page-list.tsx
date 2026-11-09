@@ -10,7 +10,7 @@ import { Paintbrush, Search } from "lucide-react";
 import { discardSitePageDraft } from "@/server/actions";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
-import { ClearFiltersButton, EmptyState } from "@/components/empty-state";
+import { EmptyState } from "@/components/empty-state";
 import { EDGE_FILTER, EdgeBar } from "@/components/edge-search";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
@@ -75,6 +75,13 @@ const STATUS_DOT: Record<PageStatus, string> = {
 };
 
 type Filter = "all" | PageStatus;
+/** The empty box's heading for each filter. */
+const EMPTY_TITLE: Partial<Record<Filter, string>> = {
+  published: "No published pages right now",
+  draft: "No drafts right now",
+  live: "Every page has a design of its own",
+};
+
 const FILTERS: { id: Filter; label: string }[] = [
   { id: "all", label: "All" },
   { id: "published", label: "Published" },
@@ -197,11 +204,11 @@ export function SitePageDesignList({
       </EdgeBar>
       {shown.length === 0 ? (
         // The site's empty box, as on every other list, with Clear filters.
+        // The filters are right above, so no button: just what isn't there.
         <EmptyState
-          action={<ClearFiltersButton onClick={() => setFilter("all")} />}
-          description="Try a different filter, or show all pages."
+          description="Pick All above to see every page."
           icon={Search}
-          title="No matching pages"
+          title={EMPTY_TITLE[filter as Exclude<Filter, "all">] ?? "No pages here right now"}
         />
       ) : (
         <DataList data-edge-top="">
