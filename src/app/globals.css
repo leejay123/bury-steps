@@ -939,7 +939,9 @@ html:not([data-design="shadcnio"]):has([data-bottom-nav]:not([hidden], [hidden] 
   font-weight: 600;
   letter-spacing: -0.02em;
 }
-[data-design="shadcnio"] [data-slot="button"] {
+/* Not a choice in a dropdown (Show 10, Sort…): its grey highlight keeps the
+   menu's gentle corners rather than a pill shape. */
+[data-design="shadcnio"] [data-slot="button"]:not([role="option"]) {
   border-radius: 9999px;
 }
 [data-design="shadcnio"] [data-slot="card"] {

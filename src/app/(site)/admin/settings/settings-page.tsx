@@ -241,7 +241,11 @@ export function SettingsListHeader({
           <p className="text-sm text-muted-foreground">{description}</p>
         ) : null}
       </div>
-      {action ? <div className="shrink-0 [&>*]:w-full sm:[&>*]:w-auto">{action}</div> : null}
+      {/* Full width on a phone: the box stretches too (the edge-to-edge
+          design centres the header's contents, which shrank it to the button). */}
+      {action ? (
+        <div className="w-full shrink-0 self-stretch sm:w-auto sm:self-auto [&>*]:w-full sm:[&>*]:w-auto">{action}</div>
+      ) : null}
     </div>
   );
 }
