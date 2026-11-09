@@ -1917,6 +1917,10 @@ function FoldingView({
               // count and page buttons) line up with the section's icon.
               side &&
                 "[&>*:has([data-reveal-list])_[data-edge-pad]]:px-4 [&>*:has([data-reveal-list])_[data-edge-pad]:last-child]:pb-4",
+              // …and their opening words (Who attended) have room under the
+              // title's line, as other words do.
+              side &&
+                "[&>*:first-child:has([data-reveal-list])_[data-edge-pad]:first-child]:pt-4",
             )}
             Content={Content}
             edgeEmpty={side && emptyEdge}
