@@ -65,13 +65,12 @@ function QuestionRow({
   return (
     // One even background when open (grey or white, as chosen): no second,
     // darker hover grey on the question over it.
-    <div className={cn("border-b", open && openTone === "grey" && "bg-muted/40")}>
+    <div className={cn("border-b transition-colors duration-200", open && openTone === "grey" && "bg-muted/40")}>
       <h3 className="contents">
         <button
           aria-expanded={open}
           className={cn(
             pad,
-            !open && "hover:bg-muted/50",
             "flex w-full items-center gap-4 py-5 text-start focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-inset md:py-6",
           )}
           onClick={onToggle}
