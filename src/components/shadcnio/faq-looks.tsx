@@ -28,6 +28,9 @@ type LookProps = {
   facebookUrl: string;
 };
 
+/** Search and topics: a Show more button after the first few questions (the page designer's choice). */
+export type FaqShowMore = { on: boolean; first: number };
+
 const PAD = "px-5 md:px-12";
 /** Beside the topic column, as the original's questions are. */
 const GROUPED_PAD = "px-5 md:px-12 lg:ps-8";
@@ -153,10 +156,16 @@ function NoMatch({ onClear }: { onClear: () => void }) {
 }
 
 /** A: a search strip, the topic filters, then one list of questions. */
-export function FaqSearchLook({ topics, faqs, facebookUrl }: LookProps) {
+export function FaqSearchLook({
+  topics,
+  faqs,
+  facebookUrl,
+  showMore = { on: false, first: 5 },
+}: LookProps & { showMore?: FaqShowMore }) {
   const [query, setQuery] = useState("");
   const [topic, setTopic] = useState("all");
   const [open, setOpen] = useState<string | null>(null);
+  const [all, setAll] = useState(false);
   const words = query.trim().toLowerCase();
   const shown = faqs.filter(
     (faq) =>
@@ -185,10 +194,23 @@ export function FaqSearchLook({ topics, faqs, facebookUrl }: LookProps) {
           }}
         />
       ) : (
-        shown.map((faq) => (
+        // A search shows everything it finds; otherwise the first few, then Show more.
+        (showMore.on && !all && !words ? shown.slice(0, showMore.first) : shown).map((faq) => (
           <QuestionRow faq={faq} key={faq.id} onToggle={() => setOpen(open === faq.id ? null : faq.id)} open={open === faq.id} />
         ))
       )}
+      {showMore.on && !words && shown.length > showMore.first ? (
+        <div className="flex justify-center border-b px-5 py-3">
+          <button
+            aria-expanded={all}
+            className="inline-flex h-9 items-center rounded-full border bg-background px-4 font-medium text-sm hover:bg-muted"
+            onClick={() => setAll(!all)}
+            type="button"
+          >
+            {all ? "Show less" : `Show more (${shown.length - showMore.first})`}
+          </button>
+        </div>
+      ) : null}
       <StillStuck facebookUrl={facebookUrl} />
     </div>
   );

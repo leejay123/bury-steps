@@ -28,6 +28,15 @@ import {
 import { ShadcnFaq } from "@/components/shadcnio/faq";
 import { isFaqLook } from "@/components/shadcnio/faq-looks";
 import { ShadcnReviews } from "@/components/shadcnio/reviews";
+import {
+  QuotesCarouselLook,
+  QuotesFeaturedLook,
+  QuotesRowsLook,
+  isQuotesLook,
+  type QuotesOptions,
+} from "@/components/shadcnio/reviews-looks";
+import { AboutSplitLook, AboutWordsLook, isAboutLook, splitWords } from "@/components/shadcnio/about-looks";
+import { DEFAULT_HOW_THIS_STARTED_EYEBROW } from "@/lib/homepage-copy";
 import { ShadcnLegal, type ShadcnLegalIcon } from "@/components/shadcnio/legal";
 import { ShadcnContactForm } from "@/app/(site)/contact/contact-form";
 import {
@@ -159,10 +168,29 @@ export function HomeHeroBlock(props: Record<string, unknown>) {
   );
 }
 
+/** A designer switch: on unless it's been turned off (so pages saved before it keep it on). */
+const isOn = (value: unknown) => value !== "off";
+
 export function HomeAboutBlock(props: Record<string, unknown>) {
   const title = asText(props.title, "How this started");
   const teaser = asText(props.teaser);
   const [lead, ...rest] = teaser.split(/(?<=[.!?])\s+/);
+  const look = isAboutLook(props.look) ? props.look : "original";
+  if (look !== "original") {
+    const shared = {
+      id: "home-about-heading",
+      title,
+      lead,
+      rest: rest.join(" "),
+      words: isOn(props.showWords) ? splitWords(asText(props.words, DEFAULT_HOW_THIS_STARTED_EYEBROW)) : [],
+      readMore: isOn(props.readMore),
+    };
+    return (
+      <Section id="home-about-heading">
+        {look === "split" ? <AboutSplitLook {...shared} /> : <AboutWordsLook {...shared} />}
+      </Section>
+    );
+  }
   return (
     <Section id="home-about-heading">
       <div className="px-5 md:px-12 flex flex-col items-center gap-5 py-12 text-center md:py-16">
@@ -176,11 +204,13 @@ export function HomeAboutBlock(props: Record<string, unknown>) {
             <span className="font-medium text-foreground">{lead}</span> {rest.join(" ")}
           </p>
         </div>
-        <div className="flex shrink-0 justify-center gap-2">
-          <PillLink arrow href="/about">
-            Read more
-          </PillLink>
-        </div>
+        {isOn(props.readMore) ? (
+          <div className="flex shrink-0 justify-center gap-2">
+            <PillLink arrow href="/about">
+              Read more
+            </PillLink>
+          </div>
+        ) : null}
       </div>
     </Section>
   );
@@ -309,6 +339,14 @@ export function HomeReviewsBlock(props: Record<string, unknown>) {
     } satisfies TestimonialView;
   });
   if (quotes.length === 0) return null;
+  const look = isQuotesLook(props.look) ? props.look : "original";
+  const options: QuotesOptions = {
+    readMore: isOn(props.readMore),
+    first: [3, 4, 6].includes(Number(props.first)) ? Number(props.first) : 3,
+    photos: isOn(props.photos),
+    roles: isOn(props.roles),
+    autoplay: props.autoplay === "on",
+  };
   return (
     <Section id="home-reviews-heading">
       <SectionHead
@@ -317,7 +355,15 @@ export function HomeReviewsBlock(props: Record<string, unknown>) {
         rest={asText(props.rest, "Here's what a few of them say about the group, the walks and the people.")}
         title={asText(props.title, "From the group")}
       />
-      <ShadcnReviews testimonials={quotes} />
+      {look === "carousel" ? (
+        <QuotesCarouselLook o={options} quotes={quotes} />
+      ) : look === "rows" ? (
+        <QuotesRowsLook o={options} quotes={quotes} />
+      ) : look === "featured" ? (
+        <QuotesFeaturedLook o={options} quotes={quotes} />
+      ) : (
+        <ShadcnReviews readMore={options.readMore} testimonials={quotes} />
+      )}
     </Section>
   );
 }
@@ -354,6 +400,10 @@ export function HomeFaqBlock(props: Record<string, unknown>) {
       lead={asText(props.lead, "How to join, what to bring and how clock-in works,")}
       look={isFaqLook(props.look) ? props.look : "original"}
       rest={asText(props.rest) || undefined}
+      showMore={{
+        on: props.showMore === "on",
+        first: [3, 4, 5, 6, 8].includes(Number(props.showMoreFirst)) ? Number(props.showMoreFirst) : 5,
+      }}
       title={asText(props.title, "Frequently asked questions")}
     />
   );

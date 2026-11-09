@@ -35,6 +35,7 @@ export async function seedForPage(page: SitePageKey): Promise<PuckData> {
     return seedHomeDesign({
       aboutTitle: theme.howThisStartedTitle,
       aboutTeaser: theme.howThisStartedTeaser,
+      aboutWords: theme.howThisStartedEyebrow,
       expect: theme.aboutExpect.slice(0, 6),
       goals: theme.aboutGoals.slice(0, 6),
       quotes: testimonials.map((row) => ({

@@ -4,7 +4,7 @@ import { useLayoutEffect, useRef, useState } from "react";
 import { Plus } from "lucide-react";
 import type { FaqCategoryView, FaqView } from "@/lib/faqs";
 import { cn } from "@/lib/utils";
-import { FaqCardsLook, FaqGroupedLook, FaqSearchLook, type FaqLook } from "./faq-looks";
+import { FaqCardsLook, FaqGroupedLook, FaqSearchLook, type FaqLook, type FaqShowMore } from "./faq-looks";
 import { SectionHead, Section } from "./parts";
 
 // shadcn.io's FAQ classes, exactly (used with their permission).
@@ -22,6 +22,7 @@ const ANSWER_PAD = "px-5 md:px-12 lg:ps-8";
  */
 export function ShadcnFaq({
   look = "original",
+  showMore,
   categories,
   faqs,
   facebookUrl,
@@ -37,6 +38,8 @@ export function ShadcnFaq({
   rest?: string;
   /** Which look (the page designer's choice); the original by default. */
   look?: FaqLook;
+  /** Search and topics: Show more after the first few. */
+  showMore?: FaqShowMore;
 }) {
   const topics = categories.filter((category) => faqs.some((faq) => faq.categoryId === category.id));
   const [active, setActive] = useState(topics[0]?.id ?? "");
@@ -58,7 +61,7 @@ export function ShadcnFaq({
         title={title}
       />
       {look === "search" ? (
-        <FaqSearchLook facebookUrl={facebookUrl} faqs={faqs} topics={topics} />
+        <FaqSearchLook facebookUrl={facebookUrl} faqs={faqs} showMore={showMore} topics={topics} />
       ) : look === "grouped" ? (
         <FaqGroupedLook facebookUrl={facebookUrl} faqs={faqs} topics={topics} />
       ) : look === "cards" ? (

@@ -37,6 +37,8 @@ export type RuleSeed = { title: string; body: string };
 export type HomeSeedInput = {
   aboutTitle: string;
   aboutTeaser: string;
+  /** How this started's three words ("Kindness · Friendship · Welcome"). */
+  aboutWords?: string;
   expect: string[];
   goals: string[];
   quotes: QuoteSeed[];
@@ -104,7 +106,11 @@ export function defaultContactForm(): PuckBlock {
 export function seedHomeDesign(input: HomeSeedInput): PuckData {
   return puckPage([
     defaultHomeHero(),
-    puckBlock("HomeAbout", 2, { title: input.aboutTitle, teaser: input.aboutTeaser }),
+    puckBlock("HomeAbout", 2, {
+      title: input.aboutTitle,
+      teaser: input.aboutTeaser,
+      ...(input.aboutWords ? { words: input.aboutWords } : {}),
+    }),
     puckBlock("HomeWalks", 3, {
       title: "Walks coming up, every week",
       rest: "each one led by a volunteer walk leader, with the meeting point, distance and grade. Members see every detail and clock in on the day.",

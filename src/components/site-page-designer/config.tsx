@@ -33,6 +33,19 @@ const list = (label: string, title = "Title") => ({
 });
 
 const keep = { duplicate: false };
+/** An on/off switch (saved as "on" / "off"). */
+const onOff = (label: string, onLabel = "Show", offLabel = "Hide") => ({
+  type: "radio" as const,
+  label,
+  options: [
+    { label: onLabel, value: "on" },
+    { label: offLabel, value: "off" },
+  ],
+});
+/** The settings without those in `drop` (they belong to another look). */
+function dropFields<F extends Record<string, unknown>>(fields: F, drop: string[]): F {
+  return Object.fromEntries(Object.entries(fields).filter(([key]) => !drop.includes(key))) as F;
+}
 
 export const homePageConfig = {
   categories: {
@@ -70,8 +83,27 @@ export const homePageConfig = {
       label: "How this started",
       permissions: keep,
       fields: {
+        look: {
+          type: "select",
+          label: "Look",
+          options: [
+            { value: "original", label: "Original (centred, Read more)" },
+            { value: "split", label: "Story beside the heading" },
+            { value: "words", label: "Story with its three words" },
+          ],
+        },
         title: text("Heading"),
         teaser: area("Short story"),
+        readMore: onOff("Read more button"),
+        showWords: onOff("The three words"),
+        words: text("The three words (split with ·)"),
+      },
+      // The three words only with the looks that show them.
+      resolveFields: (data: { props: Record<string, unknown> }, { fields }: { fields: Record<string, unknown> }) => {
+        const look = String(data.props.look ?? "original");
+        if (look === "original") return dropFields(fields, ["showWords", "words"]);
+        if (data.props.showWords === "off") return dropFields(fields, ["words"]);
+        return fields;
       },
       render: HomeAboutBlock,
     },
@@ -127,6 +159,29 @@ export const homePageConfig = {
       label: "Quotes",
       permissions: keep,
       fields: {
+        look: {
+          type: "select",
+          label: "Look",
+          options: [
+            { value: "original", label: "Original (grid of three)" },
+            { value: "carousel", label: "One big quote at a time" },
+            { value: "rows", label: "Quote rows" },
+            { value: "featured", label: "One featured, two beside" },
+          ],
+        },
+        readMore: onOff("Read more button"),
+        first: {
+          type: "select",
+          label: "How many show before Read more",
+          options: [
+            { value: "3", label: "3" },
+            { value: "4", label: "4" },
+            { value: "6", label: "6" },
+          ],
+        },
+        photos: onOff("Photos (or first letters)"),
+        roles: onOff("The line under each name"),
+        autoplay: onOff("Moves on by itself", "On", "Off"),
         title: text("Heading"),
         lead: text("Opening words"),
         rest: area("Rest of the intro"),
@@ -142,6 +197,18 @@ export const homePageConfig = {
           getItemSummary: (item: { name?: string }) => item.name || "Quote",
         },
       },
+      // Only the switches that apply to the chosen look.
+      resolveFields: (data: { props: Record<string, unknown> }, { fields }: { fields: Record<string, unknown> }) => {
+        const look = String(data.props.look ?? "original");
+        const drop: string[] = [];
+        if (look !== "carousel") drop.push("autoplay");
+        if (look === "carousel") drop.push("readMore", "first");
+        // The original always starts with three; the featured look with its three.
+        if (look === "original" || look === "featured") drop.push("first");
+        if (look === "original") drop.push("photos", "roles");
+        if (data.props.readMore === "off") drop.push("first");
+        return dropFields(fields, drop);
+      },
       render: HomeReviewsBlock,
     },
     HomeFaq: {
@@ -156,6 +223,18 @@ export const homePageConfig = {
             { value: "search", label: "Search and topics" },
             { value: "grouped", label: "Grouped by topic" },
             { value: "cards", label: "Answer cards (answers always showing)" },
+          ],
+        },
+        showMore: onOff("Show more button (Search and topics)", "On", "Off"),
+        showMoreFirst: {
+          type: "select",
+          label: "How many questions before Show more",
+          options: [
+            { value: "3", label: "3" },
+            { value: "4", label: "4" },
+            { value: "5", label: "5" },
+            { value: "6", label: "6" },
+            { value: "8", label: "8" },
           ],
         },
         title: text("Heading"),
@@ -180,6 +259,12 @@ export const homePageConfig = {
           defaultItemProps: { id: "", categoryId: "", question: "", answer: "" },
           getItemSummary: (item: { question?: string }) => item.question || "Question",
         },
+      },
+      // Show more is for the Search and topics look; its count only once it's on.
+      resolveFields: (data: { props: Record<string, unknown> }, { fields }: { fields: Record<string, unknown> }) => {
+        if (data.props.look !== "search") return dropFields(fields, ["showMore", "showMoreFirst"]);
+        if (data.props.showMore !== "on") return dropFields(fields, ["showMoreFirst"]);
+        return fields;
       },
       render: HomeFaqBlock,
     },

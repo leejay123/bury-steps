@@ -16,10 +16,17 @@ const COLUMNS = 3;
  * Read more opens up to six in place. Rows are always full; a short last row
  * is finished with striped filler cells.
  */
-export function ShadcnReviews({ testimonials }: { testimonials: TestimonialView[] }) {
+export function ShadcnReviews({
+  testimonials,
+  readMore = true,
+}: {
+  testimonials: TestimonialView[];
+  /** Off: all of them (up to six) from the start, no Read more. */
+  readMore?: boolean;
+}) {
   const [open, setOpen] = useState(false);
   const list = testimonials.slice(0, MAX);
-  const more = list.length > FIRST;
+  const more = readMore && list.length > FIRST;
   const shown = open || !more ? list : list.slice(0, FIRST);
   const fillLarge = (COLUMNS - (shown.length % COLUMNS)) % COLUMNS;
   const fillTablet = shown.length % 2;
