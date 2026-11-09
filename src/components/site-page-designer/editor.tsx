@@ -18,6 +18,7 @@ import {
   DesignerTopBar,
   DesignerTopBarProvider,
   DesignerTopBarSlot,
+  SettingsOrHint,
   type DesignerStatus,
 } from "@/components/designer-top-bar";
 import { SITE_PAGES, type PuckData, type SitePageKey } from "@/lib/site-page-designs";
@@ -163,6 +164,8 @@ export function SitePageDesignEditor({
             }}
             overrides={{
               iframe: (props) => <SitePagePreviewFrame {...props} page={page} />,
+              // Nothing chosen: how to reach a section's settings (these pages have none of their own).
+              fields: SettingsOrHint,
               // Find a block, over the Blocks panel's list.
               components: BlockSearchList,
               componentItem: blockItem,

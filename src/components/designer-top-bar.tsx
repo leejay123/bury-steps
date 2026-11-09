@@ -2,7 +2,16 @@
 
 import { createContext, useContext, useEffect, useId, useState, type ReactNode } from "react";
 import { usePuck, type Data, type UiState, type Viewports } from "@puckeditor/core";
-import { ChevronDown, Monitor, Search, SlidersHorizontal, Smartphone, Tablet, X } from "lucide-react";
+import {
+  ChevronDown,
+  Monitor,
+  MousePointerClick,
+  Search,
+  SlidersHorizontal,
+  Smartphone,
+  Tablet,
+  X,
+} from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
@@ -90,6 +99,15 @@ export function DesignerTopBar({
   const viewports = appState.ui.viewports;
   const ui = appState.ui;
   const [viewOpen, setViewOpen] = useState(false);
+
+  // Picking a block opens the settings panel (if it was hidden), so its
+  // settings are always there when something is chosen.
+  const selected = ui.itemSelector ? `${ui.itemSelector.zone ?? ""}:${ui.itemSelector.index}` : "";
+  useEffect(() => {
+    if (selected && !ui.rightSideBarVisible) dispatch({ type: "setUi", ui: { rightSideBarVisible: true } });
+    // Only when the choice changes: hiding the panel afterwards still works.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selected]);
 
   // A panel dragged (or remembered) wider than its limit goes back to the limit.
   useEffect(() => {
@@ -296,6 +314,24 @@ const TopBarSlot = createContext<ReactNode>(null);
 export const DesignerTopBarProvider = TopBarSlot.Provider;
 export function DesignerTopBarSlot() {
   return <>{useContext(TopBarSlot)}</>;
+}
+
+/**
+ * The settings panel with nothing chosen (Puck's `overrides.fields`): a page
+ * with no settings of its own shows how to get to a section's settings, not
+ * Puck's empty "title" box. With a section chosen, its settings as usual.
+ */
+export function SettingsOrHint({ children, itemSelector }: { children?: ReactNode; itemSelector?: unknown }) {
+  if (itemSelector) return <>{children}</>;
+  return (
+    <div className="flex flex-col items-center gap-3 px-6 py-12 text-center">
+      <span className="flex size-10 items-center justify-center rounded-full bg-muted">
+        <MousePointerClick aria-hidden className="size-5 text-muted-foreground" />
+      </span>
+      <p className="font-medium text-sm">Click a section on the page to change its settings</p>
+      <p className="text-muted-foreground text-xs">Or pick one in Outline, on the left.</p>
+    </div>
+  );
 }
 
 /** The Blocks panel's search: what's typed, for each block to check itself against. */
