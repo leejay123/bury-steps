@@ -32,6 +32,9 @@ type LookProps = {
 /** Search and topics: a Show more button after the first few questions (the page designer's choice). */
 export type FaqShowMore = { on: boolean; first: number; tone?: StripTone };
 
+/** The page designer's colour choices: the search bar's background, and an opened question's. */
+export type FaqTones = { search?: StripTone; open?: StripTone };
+
 const PAD = "px-5 md:px-12";
 /** Beside the topic column, as the original's questions are. */
 const GROUPED_PAD = "px-5 md:px-12 lg:ps-8";
@@ -49,21 +52,27 @@ function QuestionRow({
   open,
   onToggle,
   pad = PAD,
+  openTone = "grey",
 }: {
   faq: FaqView;
   open: boolean;
   onToggle: () => void;
   /** Side padding, shared by the question and its answer. */
   pad?: string;
+  /** An opened question's background: light grey, or white. */
+  openTone?: StripTone;
 }) {
   return (
-    <div className={cn("border-b", open && "bg-muted/40")}>
+    // One even background when open (grey or white, as chosen): no second,
+    // darker hover grey on the question over it.
+    <div className={cn("border-b", open && openTone === "grey" && "bg-muted/40")}>
       <h3 className="contents">
         <button
           aria-expanded={open}
           className={cn(
             pad,
-            "flex w-full items-center gap-4 py-5 text-start hover:bg-muted/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-inset md:py-6",
+            !open && "hover:bg-muted/50",
+            "flex w-full items-center gap-4 py-5 text-start focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-inset md:py-6",
           )}
           onClick={onToggle}
           type="button"
@@ -162,7 +171,8 @@ export function FaqSearchLook({
   faqs,
   facebookUrl,
   showMore = { on: false, first: 5 },
-}: LookProps & { showMore?: FaqShowMore }) {
+  tones = {},
+}: LookProps & { showMore?: FaqShowMore; tones?: FaqTones }) {
   const [query, setQuery] = useState("");
   const [topic, setTopic] = useState("all");
   const [open, setOpen] = useState<string | null>(null);
@@ -175,7 +185,13 @@ export function FaqSearchLook({
   );
   return (
     <div className="border-t">
-      <label className={cn(PAD, "flex h-14 items-center gap-3 border-b bg-muted/30 focus-within:bg-muted/50")}>
+      <label
+        className={cn(
+          PAD,
+          "flex h-14 items-center gap-3 border-b",
+          tones.search === "white" ? "bg-background" : "bg-muted/30 focus-within:bg-muted/50",
+        )}
+      >
         <Search aria-hidden className="size-4 shrink-0 text-muted-foreground" />
         <span className="sr-only">Search questions</span>
         <input
@@ -197,7 +213,13 @@ export function FaqSearchLook({
       ) : (
         // A search shows everything it finds; otherwise the first few, then Show more.
         (showMore.on && !all && !words ? shown.slice(0, showMore.first) : shown).map((faq) => (
-          <QuestionRow faq={faq} key={faq.id} onToggle={() => setOpen(open === faq.id ? null : faq.id)} open={open === faq.id} />
+          <QuestionRow
+            faq={faq}
+            key={faq.id}
+            onToggle={() => setOpen(open === faq.id ? null : faq.id)}
+            open={open === faq.id}
+            openTone={tones.open}
+          />
         ))
       )}
       {showMore.on && !words && shown.length > showMore.first ? (
@@ -218,7 +240,7 @@ export function FaqSearchLook({
 }
 
 /** B: topics down the left (across the top on phones); the questions grouped by topic. */
-export function FaqGroupedLook({ topics, faqs, facebookUrl }: LookProps) {
+export function FaqGroupedLook({ topics, faqs, facebookUrl, tones = {} }: LookProps & { tones?: FaqTones }) {
   const [open, setOpen] = useState<string | null>(null);
   const anchor = (id: string) => `faq-topic-${id.replace(/[^A-Za-z0-9_-]/g, "")}`;
   return (
@@ -264,6 +286,7 @@ export function FaqGroupedLook({ topics, faqs, facebookUrl }: LookProps) {
                   key={faq.id}
                   onToggle={() => setOpen(open === faq.id ? null : faq.id)}
                   open={open === faq.id}
+                  openTone={tones.open}
                   pad={GROUPED_PAD}
                 />
               ))}

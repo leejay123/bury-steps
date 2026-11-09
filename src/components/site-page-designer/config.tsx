@@ -246,6 +246,15 @@ export const homePageConfig = {
           ],
         },
         showMore: onOff("Show more button (Search and topics)", "On", "Off"),
+        searchBar: stripField("Search bar"),
+        openQuestion: {
+          type: "radio",
+          label: "Opened question",
+          options: [
+            { label: "Grey", value: "grey" },
+            { label: "White", value: "white" },
+          ],
+        },
         moreStrip: stripField("Show more strip"),
         showMoreFirst: {
           type: "select",
@@ -283,9 +292,13 @@ export const homePageConfig = {
       },
       // Show more is for the Search and topics look; its count only once it's on.
       resolveFields: (data: { props: Record<string, unknown> }, { fields }: { fields: Record<string, unknown> }) => {
-        if (data.props.look !== "search") return dropFields(fields, ["showMore", "showMoreFirst", "moreStrip"]);
-        if (data.props.showMore !== "on") return dropFields(fields, ["showMoreFirst", "moreStrip"]);
-        return fields;
+        const look = String(data.props.look ?? "original");
+        const drop: string[] = [];
+        if (look !== "search") drop.push("showMore", "showMoreFirst", "moreStrip", "searchBar");
+        else if (data.props.showMore !== "on") drop.push("showMoreFirst", "moreStrip");
+        // Opened questions only in the looks whose questions open (not the original or the cards).
+        if (look !== "search" && look !== "grouped") drop.push("openQuestion");
+        return dropFields(fields, drop);
       },
       render: HomeFaqBlock,
     },

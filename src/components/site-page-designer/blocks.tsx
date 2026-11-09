@@ -407,6 +407,7 @@ export function HomeFaqBlock(props: Record<string, unknown>) {
         first: [3, 4, 5, 6, 8].includes(Number(props.showMoreFirst)) ? Number(props.showMoreFirst) : 5,
         tone: stripTone(props.moreStrip),
       }}
+      tones={{ search: stripTone(props.searchBar), open: props.openQuestion === "white" ? "white" : "grey" }}
       title={asText(props.title, "Frequently asked questions")}
     />
   );
