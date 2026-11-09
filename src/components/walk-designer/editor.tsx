@@ -4,7 +4,7 @@
 // import here became a separate file loaded on demand, which failed to load
 // alongside the site's inline CSS (experimental.inlineCss) and crashed the page.
 import { DesignerNarrowCover } from "@/components/designer-narrow-cover";
-import { useMemo, useRef, useState } from "react";
+import { useMemo, useRef, useState, type ReactNode } from "react";
 import { Puck, type Data } from "@puckeditor/core";
 // Puck's styles up front, the copy with no outside font: otherwise Puck adds
 // them itself with an @import of rsms.me/inter, which the site's security
@@ -17,14 +17,17 @@ import { WalkWordingProvider, useWalkWording } from "@/components/walk-wording-c
 import { WalkClockInPreview, WalkClockPreview } from "@/hooks/use-walk-clock";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { effectiveEndsAt, walkOpensAt } from "@/lib/walk-window";
-import { DESIGNER_UI, DESIGNER_VIEWPORTS, DesignerStripItem, DesignerTopBar } from "@/components/designer-top-bar";
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+  BlockSearchItem,
+  BlockSearchList,
+  DESIGNER_UI,
+  DESIGNER_VIEWPORTS,
+  DesignerTopBar,
+  DesignerTopBarProvider,
+  DesignerTopBarSlot,
+  ViewChoices,
+  ViewSection,
+} from "@/components/designer-top-bar";
 import type { WalkIdeaParts } from "@/components/walk-idea-layouts";
 import type { WalkDesignAudience, WalkDesigns } from "@/lib/walk-page-choice";
 import { walkDesignConfig } from "./config";
@@ -47,10 +50,10 @@ function withJoinDefault(data: Data): Data {
   };
 }
 
-const AUDIENCES: { id: WalkDesignAudience; label: string }[] = [
-  { id: "organiser", label: "Organisers and owners" },
-  { id: "member", label: "Members" },
-  { id: "visitor", label: "Signed-out visitors" },
+const AUDIENCES: { id: WalkDesignAudience; label: string; short: string }[] = [
+  { id: "organiser", label: "Organisers and owners", short: "Organisers" },
+  { id: "member", label: "Members", short: "Members" },
+  { id: "visitor", label: "Signed-out visitors", short: "Visitors" },
 ];
 
 type Moment =
@@ -71,6 +74,11 @@ const CLOCKED_IN: { id: ClockedIn; label: string }[] = [
   { id: "in", label: "Clocked in" },
   { id: "out", label: "Clocked out early" },
 ];
+
+/** A block in the Blocks panel, hidden while Find a block doesn't match it. */
+function WalkBlockItem({ children, name }: { children?: ReactNode; name: string }) {
+  return <BlockSearchItem label={walkDesignConfig.components[name]?.label ?? name}>{children}</BlockSearchItem>;
+}
 
 /** The walk as if cancelled: the badge, status and messages say so, and there's no clocking in. */
 function cancelledParts(parts: WalkIdeaParts): WalkIdeaParts {
@@ -225,76 +233,44 @@ export function WalkDesignEditor({
       note="Publish saves this design for the people chosen here."
       onClose={onClose}
       onPublish={publish}
-      strip={
-        <>
-        <DesignerStripItem first label="For">
-          <Select onValueChange={(value) => open(value as WalkDesignAudience)} value={audience}>
-            <SelectTrigger aria-label="Who the design is for" className="h-8 w-full">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent className="z-[100]">
-              {AUDIENCES.map((item) => (
-                <SelectItem key={item.id} value={item.id}>
-                  {item.label}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </DesignerStripItem>
-        <DesignerStripItem label="Copy to">
-          <Select
-            onValueChange={(value) => copyTo(value as WalkDesignAudience)}
-            value=""
-          >
-            <SelectTrigger aria-label="Copy this design to" className="h-8 w-full">
-              <SelectValue placeholder="Another audience…" />
-            </SelectTrigger>
-            <SelectContent className="z-[100]">
-              {AUDIENCES.filter((item) => item.id !== audience).map((item) => (
-                <SelectItem key={item.id} value={item.id}>
-                  {item.label}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </DesignerStripItem>
-        <DesignerStripItem label="Preview">
-          <Select
-            onValueChange={(value) => setMoment(value as Moment)}
-            value={moment}
-          >
-            <SelectTrigger aria-label="Show the walk" className="h-8 w-full">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent className="z-[100]">
-              {MOMENTS.map((item) => (
-                <SelectItem key={item.id} value={item.id}>
-                  {item.label}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </DesignerStripItem>
-        <DesignerStripItem label="Clocked in">
-          <Select
-            onValueChange={(value) => setClockedIn(value as ClockedIn)}
-            value={clockedIn}
-          >
-            <SelectTrigger aria-label="Clocked in or not" className="h-8 w-full">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent className="z-[100]">
-              {CLOCKED_IN.map((item) => (
-                <SelectItem key={item.id} value={item.id}>
-                  {item.label}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </DesignerStripItem>
-        </>
-      }
       title="Walk page"
+      // For, Preview, Clocked in and Copy to: in the View panel, the bar stays one row.
+      view={{
+        summary: [
+          AUDIENCES.find((item) => item.id === audience)?.short,
+          MOMENTS.find((item) => item.id === moment)?.label,
+          CLOCKED_IN.find((item) => item.id === clockedIn)?.label,
+        ]
+          .filter(Boolean)
+          .join(" · "),
+        content: (
+          <>
+            <ViewSection label="For">
+              <ViewChoices
+                label="Who the design is for"
+                onChange={(value) => open(value)}
+                options={AUDIENCES.map((item) => ({ id: item.id, label: item.short }))}
+                value={audience}
+              />
+            </ViewSection>
+            <ViewSection label="Preview the walk">
+              <ViewChoices label="Show the walk" onChange={setMoment} options={MOMENTS} value={moment} />
+            </ViewSection>
+            <ViewSection label="Clocked in">
+              <ViewChoices columns={2} label="Clocked in or not" onChange={setClockedIn} options={CLOCKED_IN} value={clockedIn} />
+            </ViewSection>
+            <ViewSection label="Copy this design to">
+              <ViewChoices
+                columns={2}
+                label="Copy this design to"
+                onChange={(value) => copyTo(value)}
+                options={AUDIENCES.filter((item) => item.id !== audience).map((item) => ({ id: item.id, label: item.short }))}
+                value={null}
+              />
+            </ViewSection>
+          </>
+        ),
+      }}
     />
   );
 
@@ -318,6 +294,7 @@ export function WalkDesignEditor({
             <WalkWordingProvider wording={draftWording}>
             <PreviewAudience.Provider value={audience}>
               <WalkPartsProvider parts={preview}>
+                <DesignerTopBarProvider value={topBar}>
                 <Puck
                   config={walkDesignConfig}
                   // Fill the space under the bar above. Puck's own default is the
@@ -337,11 +314,15 @@ export function WalkDesignEditor({
                   overrides={{
                     iframe: PuckFrameStyles,
                     // The one top bar (designer-top-bar.tsx) in place of Puck's own.
-                    header: () => topBar,
+                    header: DesignerTopBarSlot,
+                    // Find a block, over the Blocks panel's list.
+                    components: BlockSearchList,
+                    componentItem: WalkBlockItem,
                   }}
                   ui={DESIGNER_UI}
                   viewports={DESIGNER_VIEWPORTS}
                 />
+                </DesignerTopBarProvider>
               </WalkPartsProvider>
             </PreviewAudience.Provider>
             </WalkWordingProvider>

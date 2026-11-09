@@ -1,10 +1,12 @@
 "use client";
 
-import { useEffect, type ReactNode } from "react";
+import { createContext, useContext, useEffect, useId, useState, type ReactNode } from "react";
 import { usePuck, type Data, type UiState, type Viewports } from "@puckeditor/core";
-import { Monitor, PanelLeft, PanelRight, Smartphone, Tablet, X } from "lucide-react";
+import { ChevronDown, Monitor, Search, SlidersHorizontal, Smartphone, Tablet, X } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Switch } from "@/components/ui/switch";
 
 /** The preview sizes, in the top bar: a phone, a tablet, then the full width. */
 const SIZES = [
@@ -49,16 +51,16 @@ const panelMax = (side: "left" | "right") =>
 
 /** A segment of the bar: full height, split off by a line (as the site's edge strips). */
 const SEGMENT = "flex shrink-0 items-center border-l";
+const FOCUS = "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-inset";
 
 /**
- * The designers' one top bar (Puck's `overrides.header`, so it sits inside Puck and can
- * change the preview size): Close, what's being designed and how it stands, the preview
- * size, then the actions with Publish last. `strip` is a second row for a designer's
- * own tools (the walk designer's Start from, Copy to, Preview, Clocked in).
+ * The designers' one slim top bar (Puck's `overrides.header`, so it sits inside Puck
+ * and can change the preview size): Close, what's being designed and how it stands,
+ * View (a panel with what the preview shows and which panels are open), the preview
+ * size as icons, then the actions with Publish last, over the settings panel.
  */
 export function DesignerTopBar({
   busy = false,
-  children,
   closeLabel,
   note,
   noteAlways = false,
@@ -66,28 +68,28 @@ export function DesignerTopBar({
   onPublish,
   secondary,
   status,
-  strip,
   title,
+  view,
 }: {
   busy?: boolean;
-  /** Beside the title (the walk designer's audience switch). */
-  children?: ReactNode;
   closeLabel: string;
-  /** One line under the title, on wide screens. */
-  note?: ReactNode;
-  /** Show the note at every width (a question that needs answering). */
+  /** What the designer does, on hover over the title (shown in the bar when noteAlways). */
+  note?: string;
+  /** Show the note in the bar (a question that needs answering). */
   noteAlways?: boolean;
   onClose: () => void;
   onPublish: (data: Data) => void | Promise<void>;
   /** Before Publish (Discard draft). */
   secondary?: ReactNode;
   status?: DesignerStatus;
-  strip?: ReactNode;
   title: string;
+  /** The View panel's own choices (the walk designer's For, Preview…), and what's picked, in a few words. */
+  view?: { summary?: string; content: ReactNode };
 }) {
   const { appState, dispatch } = usePuck();
   const viewports = appState.ui.viewports;
   const ui = appState.ui;
+  const [viewOpen, setViewOpen] = useState(false);
 
   // A panel dragged (or remembered) wider than its limit goes back to the limit.
   useEffect(() => {
@@ -100,148 +102,255 @@ export function DesignerTopBar({
   }, [ui.leftSideBarWidth, ui.rightSideBarWidth, dispatch]);
 
   const panels = [
-    { label: "Blocks panel", icon: PanelLeft, on: ui.leftSideBarVisible, key: "leftSideBarVisible" as const },
-    { label: "Settings panel", icon: PanelRight, on: ui.rightSideBarVisible, key: "rightSideBarVisible" as const },
+    { label: "Blocks panel", on: ui.leftSideBarVisible, key: "leftSideBarVisible" as const },
+    { label: "Settings panel", on: ui.rightSideBarVisible, key: "rightSideBarVisible" as const },
   ];
   const setWidth = (width: number | "100%") =>
     dispatch({ type: "setUi", ui: { viewports: { ...viewports, current: { width, height: "auto" } } } });
 
   return (
-    <div
-      className="shrink-0 border-b bg-background"
-      // The page preview's width (Puck's middle column): the size buttons fill its
-      // right half, so their edge meets the line between Copy to and Preview.
-      style={
-        {
-          "--designer-frame": `calc(100% - var(--puck-pluginbar-width, 0px) - ${
-            ui.leftSideBarVisible ? "var(--puck-sidebar-left-width, 0px)" : "0px"
-          } - ${ui.rightSideBarVisible ? "var(--puck-sidebar-right-width, 0px)" : "0px"})`,
-        } as React.CSSProperties
-      }
-    >
-      <div className="flex min-h-14 items-stretch">
-        <button
-          aria-label={closeLabel}
-          className="flex w-(--puck-pluginbar-width,3.5rem) shrink-0 items-center justify-center border-r hover:bg-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-inset disabled:opacity-50"
-          disabled={busy}
-          onClick={onClose}
-          type="button"
-        >
-          <X aria-hidden className="size-4" />
-        </button>
-        <div className="flex min-w-0 flex-1 items-center gap-x-4 px-4 py-2">
-          <div className="flex min-w-0 flex-col gap-0.5">
-            <span className="flex min-w-0 items-center gap-2">
-              <span className="truncate font-semibold">{title}</span>
-              {status ? (
-                <span
-                  className={cn(
-                    "inline-flex shrink-0 items-center gap-1.5 rounded-full px-2.5 py-0.5 text-xs font-medium",
-                    STATUS_TONE[status.tone].pill,
-                  )}
-                >
-                  <span aria-hidden className={cn("size-1.5 rounded-full", STATUS_TONE[status.tone].dot)} />
-                  {status.label}
-                </span>
-              ) : null}
-            </span>
-            {note ? (
-              <span className={cn("truncate text-xs text-muted-foreground", !noteAlways && "hidden xl:block")}>
-                {note}
-              </span>
-            ) : null}
-          </div>
-          {children}
-        </div>
-        {/* Show or hide the left (blocks, outline) and right (settings) panels. */}
-        <div aria-label="Panels" className="flex" role="group">
-          {panels.map((panel) => {
-            const Icon = panel.icon;
-            return (
-              <button
-                aria-label={`${panel.on ? "Hide" : "Show"} the ${panel.label.toLowerCase()}`}
-                aria-pressed={panel.on}
-                className={cn(
-                  SEGMENT,
-                  "px-3 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-inset",
-                  panel.on ? "bg-accent text-accent-foreground" : "text-muted-foreground hover:bg-accent/60 hover:text-foreground",
-                )}
-                key={panel.key}
-                onClick={() => dispatch({ type: "setUi", ui: { [panel.key]: !panel.on } })}
-                title={`${panel.on ? "Hide" : "Show"} the ${panel.label.toLowerCase()}`}
-                type="button"
-              >
-                <Icon aria-hidden className="size-4" />
-              </button>
-            );
-          })}
-        </div>
-        <div
-          aria-label="Preview size"
-          className="@container flex shrink-0 basis-[calc(var(--designer-frame)/2)]"
-          role="group"
-        >
-          {SIZES.map((size) => {
-            const on = viewports.current.width === size.width;
-            const Icon = size.icon;
-            return (
-              <button
-                aria-label={size.label}
-                aria-pressed={on}
-                title={size.label}
-                className={cn(
-                  SEGMENT,
-                  "min-w-0 flex-1 justify-center gap-2 px-3 text-sm font-medium focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-inset",
-                  on ? "bg-accent text-accent-foreground" : "text-muted-foreground hover:bg-accent/60 hover:text-foreground",
-                )}
-                key={size.label}
-                onClick={() => setWidth(size.width)}
-                type="button"
-              >
-                <Icon aria-hidden className="size-4" />
-                {/* Words too when the half has room for them; just the icons when it doesn't. */}
-                <span className="hidden @[20rem]:inline">{size.label}</span>
-              </button>
-            );
-          })}
-        </div>
-        {/* Exactly over the settings panel while it shows, so the line beside
-            Publish runs straight down its edge. */}
-        <div
-          className={cn(
-            SEGMENT,
-            "gap-2 px-3 py-2 lg:px-4",
-            ui.rightSideBarVisible && "w-(--puck-sidebar-right-width) justify-end",
-          )}
-        >
-          {secondary}
-          <Button disabled={busy} onClick={() => void onPublish(appState.data)} size="sm" type="button">
-            Publish
-          </Button>
-        </div>
+    <div className="flex h-12 shrink-0 items-stretch border-b bg-background">
+      {/* As wide as the Blocks rail below, so its line runs straight down. */}
+      <button
+        aria-label={closeLabel}
+        className={cn(
+          "flex w-(--puck-pluginbar-width,3.5rem) shrink-0 items-center justify-center border-r hover:bg-accent disabled:opacity-50",
+          FOCUS,
+        )}
+        disabled={busy}
+        onClick={onClose}
+        title={closeLabel}
+        type="button"
+      >
+        <X aria-hidden className="size-4" />
+      </button>
+      <div className="flex min-w-0 flex-1 items-center gap-2.5 px-4" title={noteAlways ? undefined : note}>
+        <span className="truncate font-semibold text-sm">{title}</span>
+        {status ? (
+          <span
+            className={cn(
+              "inline-flex shrink-0 items-center gap-1.5 rounded-full px-2.5 py-0.5 text-xs font-medium",
+              STATUS_TONE[status.tone].pill,
+            )}
+          >
+            <span aria-hidden className={cn("size-1.5 rounded-full", STATUS_TONE[status.tone].dot)} />
+            {status.label}
+          </span>
+        ) : null}
+        {note && noteAlways ? <span className="truncate font-medium text-amber-700 text-xs dark:text-amber-300">{note}</span> : null}
       </div>
-      {/* The strip's first tool spans the Blocks rail and left panel, its last sits over
-          the settings panel, so its lines carry on down the panels' edges (globals.css). */}
-      {strip ? (
-        <div
-          className="flex items-stretch border-t bg-muted/30"
-          data-designer-strip=""
-          data-left={ui.leftSideBarVisible ? "on" : "off"}
-          data-right={ui.rightSideBarVisible ? "on" : "off"}
-        >
-          {strip}
-        </div>
-      ) : null}
+      {/* View: what the preview shows, and which panels are open. */}
+      <Popover onOpenChange={setViewOpen} open={viewOpen}>
+        <PopoverTrigger asChild>
+          <button
+            className={cn(
+              SEGMENT,
+              "min-w-0 gap-2 px-3.5 text-sm",
+              FOCUS,
+              viewOpen ? "bg-accent text-accent-foreground" : "hover:bg-accent/60",
+            )}
+            type="button"
+          >
+            <SlidersHorizontal aria-hidden className="size-4 shrink-0" />
+            <span className="font-semibold">View</span>
+            {view?.summary ? (
+              <span className="hidden max-w-[22rem] truncate text-muted-foreground xl:inline">{view.summary}</span>
+            ) : null}
+            <ChevronDown
+              aria-hidden
+              className={cn("size-3.5 shrink-0 text-muted-foreground transition-transform", viewOpen && "rotate-180")}
+            />
+          </button>
+        </PopoverTrigger>
+        <PopoverContent align="end" className="z-[100] w-[22rem] overflow-hidden rounded-xl p-0">
+          {view?.content}
+          <div className="flex flex-col gap-3 bg-muted/40 px-4 py-3">
+            {panels.map((panel) => (
+              <PanelSwitch
+                key={panel.key}
+                label={panel.label}
+                on={Boolean(panel.on)}
+                onChange={(on) => dispatch({ type: "setUi", ui: { [panel.key]: on } })}
+              />
+            ))}
+          </div>
+        </PopoverContent>
+      </Popover>
+      <div aria-label="Preview size" className="flex" role="group">
+        {SIZES.map((size) => {
+          const on = viewports.current.width === size.width;
+          const Icon = size.icon;
+          return (
+            <button
+              aria-label={size.label}
+              aria-pressed={on}
+              className={cn(
+                SEGMENT,
+                "w-12 justify-center",
+                FOCUS,
+                on ? "bg-accent text-accent-foreground" : "text-muted-foreground hover:bg-accent/60 hover:text-foreground",
+              )}
+              key={size.label}
+              onClick={() => setWidth(size.width)}
+              title={size.label}
+              type="button"
+            >
+              <Icon aria-hidden className="size-4" />
+            </button>
+          );
+        })}
+      </div>
+      {/* Exactly over the settings panel while it shows, so the line beside
+          the actions runs straight down its edge. */}
+      <div
+        className={cn(
+          SEGMENT,
+          "gap-2 px-3",
+          ui.rightSideBarVisible && "w-(--puck-sidebar-right-width) justify-end",
+        )}
+      >
+        {secondary}
+        <Button disabled={busy} onClick={() => void onPublish(appState.data)} size="sm" type="button">
+          Publish
+        </Button>
+      </div>
     </div>
   );
 }
 
-/** One labelled tool in the strip: a full-height segment, sharing the row equally. */
-export function DesignerStripItem({ children, first, label }: { children: ReactNode; first?: boolean; label: string }) {
+function PanelSwitch({ label, on, onChange }: { label: string; on: boolean; onChange: (on: boolean) => void }) {
+  const id = useId();
   return (
-    <div className={cn("flex min-h-12 min-w-0 flex-1 items-center gap-3 px-4", !first && "border-l")}>
-      <span className="shrink-0 text-xs text-muted-foreground">{label}</span>
-      <div className="min-w-0 flex-1">{children}</div>
+    <div className="flex items-center justify-between gap-3">
+      <label className="text-sm" htmlFor={id}>
+        {label}
+      </label>
+      <Switch checked={on} id={id} onCheckedChange={onChange} />
     </div>
+  );
+}
+
+/** One section of the View panel: a small heading and its choices. */
+export function ViewSection({ children, label }: { children: ReactNode; label: string }) {
+  return (
+    <div className="flex flex-col gap-2 border-b px-4 py-3.5">
+      <span className="font-semibold text-muted-foreground text-xs">{label}</span>
+      {children}
+    </div>
+  );
+}
+
+/**
+ * Choices as buttons in one box, all on show (instead of a dropdown): the
+ * picked one shaded. Lines between them, top and left, clipped at the box's
+ * edge, so rows that wrap still have one line each.
+ */
+export function ViewChoices<T extends string>({
+  columns = 3,
+  label,
+  onChange,
+  options,
+  value,
+}: {
+  columns?: 2 | 3;
+  label: string;
+  onChange: (value: T) => void;
+  options: readonly { id: T; label: string }[];
+  value: T | null;
+}) {
+  return (
+    <div
+      aria-label={label}
+      className={cn("grid overflow-hidden rounded-lg border", columns === 2 ? "grid-cols-2" : "grid-cols-3")}
+      role="group"
+    >
+      {options.map((option) => {
+        const on = option.id === value;
+        return (
+          <button
+            aria-pressed={on}
+            className={cn(
+              "min-h-9 px-2 py-1.5 text-[0.8125rem] leading-tight shadow-[-1px_0_0_0_var(--border),0_-1px_0_0_var(--border)]",
+              FOCUS,
+              on ? "bg-accent font-semibold text-accent-foreground" : "hover:bg-accent/60",
+            )}
+            key={option.id}
+            onClick={() => onChange(option.id)}
+            type="button"
+          >
+            {option.label}
+          </button>
+        );
+      })}
+    </div>
+  );
+}
+
+/**
+ * The top bar reaches Puck through a context and one stable header
+ * (`overrides.header: DesignerTopBarSlot`): a header made fresh on every
+ * change counts as a new one to React, which rebuilt it and shut the View
+ * panel whenever a choice in it changed the preview.
+ */
+const TopBarSlot = createContext<ReactNode>(null);
+export const DesignerTopBarProvider = TopBarSlot.Provider;
+export function DesignerTopBarSlot() {
+  return <>{useContext(TopBarSlot)}</>;
+}
+
+/** The Blocks panel's search: what's typed, for each block to check itself against. */
+const BlockSearch = createContext("");
+
+/**
+ * Puck's `overrides.components` (the Blocks panel's list): a Find a block box over
+ * the list; each block (`overrides.componentItem`, BlockSearchItem) hides itself
+ * when its name doesn't match. While searching, the group headings step aside.
+ */
+export function BlockSearchList({ children }: { children?: ReactNode }) {
+  const [query, setQuery] = useState("");
+  const id = useId();
+  return (
+    <div data-block-search={query.trim() ? "on" : "off"}>
+      <div className="mb-3 flex h-9 items-center gap-2 rounded-lg border bg-background px-3 focus-within:ring-2 focus-within:ring-ring">
+        <Search aria-hidden className="size-4 shrink-0 text-muted-foreground" />
+        <label className="sr-only" htmlFor={id}>
+          Find a block
+        </label>
+        <input
+          className="h-full min-w-0 flex-1 bg-transparent text-sm outline-none placeholder:text-muted-foreground [&::-webkit-search-cancel-button]:appearance-none"
+          id={id}
+          onChange={(event) => setQuery(event.target.value)}
+          placeholder="Find a block"
+          type="search"
+          value={query}
+        />
+        {query ? (
+          <button
+            aria-label="Clear the search"
+            className="rounded-full p-1 text-muted-foreground hover:bg-accent hover:text-foreground"
+            onClick={() => setQuery("")}
+            type="button"
+          >
+            <X aria-hidden className="size-3.5" />
+          </button>
+        ) : null}
+      </div>
+      <BlockSearch.Provider value={query.trim().toLowerCase()}>{children}</BlockSearch.Provider>
+    </div>
+  );
+}
+
+/**
+ * One block in the Blocks panel, marked as matching the search or not. Puck keeps
+ * a holder round every block, so the hiding is done in globals.css: a holder (and
+ * a group) with no match inside is taken out, leaving no gaps.
+ */
+export function BlockSearchItem({ children, label }: { children?: ReactNode; label: string }) {
+  const query = useContext(BlockSearch);
+  const match = !query || label.toLowerCase().includes(query);
+  return (
+    <span className="contents" data-block-match={match ? "yes" : "no"}>
+      {children}
+    </span>
   );
 }

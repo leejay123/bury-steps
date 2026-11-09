@@ -1221,15 +1221,18 @@ html[data-page-kind="home"] #main-content {
   --puck-radius-l: var(--radius);
 }
 
-/* The walk designer's second top row (For, Copy to, Preview, Clocked in): its first tool
-   spans the Blocks rail and the left panel, its last sits exactly over the settings
-   panel, so the row's lines run straight on down the panels' edges. Puck's column
-   widths are CSS variables on its layout, which the top bar sits inside. */
-[data-designer] [data-designer-strip][data-left="on"] > :first-child {
-  flex: 0 0 calc(var(--puck-pluginbar-width) + var(--puck-sidebar-left-width));
+/* The Blocks panel: slimmer rows, and while Find a block has words in it, the group
+   headings step aside (a search shows only the blocks that match). */
+[data-designer] {
+  --puck-drawer-item-space: 0.5rem 0.75rem;
 }
-[data-designer] [data-designer-strip][data-right="on"] > :last-child {
-  flex: 0 0 var(--puck-sidebar-right-width);
+[data-designer] [data-block-search="on"] [class*="_ComponentList-title_"],
+[data-designer] [data-block-search="on"] [class*="_Drawer_"] > :not(:has([data-block-match="yes"])),
+[data-designer] [data-block-search="on"] [class*="_ComponentList_"]:not(:has([data-block-match="yes"])) {
+  display: none;
+}
+[data-designer] [data-block-search="on"] [class*="_ComponentList_"] {
+  margin-top: 0;
 }
 
 /* The settings' choice boxes (Yes / No, and longer ones that wrap onto a second row):
