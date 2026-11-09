@@ -74,7 +74,8 @@ export function AboutSplitLook({ id, title, lead, rest, words, readMore }: About
         </div>
         {readMore ? (
           <Link
-            className="flex items-center justify-between gap-3 border-t bg-muted/30 px-5 py-5 font-medium text-sm hover:bg-muted/60 md:px-12"
+            // A white strip, as every Read more's (grey only on hover).
+            className="flex items-center justify-between gap-3 border-t bg-background px-5 py-5 font-medium text-sm hover:bg-muted/50 md:px-12"
             href="/about"
           >
             Read the full story

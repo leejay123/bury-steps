@@ -65,10 +65,10 @@ function Who({ review, o, size }: { review: TestimonialView; o: QuotesOptions; s
   );
 }
 
-/** Read more / Show less, in a strip along the bottom (as the original). */
+/** Read more / Show less, in a white strip along the bottom (as the original). */
 function MoreStrip({ open, onToggle }: { open: boolean; onToggle: () => void }) {
   return (
-    <div className="flex justify-center border-t bg-muted/30 px-5 py-3">
+    <div className="flex justify-center border-t bg-background px-5 py-3">
       <button aria-expanded={open} className={BUTTON_SMALL_OUTLINE} onClick={onToggle} type="button">
         {open ? "Show less" : "Read more"}
       </button>
