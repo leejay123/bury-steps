@@ -52,6 +52,20 @@ import {
 } from "@/components/shadcnio/parts";
 import { HeroField } from "@/components/shadcnio/ascii-field";
 import { MoreRows, stripTone } from "@/components/shadcnio/more-rows";
+import {
+  CtaBandLook,
+  CtaNextLook,
+  CtaSplitLook,
+  ExpectCellsLook,
+  ExpectNumberedLook,
+  ExpectTicksLook,
+  WalksNextLook,
+  WalksRowsLook,
+  WalksWeekLook,
+  isCtaLook,
+  isExpectLook,
+  isWalksLook,
+} from "@/components/shadcnio/home-section-looks";
 import { GALLERY_GRID_3, PHONE_LIST } from "@/components/shadcnio/grids";
 import { SectionTitle } from "@/components/section-title";
 import { Button } from "@/components/ui/button";
@@ -219,6 +233,7 @@ export function HomeAboutBlock(props: Record<string, unknown>) {
 
 export function HomeWalksBlock(props: Record<string, unknown>) {
   const { data } = useSitePageLive();
+  const walksLook = isWalksLook(props.look) ? props.look : "original";
   return (
     <Section id="home-walks-heading">
       <SectionHead
@@ -231,6 +246,13 @@ export function HomeWalksBlock(props: Record<string, unknown>) {
         )}
         title={asText(props.title, "Walks coming up, every week")}
       />
+      {walksLook === "rows" ? (
+        <WalksRowsLook tone={stripTone(props.moreStrip)} walks={data.upcoming} />
+      ) : walksLook === "next" ? (
+        <WalksNextLook walks={data.upcoming} />
+      ) : walksLook === "week" ? (
+        <WalksWeekLook walks={data.upcoming} />
+      ) : (
       <MoreRows className={WALKS_GRID} columns={3} first={3} label="Walks coming up" tone={stripTone(props.moreStrip)}>
         {data.upcoming.slice(0, 6).map((walk, i, shownWalks) => (
           <Tile
@@ -248,12 +270,37 @@ export function HomeWalksBlock(props: Record<string, unknown>) {
           />
         ))}
       </MoreRows>
+      )}
     </Section>
   );
 }
 
 export function HomeExpectBlock(props: Record<string, unknown>) {
   const items = asItems(props.items).slice(0, 6);
+  const look = isExpectLook(props.look) ? props.look : "original";
+  const lead = asText(props.lead, "A friendly, welcoming group");
+  const rest = asText(props.rest, "for every age and every pace. No pressure, no judgement, just good company on the paths.");
+  const title = asText(props.title, "What you can expect");
+  const tone = stripTone(props.moreStrip);
+  const points = items.map((item) => item.title);
+  // Its heading sits beside the list, so it brings its own.
+  if (look === "numbered")
+    return (
+      <Section id="home-expect-heading">
+        <ExpectNumberedLook id="home-expect-heading" items={points} lead={lead} rest={rest} title={title} tone={tone} />
+      </Section>
+    );
+  if (look === "ticks" || look === "cells")
+    return (
+      <Section id="home-expect-heading">
+        <SectionHead id="home-expect-heading" lead={lead} rest={rest} title={title} />
+        {look === "ticks" ? (
+          <ExpectTicksLook items={points} tone={tone} />
+        ) : (
+          <ExpectCellsLook icons={EXPECT_ICONS} items={points} tone={tone} />
+        )}
+      </Section>
+    );
   return (
     <Section id="home-expect-heading">
       <SectionHead
@@ -415,6 +462,27 @@ export function HomeFaqBlock(props: Record<string, unknown>) {
 
 export function HomeCtaBlock(props: Record<string, unknown>) {
   const { data, joinHref } = useSitePageLive();
+  const look = isCtaLook(props.look) ? props.look : "original";
+  if (look !== "original") {
+    const cta = {
+      title: asText(props.title, "Come for a walk this week"),
+      guestBody: asText(props.guestBody, "Joining is free."),
+      memberBody: asText(props.memberBody, "Your next walk is waiting."),
+      members: `${number.format(data.members)} members`,
+      joinHref,
+    };
+    return (
+      <Section id="home-cta-heading">
+        {look === "split" ? (
+          <CtaSplitLook {...cta} />
+        ) : look === "band" ? (
+          <CtaBandLook {...cta} />
+        ) : (
+          <CtaNextLook {...cta} next={data.upcoming[0] ?? null} />
+        )}
+      </Section>
+    );
+  }
   return (
     <Section id="home-cta-heading">
       <div

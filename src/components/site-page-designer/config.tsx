@@ -125,16 +125,39 @@ export const homePageConfig = {
       label: "Walks coming up",
       permissions: keep,
       fields: {
+        look: {
+          type: "select",
+          label: "Look",
+          options: [
+            { value: "original", label: "Original (cards)" },
+            { value: "rows", label: "Date rows" },
+            { value: "next", label: "Next walk big, the rest beside" },
+            { value: "week", label: "By date, in columns" },
+          ],
+        },
         moreStrip: stripField(),
         title: text("Heading"),
         rest: area("Line under the heading (the walk count stays automatic)"),
       },
+      // The next-walk look shows four walks, no Read more strip.
+      resolveFields: (data: { props: Record<string, unknown> }, { fields }: { fields: Record<string, unknown> }) =>
+        data.props.look === "next" || data.props.look === "week" ? dropFields(fields, ["moreStrip"]) : fields,
       render: HomeWalksBlock,
     },
     HomeExpect: {
       label: "What you can expect",
       permissions: keep,
       fields: {
+        look: {
+          type: "select",
+          label: "Look",
+          options: [
+            { value: "original", label: "Original (cards)" },
+            { value: "ticks", label: "Ticked list in two columns" },
+            { value: "numbered", label: "Heading beside a numbered list" },
+            { value: "cells", label: "Icon cells" },
+          ],
+        },
         moreStrip: stripField(),
         title: text("Heading"),
         lead: text("Opening words"),
@@ -306,6 +329,16 @@ export const homePageConfig = {
       label: "Come for a walk",
       permissions: keep,
       fields: {
+        look: {
+          type: "select",
+          label: "Look",
+          options: [
+            { value: "original", label: "Original (centred)" },
+            { value: "split", label: "Words beside the buttons" },
+            { value: "band", label: "Dark band" },
+            { value: "next", label: "With the next walk" },
+          ],
+        },
         title: text("Heading"),
         guestBody: area("Text for visitors"),
         memberBody: area("Text for members"),

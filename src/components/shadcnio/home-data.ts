@@ -3,7 +3,17 @@ import { prisma } from "@/lib/db";
 import { HOMEPAGE_CACHE_TAG } from "@/lib/homepage-cache";
 import { walkSharePath } from "@/lib/walk-slug";
 
-export type HomeWalk = { id: string; title: string; when: string; detail: string; href: string };
+export type HomeWalk = {
+  id: string;
+  title: string;
+  when: string;
+  detail: string;
+  href: string;
+  /** For the homepage's other walk looks: the start (ISO), and the facts on their own. */
+  startsAt?: string;
+  distance?: string | null;
+  grade?: string | null;
+};
 export type HomePlace = { name: string; walks: number };
 
 export type ShadcnHomeData = {
@@ -75,6 +85,9 @@ export async function getShadcnHomeData(): Promise<ShadcnHomeData> {
       when: WHEN.format(walk.startsAt),
       detail: [WHEN.format(walk.startsAt), walk.distance, walk.grade].filter(Boolean).join(" · "),
       href: walkSharePath(walk),
+      startsAt: walk.startsAt.toISOString(),
+      distance: walk.distance,
+      grade: walk.grade,
     })),
     places: [...places]
       .sort((a, b) => b[1] - a[1])
