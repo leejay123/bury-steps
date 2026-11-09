@@ -1833,9 +1833,12 @@ function FoldingView({
           className={cn(
             "items-center text-sm hover:no-underline",
             side && "px-4",
-            // Open, a boxed section has a line under its title, between it
-            // and what's inside (the plain Lines look draws its own).
-            framed && "data-[state=open]:shadow-[inset_0_-1px_0_var(--border)]",
+            // Open, a boxed section has one straight line under its title,
+            // between it and what's inside (the plain Lines look draws its
+            // own). Square ends, and drawn over the contents (z-index), so
+            // when what's inside starts with a line of its own (the weather,
+            // a list) the two sit on top of each other: one line, never two.
+            framed && "relative z-[1] rounded-none data-[state=open]:border-b",
             // Plus: the arrow swaps for a + that turns into × when open.
             icon === "plus" &&
               "[&>svg]:hidden [&[data-state=open]_[data-plus]]:rotate-45",
@@ -1865,7 +1868,16 @@ function FoldingView({
             </span>
           ) : null}
         </AccordionTrigger>
-        <AccordionContent className={fullWidth ? "pb-0" : undefined}>
+        {/* Up by the line's width, so a top line of its own lands on the title's. */}
+        <AccordionContent
+          className={cn(
+            fullWidth && "pb-0",
+            // Edge to edge: up by the line's width, so a list or card that
+            // starts with a line of its own lands on the title's (one line).
+            // With space around: room under the title's line.
+            framed && (side ? "-mt-px" : "pt-4"),
+          )}
+        >
           <SectionBody
             className={cn(
               "flex flex-col gap-6",
@@ -1895,6 +1907,10 @@ function FoldingView({
               side &&
                 emptyEdge &&
                 "[&>*:not(:has([data-reveal-list],[data-slot=card],[data-edge],[data-slot=empty]))]:px-4 [&>*:last-child:has([data-slot=empty])]:pb-0 [&_[data-slot=empty]]:rounded-none [&_[data-slot=empty]]:border-x-0 [&_[data-slot=empty]]:border-b-0",
+              // Words first (not a list or card running edge to edge): room
+              // under the title's line.
+              side &&
+                "[&>*:first-child:not(:has([data-reveal-list],[data-slot=card],[data-edge],[data-slot=empty]))]:pt-4",
               side &&
                 "[&>*:has([data-edge])_h2]:px-4 [&_[data-edge-rows]>*]:px-4 [&_[data-edge-rows]>*:first-child]:pt-3 [&_[data-edge-rows]]:border-t",
               // The words around an edge-to-edge list (Who attended, its
