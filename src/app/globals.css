@@ -939,9 +939,11 @@ html:not([data-design="shadcnio"]):has([data-bottom-nav]:not([hidden], [hidden] 
   font-weight: 600;
   letter-spacing: -0.02em;
 }
-/* Not a choice in a dropdown (Show 10, Sort…): its grey highlight keeps the
-   menu's gentle corners rather than a pill shape. */
-[data-design="shadcnio"] [data-slot="button"]:not([role="option"]) {
+/* Every button, a wrapped one too (a drawer's Cancel inside its Close, a
+   menu's trigger): data-button, which no wrapper swaps out, so buttons side by
+   side always share their corners. Not a choice in a dropdown (Show 10,
+   Sort…): its grey highlight keeps the menu's gentle corners. */
+[data-design="shadcnio"] [data-button]:not([role="option"]) {
   border-radius: 9999px;
 }
 [data-design="shadcnio"] [data-slot="card"] {
@@ -1183,7 +1185,7 @@ html[data-page-kind="home"] #main-content {
 /* Every button on every page (the site's own buttons, including drawers' Next and Cancel,
    and the shadcn.io pills), not only the homepage's — and every window's × close button
    (drawers, dialogs, alerts, side panels). */
-:root[data-design="shadcnio"][data-sc-radius]:not([data-sc-radius="default"]) :is([class*="rounded-[calc(var(--radius)*100)]"], [data-slot="button"], [data-slot="drawer-close"], [data-slot="dialog-close"], [data-slot="alert-dialog-close"], [data-slot="sheet-close"]) {
+:root[data-design="shadcnio"][data-sc-radius]:not([data-sc-radius="default"]) :is([class*="rounded-[calc(var(--radius)*100)]"], [data-button], [data-slot="drawer-close"], [data-slot="dialog-close"], [data-slot="alert-dialog-close"], [data-slot="sheet-close"]) {
   border-radius: calc(var(--radius) * 1.5);
 }
 :root[data-design="shadcnio"][data-sc-radius]:not([data-sc-radius="default"]) [data-shadcnio-home] :is(span[class*="rounded-[1rem]"], ul[class*="rounded-[1rem]"] > li > a > span, span[class*="rounded-[1.75rem]"]) {

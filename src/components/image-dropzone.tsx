@@ -241,7 +241,7 @@ export function ImageDropzone({
             <EmptyDescription>{hint}</EmptyDescription>
           </EmptyHeader>
           <EmptyContent>
-            <span className={cn(buttonVariants({ size: "sm", variant: "outline" }), "pointer-events-none")}>
+            <span className={cn(buttonVariants({ size: "sm", variant: "outline" }), "pointer-events-none")} data-button="">
               <UploadIcon data-icon="inline-start" />
               Choose photo
             </span>

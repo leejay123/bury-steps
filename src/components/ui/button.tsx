@@ -45,6 +45,10 @@ function Button({
       data-variant={variant ?? "default"}
       className={cn(buttonVariants({ variant, size, className }))}
       {...props}
+      // Always marks a button, even inside a Close / Trigger wrapper (asChild),
+      // which swaps data-slot for its own: the site's button styles (pill
+      // corners and the like) look for this, so no button misses them.
+      data-button=""
     />
   );
 }

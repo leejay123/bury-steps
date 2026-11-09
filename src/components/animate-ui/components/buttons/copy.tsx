@@ -104,6 +104,7 @@ function CopyButton({
     <ButtonPrimitive
       data-slot="copy-button"
       className={cn(buttonVariants({ variant, size, className }))}
+      data-button=""
       onClick={handleCopy}
       {...props}
     >
