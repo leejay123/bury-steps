@@ -5,6 +5,7 @@ import { Minus, Plus, Search } from "lucide-react";
 import type { FaqCategoryView, FaqView } from "@/lib/faqs";
 import { cn } from "@/lib/utils";
 import { Answer } from "./faq";
+import { STRIP_BG, type StripTone } from "./more-rows";
 
 /**
  * The Questions section's other looks (chosen in the page designer), in the
@@ -29,7 +30,7 @@ type LookProps = {
 };
 
 /** Search and topics: a Show more button after the first few questions (the page designer's choice). */
-export type FaqShowMore = { on: boolean; first: number };
+export type FaqShowMore = { on: boolean; first: number; tone?: StripTone };
 
 const PAD = "px-5 md:px-12";
 /** Beside the topic column, as the original's questions are. */
@@ -200,7 +201,7 @@ export function FaqSearchLook({
         ))
       )}
       {showMore.on && !words && shown.length > showMore.first ? (
-        <div className="flex justify-center border-b px-5 py-3">
+        <div className={cn("flex justify-center border-b px-5 py-3", STRIP_BG[showMore.tone ?? "white"])}>
           <button
             aria-expanded={all}
             className="inline-flex h-9 items-center rounded-full border bg-background px-4 font-medium text-sm hover:bg-muted"

@@ -51,7 +51,7 @@ import {
   WALKS_GRID,
 } from "@/components/shadcnio/parts";
 import { HeroField } from "@/components/shadcnio/ascii-field";
-import { MoreRows } from "@/components/shadcnio/more-rows";
+import { MoreRows, stripTone } from "@/components/shadcnio/more-rows";
 import { GALLERY_GRID_3, PHONE_LIST } from "@/components/shadcnio/grids";
 import { SectionTitle } from "@/components/section-title";
 import { Button } from "@/components/ui/button";
@@ -184,6 +184,7 @@ export function HomeAboutBlock(props: Record<string, unknown>) {
       rest: rest.join(" "),
       words: isOn(props.showWords) ? splitWords(asText(props.words, DEFAULT_HOW_THIS_STARTED_EYEBROW)) : [],
       readMore: isOn(props.readMore),
+      strip: stripTone(props.moreStrip),
     };
     return (
       <Section id="home-about-heading">
@@ -230,7 +231,7 @@ export function HomeWalksBlock(props: Record<string, unknown>) {
         )}
         title={asText(props.title, "Walks coming up, every week")}
       />
-      <MoreRows className={WALKS_GRID} columns={3} first={3} label="Walks coming up">
+      <MoreRows className={WALKS_GRID} columns={3} first={3} label="Walks coming up" tone={stripTone(props.moreStrip)}>
         {data.upcoming.slice(0, 6).map((walk, i, shownWalks) => (
           <Tile
             href={walk.href}
@@ -261,7 +262,7 @@ export function HomeExpectBlock(props: Record<string, unknown>) {
         rest={asText(props.rest, "for every age and every pace. No pressure, no judgement, just good company on the paths.")}
         title={asText(props.title, "What you can expect")}
       />
-      <MoreRows className={`${GALLERY_GRID_3} ${PHONE_LIST}`} columns={3} first={3} label="What you can expect">
+      <MoreRows className={`${GALLERY_GRID_3} ${PHONE_LIST}`} columns={3} first={3} label="What you can expect" tone={stripTone(props.moreStrip)}>
         {items.map((item, i) => (
           <li key={`${item.title}-${i}`}>
             <a>
@@ -291,7 +292,7 @@ export function HomeHowItWorksBlock(props: Record<string, unknown>) {
           rest={asText(props.rest, "that's all there is to it. The leader knows who's out walking, and you can look back on every walk you've done.")}
           title={asText(props.title, "How it works")}
         />
-        <MoreRows className={WALKS_GRID} columns={3} first={3} label="How it works">
+        <MoreRows className={WALKS_GRID} columns={3} first={3} label="How it works" tone={stripTone(props.moreStrip)}>
           {steps.map((step, i) => (
             <Tile
               key={`${step.title}-${i}`}
@@ -317,7 +318,7 @@ export function HomeGoalsBlock(props: Record<string, unknown>) {
         rest={asText(props.rest, "at whatever pace suits you. Members walk to get moving again, to feel better and to make friends.")}
         title={asText(props.title, "More than just a walking group")}
       />
-      <MoreRows className={WALKS_GRID} columns={3} first={3} label="Group goals">
+      <MoreRows className={WALKS_GRID} columns={3} first={3} label="Group goals" tone={stripTone(props.moreStrip)}>
         {items.map((goal, i) => (
           <Tile key={`${goal.title}-${i}`} phoneRow sub="A reason to walk" title={goal.title} visual={{ kind: "circle", icon: GOAL_ICONS[i % 4] }} />
         ))}
@@ -346,6 +347,7 @@ export function HomeReviewsBlock(props: Record<string, unknown>) {
     photos: isOn(props.photos),
     roles: isOn(props.roles),
     autoplay: props.autoplay === "on",
+    strip: stripTone(props.moreStrip),
   };
   return (
     <Section id="home-reviews-heading">
@@ -362,7 +364,7 @@ export function HomeReviewsBlock(props: Record<string, unknown>) {
       ) : look === "featured" ? (
         <QuotesFeaturedLook o={options} quotes={quotes} />
       ) : (
-        <ShadcnReviews readMore={options.readMore} testimonials={quotes} />
+        <ShadcnReviews readMore={options.readMore} testimonials={quotes} tone={options.strip} />
       )}
     </Section>
   );
@@ -403,6 +405,7 @@ export function HomeFaqBlock(props: Record<string, unknown>) {
       showMore={{
         on: props.showMore === "on",
         first: [3, 4, 5, 6, 8].includes(Number(props.showMoreFirst)) ? Number(props.showMoreFirst) : 5,
+        tone: stripTone(props.moreStrip),
       }}
       title={asText(props.title, "Frequently asked questions")}
     />

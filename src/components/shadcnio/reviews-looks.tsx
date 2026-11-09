@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { ChevronLeft, ChevronRight, Quote } from "lucide-react";
 import type { TestimonialView } from "@/lib/testimonials";
 import { cn } from "@/lib/utils";
+import { STRIP_BG, type StripTone } from "./more-rows";
 import { BUTTON_SMALL_OUTLINE } from "./parts";
 
 /**
@@ -32,6 +33,8 @@ export type QuotesOptions = {
   roles: boolean;
   /** Carousel: moves on to the next quote by itself. */
   autoplay: boolean;
+  /** The Read more strip's background. */
+  strip: StripTone;
 };
 
 const PAD = "px-5 md:px-12";
@@ -65,10 +68,10 @@ function Who({ review, o, size }: { review: TestimonialView; o: QuotesOptions; s
   );
 }
 
-/** Read more / Show less, in a white strip along the bottom (as the original). */
-function MoreStrip({ open, onToggle }: { open: boolean; onToggle: () => void }) {
+/** Read more / Show less, in a strip along the bottom (white or grey, as chosen). */
+function MoreStrip({ open, onToggle, tone }: { open: boolean; onToggle: () => void; tone: StripTone }) {
   return (
-    <div className="flex justify-center border-t bg-background px-5 py-3">
+    <div className={cn("flex justify-center border-t px-5 py-3", STRIP_BG[tone])}>
       <button aria-expanded={open} className={BUTTON_SMALL_OUTLINE} onClick={onToggle} type="button">
         {open ? "Show less" : "Read more"}
       </button>
@@ -177,7 +180,7 @@ export function QuotesRowsLook({ quotes, o }: { quotes: TestimonialView[]; o: Qu
           </blockquote>
         </figure>
       ))}
-      {more ? <MoreStrip onToggle={toggle} open={open} /> : null}
+      {more ? <MoreStrip onToggle={toggle} open={open} tone={o.strip} /> : null}
     </div>
   );
 }
@@ -220,7 +223,7 @@ export function QuotesFeaturedLook({ quotes, o }: { quotes: TestimonialView[]; o
           <blockquote className={cn(PAD, "py-5 text-pretty text-muted-foreground leading-relaxed md:py-7")}>“{review.quote}”</blockquote>
         </figure>
       ))}
-      {more ? <MoreStrip onToggle={toggle} open={open} /> : null}
+      {more ? <MoreStrip onToggle={toggle} open={open} tone={o.strip} /> : null}
     </div>
   );
 }

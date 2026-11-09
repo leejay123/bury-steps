@@ -2,6 +2,7 @@ import { ArrowRight, Heart, House, Sparkles, UsersRound, type LucideIcon } from 
 import { IntentLink as Link } from "@/components/intent-link";
 import { SectionTitle } from "@/components/section-title";
 import { cn } from "@/lib/utils";
+import { STRIP_BG, type StripTone } from "./more-rows";
 import { PillLink } from "./parts";
 
 /**
@@ -43,10 +44,12 @@ type AboutProps = {
   rest: string;
   words: string[];
   readMore: boolean;
+  /** The Read the full story strip's background (Story beside the heading). */
+  strip?: StripTone;
 };
 
 /** A: the heading and its words on the left, the story beside them, Read the full story along the bottom. */
-export function AboutSplitLook({ id, title, lead, rest, words, readMore }: AboutProps) {
+export function AboutSplitLook({ id, title, lead, rest, words, readMore, strip = "white" }: AboutProps) {
   return (
     <div className="grid lg:grid-cols-[26rem_minmax(0,1fr)]">
       {/* On a phone the words' last row sits on the column's own bottom line (no doubled line). */}
@@ -74,8 +77,11 @@ export function AboutSplitLook({ id, title, lead, rest, words, readMore }: About
         </div>
         {readMore ? (
           <Link
-            // A white strip, as every Read more's (grey only on hover).
-            className="flex items-center justify-between gap-3 border-t bg-background px-5 py-5 font-medium text-sm hover:bg-muted/50 md:px-12"
+            // White or grey, as chosen (a little darker on hover).
+            className={cn(
+              "flex items-center justify-between gap-3 border-t px-5 py-5 font-medium text-sm hover:bg-muted/50 md:px-12",
+              STRIP_BG[strip],
+            )}
             href="/about"
           >
             Read the full story

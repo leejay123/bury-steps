@@ -5,7 +5,7 @@ import type { TestimonialView } from "@/lib/testimonials";
 import { PHONE_REVIEW_LIST, REVIEW_GRID_3 } from "./grids";
 import { BUTTON_SMALL_OUTLINE } from "./parts";
 
-import { FILLER } from "./more-rows";
+import { FILLER, STRIP_BG, type StripTone } from "./more-rows";
 
 const FIRST = 3;
 const MAX = 6;
@@ -19,8 +19,11 @@ const COLUMNS = 3;
 export function ShadcnReviews({
   testimonials,
   readMore = true,
+  tone = "white",
 }: {
   testimonials: TestimonialView[];
+  /** The Read more strip's background. */
+  tone?: StripTone;
   /** Off: all of them (up to six) from the start, no Read more. */
   readMore?: boolean;
 }) {
@@ -69,7 +72,7 @@ export function ShadcnReviews({
         ))}
       </ul>
       {more ? (
-        <div className="flex justify-center border-t px-5 py-3">
+        <div className={`flex justify-center border-t px-5 py-3 ${STRIP_BG[tone]}`}>
           <button aria-expanded={open} className={BUTTON_SMALL_OUTLINE} onClick={() => setOpen(!open)} type="button">
             {open ? "Show less" : "Read more"}
           </button>

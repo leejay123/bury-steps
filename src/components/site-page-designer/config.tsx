@@ -42,6 +42,16 @@ const onOff = (label: string, onLabel = "Show", offLabel = "Hide") => ({
     { label: offLabel, value: "off" },
   ],
 });
+/** The strip a Read more / Show more sits in: white or light grey. */
+const stripField = (label = "Read more strip") => ({
+  type: "radio" as const,
+  label,
+  options: [
+    { label: "White", value: "white" },
+    { label: "Grey", value: "grey" },
+  ],
+});
+
 /** The settings without those in `drop` (they belong to another look). */
 function dropFields<F extends Record<string, unknown>>(fields: F, drop: string[]): F {
   return Object.fromEntries(Object.entries(fields).filter(([key]) => !drop.includes(key))) as F;
@@ -97,13 +107,17 @@ export const homePageConfig = {
         readMore: onOff("Read more button"),
         showWords: onOff("The three words"),
         words: text("The three words (split with ·)"),
+        moreStrip: stripField("Read the full story strip"),
       },
       // The three words only with the looks that show them.
       resolveFields: (data: { props: Record<string, unknown> }, { fields }: { fields: Record<string, unknown> }) => {
         const look = String(data.props.look ?? "original");
-        if (look === "original") return dropFields(fields, ["showWords", "words"]);
-        if (data.props.showWords === "off") return dropFields(fields, ["words"]);
-        return fields;
+        const drop: string[] = [];
+        if (look === "original") drop.push("showWords", "words");
+        else if (data.props.showWords === "off") drop.push("words");
+        // Only Story beside the heading has a strip (the others' Read more is a round button).
+        if (look !== "split" || data.props.readMore === "off") drop.push("moreStrip");
+        return dropFields(fields, drop);
       },
       render: HomeAboutBlock,
     },
@@ -111,6 +125,7 @@ export const homePageConfig = {
       label: "Walks coming up",
       permissions: keep,
       fields: {
+        moreStrip: stripField(),
         title: text("Heading"),
         rest: area("Line under the heading (the walk count stays automatic)"),
       },
@@ -120,6 +135,7 @@ export const homePageConfig = {
       label: "What you can expect",
       permissions: keep,
       fields: {
+        moreStrip: stripField(),
         title: text("Heading"),
         lead: text("Opening words"),
         rest: area("Rest of the intro"),
@@ -131,6 +147,7 @@ export const homePageConfig = {
       label: "How it works",
       permissions: keep,
       fields: {
+        moreStrip: stripField(),
         title: text("Heading"),
         lead: text("Opening words"),
         rest: area("Rest of the intro"),
@@ -148,6 +165,7 @@ export const homePageConfig = {
       label: "More than just a walking group",
       permissions: keep,
       fields: {
+        moreStrip: stripField(),
         title: text("Heading"),
         lead: text("Opening words"),
         rest: area("Rest of the intro"),
@@ -182,6 +200,7 @@ export const homePageConfig = {
         photos: onOff("Photos (or first letters)"),
         roles: onOff("The line under each name"),
         autoplay: onOff("Moves on by itself", "On", "Off"),
+        moreStrip: stripField(),
         title: text("Heading"),
         lead: text("Opening words"),
         rest: area("Rest of the intro"),
@@ -207,6 +226,7 @@ export const homePageConfig = {
         if (look === "original" || look === "featured") drop.push("first");
         if (look === "original") drop.push("photos", "roles");
         if (data.props.readMore === "off") drop.push("first");
+        if (look === "carousel" || data.props.readMore === "off") drop.push("moreStrip");
         return dropFields(fields, drop);
       },
       render: HomeReviewsBlock,
@@ -226,6 +246,7 @@ export const homePageConfig = {
           ],
         },
         showMore: onOff("Show more button (Search and topics)", "On", "Off"),
+        moreStrip: stripField("Show more strip"),
         showMoreFirst: {
           type: "select",
           label: "How many questions before Show more",
@@ -262,8 +283,8 @@ export const homePageConfig = {
       },
       // Show more is for the Search and topics look; its count only once it's on.
       resolveFields: (data: { props: Record<string, unknown> }, { fields }: { fields: Record<string, unknown> }) => {
-        if (data.props.look !== "search") return dropFields(fields, ["showMore", "showMoreFirst"]);
-        if (data.props.showMore !== "on") return dropFields(fields, ["showMoreFirst"]);
+        if (data.props.look !== "search") return dropFields(fields, ["showMore", "showMoreFirst", "moreStrip"]);
+        if (data.props.showMore !== "on") return dropFields(fields, ["showMoreFirst", "moreStrip"]);
         return fields;
       },
       render: HomeFaqBlock,
