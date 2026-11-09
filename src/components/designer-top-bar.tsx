@@ -107,11 +107,22 @@ export function DesignerTopBar({
     dispatch({ type: "setUi", ui: { viewports: { ...viewports, current: { width, height: "auto" } } } });
 
   return (
-    <div className="shrink-0 border-b bg-background">
+    <div
+      className="shrink-0 border-b bg-background"
+      // The page preview's width (Puck's middle column): the size buttons fill its
+      // right half, so their edge meets the line between Copy to and Preview.
+      style={
+        {
+          "--designer-frame": `calc(100% - var(--puck-pluginbar-width, 0px) - ${
+            ui.leftSideBarVisible ? "var(--puck-sidebar-left-width, 0px)" : "0px"
+          } - ${ui.rightSideBarVisible ? "var(--puck-sidebar-right-width, 0px)" : "0px"})`,
+        } as React.CSSProperties
+      }
+    >
       <div className="flex min-h-14 items-stretch">
         <button
           aria-label={closeLabel}
-          className="flex w-14 shrink-0 items-center justify-center border-r hover:bg-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-inset disabled:opacity-50"
+          className="flex w-(--puck-pluginbar-width,3.5rem) shrink-0 items-center justify-center border-r hover:bg-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-inset disabled:opacity-50"
           disabled={busy}
           onClick={onClose}
           type="button"
@@ -165,7 +176,11 @@ export function DesignerTopBar({
             );
           })}
         </div>
-        <div aria-label="Preview size" className="flex" role="group">
+        <div
+          aria-label="Preview size"
+          className="@container flex shrink-0 basis-[calc(var(--designer-frame)/2)]"
+          role="group"
+        >
           {SIZES.map((size) => {
             const on = viewports.current.width === size.width;
             const Icon = size.icon;
@@ -176,7 +191,7 @@ export function DesignerTopBar({
                 title={size.label}
                 className={cn(
                   SEGMENT,
-                  "gap-2 px-3 text-sm font-medium lg:px-4 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-inset",
+                  "min-w-0 flex-1 justify-center gap-2 px-3 text-sm font-medium focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-inset",
                   on ? "bg-accent text-accent-foreground" : "text-muted-foreground hover:bg-accent/60 hover:text-foreground",
                 )}
                 key={size.label}
@@ -184,19 +199,39 @@ export function DesignerTopBar({
                 type="button"
               >
                 <Icon aria-hidden className="size-4" />
-                <span className="hidden lg:inline">{size.label}</span>
+                {/* Words too when the half has room for them; just the icons when it doesn't. */}
+                <span className="hidden @[20rem]:inline">{size.label}</span>
               </button>
             );
           })}
         </div>
-        <div className={cn(SEGMENT, "gap-2 px-3 py-2 lg:px-4")}>
+        {/* Exactly over the settings panel while it shows, so the line beside
+            Publish runs straight down its edge. */}
+        <div
+          className={cn(
+            SEGMENT,
+            "gap-2 px-3 py-2 lg:px-4",
+            ui.rightSideBarVisible && "w-(--puck-sidebar-right-width) justify-end",
+          )}
+        >
           {secondary}
           <Button disabled={busy} onClick={() => void onPublish(appState.data)} size="sm" type="button">
             Publish
           </Button>
         </div>
       </div>
-      {strip ? <div className="flex flex-wrap items-stretch border-t bg-muted/30">{strip}</div> : null}
+      {/* The strip's first tool spans the Blocks rail and left panel, its last sits over
+          the settings panel, so its lines carry on down the panels' edges (globals.css). */}
+      {strip ? (
+        <div
+          className="flex items-stretch border-t bg-muted/30"
+          data-designer-strip=""
+          data-left={ui.leftSideBarVisible ? "on" : "off"}
+          data-right={ui.rightSideBarVisible ? "on" : "off"}
+        >
+          {strip}
+        </div>
+      ) : null}
     </div>
   );
 }
@@ -204,7 +239,7 @@ export function DesignerTopBar({
 /** One labelled tool in the strip: a full-height segment, sharing the row equally. */
 export function DesignerStripItem({ children, first, label }: { children: ReactNode; first?: boolean; label: string }) {
   return (
-    <div className={cn("flex min-h-12 min-w-52 flex-1 items-center gap-3 px-4", !first && "border-l")}>
+    <div className={cn("flex min-h-12 min-w-0 flex-1 items-center gap-3 px-4", !first && "border-l")}>
       <span className="shrink-0 text-xs text-muted-foreground">{label}</span>
       <div className="min-w-0 flex-1">{children}</div>
     </div>

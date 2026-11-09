@@ -1221,6 +1221,46 @@ html[data-page-kind="home"] #main-content {
   --puck-radius-l: var(--radius);
 }
 
+/* The walk designer's second top row (For, Copy to, Preview, Clocked in): its first tool
+   spans the Blocks rail and the left panel, its last sits exactly over the settings
+   panel, so the row's lines run straight on down the panels' edges. Puck's column
+   widths are CSS variables on its layout, which the top bar sits inside. */
+[data-designer] [data-designer-strip][data-left="on"] > :first-child {
+  flex: 0 0 calc(var(--puck-pluginbar-width) + var(--puck-sidebar-left-width));
+}
+[data-designer] [data-designer-strip][data-right="on"] > :last-child {
+  flex: 0 0 var(--puck-sidebar-right-width);
+}
+
+/* The settings' choice boxes (Yes / No, and longer ones that wrap onto a second row):
+   Puck draws a line on each choice's right, which leaves a stray line and a gap once
+   they wrap. Instead each choice draws its line along its top and left, outside it,
+   and the box clips the outer ones off under its own border, so every row and column
+   is split by one line wherever they wrap. */
+[data-designer] [class*="_Input-radioGroupItems_"] {
+  overflow: hidden;
+}
+[data-designer] [class*="_Input-radio_"] {
+  border: 0 !important;
+  border-radius: 0 !important;
+  box-shadow:
+    calc(-1 * var(--_puck-field-radio-border-width, 1px)) 0 0 0 var(--_puck-field-radio-border-color, var(--border)),
+    0 calc(-1 * var(--_puck-field-radio-border-width, 1px)) 0 0 var(--_puck-field-radio-border-color, var(--border));
+}
+[data-designer] [class*="_Input-radio_"] [class*="_Input-radioInner_"] {
+  border-radius: 0 !important;
+  height: 100%;
+}
+/* The keyboard outline inside the box, so its clipping doesn't hide it. */
+[data-designer] [class*="_Input-radio_"]:has(:focus-visible) {
+  outline-offset: calc(-1 * var(--puck-border-width-focus, 2px));
+}
+/* Dropdowns: room for the arrow, so a long choice stops short of it. */
+[data-designer] select[class*="_Input-input_"] {
+  padding-right: 2.5rem;
+  text-overflow: ellipsis;
+}
+
 /* A designer panel can't be dragged wider than 360px (left) / 420px (right), or about a
    third of the window: Puck sets no limit, and the layout grid takes the dragged width
    live, so the cap goes here (the top bar also puts a saved width back). */

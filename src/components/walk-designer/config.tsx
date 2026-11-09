@@ -676,11 +676,11 @@ const FOLDS: {
     main: [
       "showTitle",
       "titleLook",
+      "countdownStyle",
       "titleParts",
       "titleExtrasAt",
       "clockinLook",
       "countdownLook",
-      "countdownStyle",
       "peopleLook",
       "createdByLook",
       "showActions",
@@ -943,6 +943,8 @@ function hiddenDetailsSettings(props: DetailsProps): Set<string> {
   if (!inTitle("clockin")) hide.add("clockinLook");
   if (!inTitle("countdown")) hide.add("countdownLook");
   if (!inTitle("people")) hide.add("peopleLook");
+  // The live countdown is the status band's: its style only with that title look.
+  if (!String(props.titleLook ?? "").startsWith("band")) hide.add("countdownStyle");
   if (!inTitle("clockin") && !inTitle("countdown")) hide.add("titleExtrasAt");
   // Ribbon
   if (!props.ribbon || props.ribbon === "none") {
@@ -2419,6 +2421,15 @@ export const walkDesignConfig: Config = {
         const props: Record<string, unknown> = { ...data.props };
         if (!Array.isArray(props.titleParts))
           props.titleParts = titlePartsOf(props).map((part) => ({ part }));
+        // The status band always has its live countdown now (Nov 2026), so a
+        // Countdown set to show "In the status band" drew nothing of its own:
+        // it leaves the list, and the look goes back to a plain line.
+        if (props.countdownLook === "band") {
+          props.titleParts = (props.titleParts as { part?: string }[]).filter(
+            (item) => item.part !== "countdown",
+          );
+          props.countdownLook = "line";
+        }
         // Each part's Space above it always shows a size: parts saved with
         // "as the title box's gaps" (or none) get that gap's size.
         const gapSize =
@@ -2455,10 +2466,24 @@ export const walkDesignConfig: Config = {
           ["tabletFactsArrange", tabletLook],
           ["phoneFactsArrange", phoneLook],
         ]);
+        // Its heading names only what's in the title box list.
+        if (shown.titleExtrasAt) {
+          const parts = titlePartsOf(props);
+          const clockin = parts.includes("clockin");
+          const countdown = parts.includes("countdown");
+          shown.titleExtrasAt = {
+            ...shown.titleExtrasAt,
+            label:
+              clockin && countdown
+                ? "Where Your clock-in and Countdown sit"
+                : clockin
+                  ? "Where Your clock-in sits"
+                  : "Where the Countdown sits",
+          };
+        }
         // Only the choices that apply to what's picked elsewhere.
         const band = String(props.titleLook ?? "").startsWith("band");
         keepOptions(shown, "titleMessages", (v) => v !== "in-band" || band);
-        keepOptions(shown, "countdownLook", (v) => v !== "band" || band);
         const mapOn =
           Boolean(props.map && props.map !== "none") ||
           titlePartsOf(props).includes("map");
@@ -2693,7 +2718,7 @@ export const walkDesignConfig: Config = {
         },
         titleExtrasAt: {
           type: "radio",
-          label: "Your clock-in and Countdown go",
+          label: "Where Your clock-in and Countdown sit",
           options: options([
             ["list", "In the list's order"],
             ["under-name", "Right under the name (with Created by, in the list's order)"],
@@ -2746,7 +2771,7 @@ export const walkDesignConfig: Config = {
         },
         countdownStyle: {
           type: "select",
-          label: "Countdown style (the status band's live countdown)",
+          label: "Status band countdown style",
           options: options([
             ["digital", "Digital (01:49:21)"],
             ["narrow", "Narrow (1h 49m 21s)"],
@@ -2765,7 +2790,6 @@ export const walkDesignConfig: Config = {
             ["bar", "Grey bar down the side"],
             ["big", "Big number"],
             ["dashed", "Dashed grey box"],
-            ["band", "In the status band (… · 7 days to go)"],
           ]),
         },
         titleBox: boxField("Box around the title (name, status, Manage)"),
