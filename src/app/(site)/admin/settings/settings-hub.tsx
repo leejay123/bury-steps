@@ -143,7 +143,7 @@ function ExpandableRow({
         <ChevronDown
           aria-hidden
           className={cn(
-            "mt-2.5 size-4 shrink-0 text-muted-foreground transition-transform",
+            "mt-2.5 size-4 shrink-0 text-muted-foreground",
             expanded && "rotate-180",
           )}
         />

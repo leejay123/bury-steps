@@ -176,7 +176,7 @@ export function DesignerTopBar({
             ) : null}
             <ChevronDown
               aria-hidden
-              className={cn("size-3.5 shrink-0 text-muted-foreground transition-transform", viewOpen && "rotate-180")}
+              className={cn("size-3.5 shrink-0 text-muted-foreground", viewOpen && "rotate-180")}
             />
           </button>
         </PopoverTrigger>

@@ -1861,7 +1861,7 @@ function FoldingView({
           {icon === "plus" ? (
             <span
               aria-hidden
-              className="text-muted-foreground transition-transform duration-200"
+              className="text-muted-foreground"
               data-plus=""
             >
               <Plus className="size-4" />

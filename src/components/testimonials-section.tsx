@@ -102,7 +102,7 @@ export function TestimonialsSection({
             {expanded ? "See less" : "See more"}
             <ChevronDownIcon
               aria-hidden
-              className={cn("size-4 transition-transform duration-300", expanded && "rotate-180")}
+              className={cn("size-4", expanded && "rotate-180")}
             />
           </button>
         </div>

@@ -171,9 +171,12 @@ function SelectTrigger({
         type="button"
       >
         {children}
+        {/* Flips at once, no spin: on iPhone Safari a spinning arrow made the
+            row under the toolbar jump a dot as the menu opened and closed
+            (found on an iPhone 16 Pro Max, Nov 2026). */}
         <ChevronDownIcon
           className={cn(
-            "shrink-0 text-muted-foreground transition-transform duration-200 group-hover:text-foreground",
+            "shrink-0 text-muted-foreground group-hover:text-foreground",
             open && "rotate-180",
           )}
         />

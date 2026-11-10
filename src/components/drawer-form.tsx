@@ -128,7 +128,7 @@ export function MoreOptions({
       <summary className="inline-flex cursor-pointer list-none items-center gap-1.5 rounded-md py-1 text-sm font-medium text-muted-foreground hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring [&::-webkit-details-marker]:hidden">
         <ChevronDown
           aria-hidden
-          className="size-4 transition-transform group-open/more:rotate-180 motion-reduce:transition-none"
+          className="size-4 group-open/more:rotate-180"
         />
         {label}
       </summary>

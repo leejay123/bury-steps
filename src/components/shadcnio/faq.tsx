@@ -120,7 +120,7 @@ export function ShadcnFaq({
                             <span className="flex-1 text-pretty font-medium text-base leading-snug tracking-tight md:text-lg">{faq.question}</span>
                             <Plus
                               aria-hidden
-                              className="size-4 shrink-0 self-center text-muted-foreground transition-transform duration-200 group-hover/accordion-trigger:text-foreground group-aria-expanded/accordion-trigger:rotate-45 motion-reduce:transition-none"
+                              className="size-4 shrink-0 self-center text-muted-foreground group-hover/accordion-trigger:text-foreground group-aria-expanded/accordion-trigger:rotate-45"
                             />
                           </button>
                         </h3>

@@ -60,7 +60,7 @@ export function WalkDescription({
       type="button"
     >
       {expanded ? "Show less" : "Read more"}
-      <ChevronDown className={cn("size-4 transition-transform duration-200", expanded && "rotate-180")} />
+      <ChevronDown className={cn("size-4", expanded && "rotate-180")} />
     </button>
   );
   return (
