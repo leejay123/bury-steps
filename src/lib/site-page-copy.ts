@@ -387,7 +387,7 @@ export const TERMS_SECTIONS: { title: string; body: string }[] = [
   },
 ];
 
-type LegalHeroIcon = "about" | "privacy" | "terms" | "how" | "expect" | "rules" | "essentials";
+type LegalHeroIcon = "about" | "privacy" | "terms" | "how" | "expect" | "rules" | "essentials" | "charity";
 
 function seedLegalPage(opts: {
   title: string;
@@ -399,6 +399,8 @@ function seedLegalPage(opts: {
   sections: { title: string; body: string }[];
   docs?: "legal" | "guide";
   updated?: string;
+  /** The closing's button (Ask a question → /contact when left out). */
+  button?: { label: string; href: string };
 }): PuckData {
   return puckPage([
     puckBlock("LegalHero", 1, {
@@ -411,7 +413,10 @@ function seedLegalPage(opts: {
       docs: opts.docs ?? "legal",
     }),
     ...opts.sections.map((section, i) => puckBlock("LegalSection", i + 2, section)),
-    puckBlock("LegalClosing", opts.sections.length + 2, { closing: opts.closing }),
+    puckBlock("LegalClosing", opts.sections.length + 2, {
+      closing: opts.closing,
+      ...(opts.button ? { buttonLabel: opts.button.label, buttonHref: opts.button.href } : {}),
+    }),
   ]);
 }
 
@@ -659,4 +664,75 @@ export function seedWalkEssentialsDesign(): PuckData {
     }),
     puckBlock("LegalClosing", 6, { closing: "Not sure what to bring? Ask us." }),
   ]);
+}
+
+/** The group's easyfundraising page (Charity of the Year). */
+export const EASYFUNDRAISING_URL = "https://www.easyfundraising.org.uk/causes/bury-steps-walking-group";
+
+/** Charity of the Year: our easyfundraising page, explained (the organisers' own words). */
+export function seedCharityDesign(): PuckData {
+  return seedLegalPage({
+    title: "Charity of the Year",
+    lead: "Support our Charity of the Year fund.",
+    rest: "We’ve partnered with easyfundraising, so your everyday online shopping turns into free donations for our chosen charity.",
+    icon: "charity",
+    current: "/charity-of-the-year",
+    closing: "Together, one walk and one click at a time, we can make a real difference.",
+    docs: "guide",
+    updated: "",
+    button: { label: "Join our easyfundraising page", href: EASYFUNDRAISING_URL },
+    sections: [
+      {
+        title: "Why we’ve partnered",
+        body: "At Bury Steps Walking Group, we’re always looking for simple ways to make a real difference to our chosen Charity of the Year. That’s why we’ve partnered with easyfundraising, a brilliant platform that turns your everyday online shopping into free donations for our annual charity fund.",
+      },
+      {
+        title: "What is easyfundraising?",
+        body: [
+          "easyfundraising works with thousands of well-known online retailers, from supermarkets and travel companies to clothing stores and DIY suppliers. When you shop online through easyfundraising, the retailer makes a donation to your chosen cause at no extra cost to you.",
+          "You pay exactly the same price as normal, but a percentage of your purchase is donated by the retailer.",
+        ].join("\n\n"),
+      },
+      {
+        title: "How it helps the group",
+        body: [
+          "Every member who signs up through our easyfundraising page helps us grow our fundraising potential. Each time a member shops online with a participating retailer:",
+          list([
+            "The retailer donates to our cause.",
+            "The donation goes into the Bury Steps Walking Group Charity of the Year fund.",
+            "The shopper pays nothing extra.",
+            "The charity benefits from money that might otherwise never have been raised.",
+          ]),
+          "Over time, these donations can build into significant amounts that help us support worthwhile local causes.",
+        ].join("\n\n"),
+      },
+      {
+        title: "How it works",
+        body: [
+          list([
+            "**Join** [our easyfundraising page](" + EASYFUNDRAISING_URL + ").",
+            "**Visit** your chosen retailer from the easyfundraising website, app or Donation Reminder.",
+            "**Shop** as normal.",
+            "**The retailer** tracks your purchase and sends a donation to our cause.",
+          ]),
+          "The retailer only knows to make a donation if you visit them through easyfundraising, which is why using the website, app or browser reminder is so important.",
+        ].join("\n\n"),
+      },
+      {
+        title: "Shop as normal, raise funds for free",
+        body: [
+          "Whether you’re buying:",
+          list(["Groceries", "Insurance", "Holidays", "Walking gear", "Gifts", "Home improvements", "Everyday essentials"]),
+          "you could be raising money for charity without spending a penny more than you already planned to. You can shop from your phone, tablet, laptop or desktop computer, making it easy to support our fundraising wherever you are.",
+        ].join("\n\n"),
+      },
+      {
+        title: "Join us today",
+        body: [
+          "The more members who join, the more opportunities we have to raise valuable funds for our Charity of the Year. Even a few regular online purchases across our membership can generate meaningful donations throughout the year.",
+          "If you’re a member of Bury Steps Walking Group, or would simply like to support the work we do in the community, please consider [signing up through our easyfundraising page](" + EASYFUNDRAISING_URL + ") and making your everyday shopping count.",
+        ].join("\n\n"),
+      },
+    ],
+  });
 }

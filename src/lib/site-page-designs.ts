@@ -12,6 +12,7 @@ export const SITE_PAGE_KEYS = [
   "whatToExpect",
   "groupRules",
   "walkEssentials",
+  "charity",
 ] as const;
 export type SitePageKey = (typeof SITE_PAGE_KEYS)[number];
 
@@ -31,6 +32,7 @@ export const SITE_PAGES: {
   { key: "whatToExpect", title: "What to expect", path: "/what-to-expect", description: "What a walk with the group is like." },
   { key: "groupRules", title: "Group rules", path: "/group-rules", description: "The simple rules that keep the group kind." },
   { key: "walkEssentials", title: "Walk essentials", path: "/walk-essentials", description: "What each walk page tells you before you set off." },
+  { key: "charity", title: "Charity of the Year", path: "/charity-of-the-year", description: "Our Charity of the Year fund and easyfundraising." },
 ];
 
 export function isSitePageKey(value: string): value is SitePageKey {

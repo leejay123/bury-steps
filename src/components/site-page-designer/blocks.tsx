@@ -1,6 +1,6 @@
 "use client";
 
-import { Fragment, createElement } from "react";
+import { createElement, type ReactNode } from "react";
 import { IntentLink as Link } from "@/components/intent-link";
 import {
   Apple,
@@ -10,6 +10,7 @@ import {
   CalendarDays,
   Check,
   Footprints,
+  HandHeart,
   Handshake,
   Heart,
   History,
@@ -75,6 +76,7 @@ import type { FaqCategoryView, FaqView } from "@/lib/faqs";
 import type { TestimonialView } from "@/lib/testimonials";
 import { essentialIcon } from "@/lib/walk-essentials";
 import { BodyText } from "./body-text";
+import { CountsText } from "./counts-text";
 import { useSitePageLive } from "./live";
 
 const number = new Intl.NumberFormat("en-GB");
@@ -106,16 +108,23 @@ function asItems(value: unknown): { title: string; sub?: string }[] {
   });
 }
 
-export function HomeHeroBlock(props: Record<string, unknown>) {
-  const { data, logo, joinHref } = useSitePageLive();
-  const places = [
+/** Up to four short place names (Bury first), as the hero lists them. */
+function heroPlaces(places: { name: string }[]): string[] {
+  return [
     "Bury",
-    ...data.places
+    ...places
       .map((place) => tidyPlace(place.name))
       .filter((name) => name.length >= 3 && name.length <= 14 && !/^(bury|test)\b/i.test(name) && /[aeiou]/i.test(name)),
   ]
     .filter((name, i, all) => all.indexOf(name) === i)
     .slice(0, 4);
+}
+
+export function HomeHeroBlock(props: Record<string, unknown>) {
+  const { data, logo, joinHref } = useSitePageLive();
+  const places = heroPlaces(data.places);
+  const counts = { upcoming: data.upcomingCount, members: data.members, walks: data.walksThisYear, places };
+  const numbers = asText(props.numbers).trim();
   return (
     <section aria-labelledby="home-heading" className="border-t first-of-type:border-t-0">
       <div
@@ -147,23 +156,24 @@ export function HomeHeroBlock(props: Record<string, unknown>) {
             <br className="max-sm:hidden" /> {asText(props.headingRest, "all of Bury steps out with.")}
           </h1>
           <p className="max-w-2xl text-muted-foreground sm:text-lg md:text-xl text-balance">
-            <span className="font-medium text-foreground">
-              {number.format(data.upcomingCount)} upcoming walks, {number.format(data.members)} members and{" "}
-              {number.format(data.walksThisYear)} walks so far
-            </span>{" "}
-            around{" "}
-            {places.map((place, i) => (
-              <Fragment key={place}>
-                <span className="whitespace-nowrap font-medium text-foreground">
-                  <MapPin aria-hidden className="inline-block shrink-0 align-middle me-1 size-[1.05em] -translate-y-[0.1em]" />
-                  {place}
-                </span>
-                {i < places.length - 2 ? ", " : i === places.length - 2 ? " and " : ""}
-              </Fragment>
-            ))}
-            .{" "}
-            <span data-guest-home="">{asText(props.guestClose, "Join for free, and clock in on the day of the walk.")}</span>
-            <span data-member-home="">{asText(props.memberClose, "Pick your next walk, and clock in when you get there.")}</span>
+            {numbers ? (
+              // Their own sentence, with the live numbers put in ({upcoming}, {members}, {walks}, {places}).
+              <CountsText counts={counts} text={numbers} />
+            ) : (
+              <>
+                <span className="font-medium text-foreground">
+                  {number.format(data.upcomingCount)} upcoming walks, {number.format(data.members)} members and{" "}
+                  {number.format(data.walksThisYear)} walks so far
+                </span>{" "}
+                around <CountsText counts={counts} text="{places}" />.
+              </>
+            )}{" "}
+            <span data-guest-home="">
+              <CountsText counts={counts} text={asText(props.guestClose, "Join for free, and clock in on the day of the walk.")} />
+            </span>
+            <span data-member-home="">
+              <CountsText counts={counts} text={asText(props.memberClose, "Pick your next walk, and clock in when you get there.")} />
+            </span>
           </p>
         </div>
         <div className="flex flex-wrap justify-center gap-2">
@@ -234,16 +244,22 @@ export function HomeAboutBlock(props: Record<string, unknown>) {
 export function HomeWalksBlock(props: Record<string, unknown>) {
   const { data } = useSitePageLive();
   const walksLook = isWalksLook(props.look) ? props.look : "original";
+  const counts = { upcoming: data.upcomingCount, members: data.members, walks: data.walksThisYear, places: heroPlaces(data.places) };
   return (
     <Section id="home-walks-heading">
       <SectionHead
         action={{ href: "/walks", label: "See all walks" }}
         id="home-walks-heading"
-        lead={`${number.format(data.upcomingCount)} walks on the calendar,`}
-        rest={asText(
-          props.rest,
-          "each one led by a volunteer walk leader, with the meeting point, distance and grade. Members see every detail and clock in on the day.",
-        )}
+        lead={<CountsText counts={counts} text={asText(props.lead).trim() || "{upcoming} walks on the calendar,"} />}
+        rest={
+          <CountsText
+            counts={counts}
+            text={asText(
+              props.rest,
+              "each one led by a volunteer walk leader, with the meeting point, distance and grade. Members see every detail and clock in on the day.",
+            )}
+          />
+        }
         title={asText(props.title, "Walks coming up, every week")}
       />
       {walksLook === "rows" ? (
@@ -529,7 +545,7 @@ export function HomeCtaBlock(props: Record<string, unknown>) {
   );
 }
 
-const LEGAL_ICONS: ShadcnLegalIcon[] = ["about", "privacy", "terms", "how", "expect", "rules", "essentials"];
+const LEGAL_ICONS: ShadcnLegalIcon[] = ["about", "privacy", "terms", "how", "expect", "rules", "essentials", "charity"];
 
 export function LegalHeroBlock(props: Record<string, unknown>) {
   const iconName = asText(props.icon);
@@ -575,13 +591,112 @@ export function LegalSectionBlock(props: Record<string, unknown>) {
 }
 
 export function LegalClosingBlock(props: Record<string, unknown>) {
+  const label = asText(props.buttonLabel).trim();
+  const href = asText(props.buttonHref).trim();
   return (
     <div className="px-5 md:px-12 flex flex-col items-center gap-6 py-14 text-center md:py-20">
       <p className="max-w-2xl text-pretty text-muted-foreground md:text-lg">{asText(props.closing)}</p>
-      <Link className={BUTTON_OUTLINE} href="/contact">
-        Ask a question
-      </Link>
+      {label && href ? (
+        <SmartLink className={`${BUTTON_PRIMARY} gap-2`} href={href}>
+          {label}
+          <ArrowRight aria-hidden className="size-4 rtl:rotate-180" />
+        </SmartLink>
+      ) : (
+        <Link className={BUTTON_OUTLINE} href="/contact">
+          Ask a question
+        </Link>
+      )}
     </div>
+  );
+}
+
+/** A site page (/…) as a page link; any other address opens in a new tab. */
+function SmartLink({ href, className, children }: { href: string; className?: string; children: ReactNode }) {
+  if (href.startsWith("/")) {
+    return (
+      <Link className={className} href={href}>
+        {children}
+      </Link>
+    );
+  }
+  return (
+    <a className={className} href={href} rel="noopener noreferrer" target="_blank">
+      {children}
+    </a>
+  );
+}
+
+/** Charity of the Year on the homepage: words beside two big links (the CTA's split shape), or centred. */
+export function HomeCharityBlock(props: Record<string, unknown>) {
+  const eyebrow = asText(props.eyebrow, "Charity of the Year");
+  const title = asText(props.title, "Shop online, raise money for free");
+  const body = asText(
+    props.text,
+    "We’ve partnered with **easyfundraising**: thousands of shops donate to our Charity of the Year fund when you shop through it, at no extra cost to you.",
+  );
+  const buttonLabel = asText(props.buttonLabel, "Join our easyfundraising page");
+  const buttonHref = asText(props.buttonHref, "https://www.easyfundraising.org.uk/causes/bury-steps-walking-group").trim();
+  const moreLabel = asText(props.moreLabel, "How it works");
+  const moreHref = asText(props.moreHref, "/charity-of-the-year").trim();
+  const centred = props.look === "centred";
+  const heading = (
+    <>
+      <p className="flex items-center gap-2 font-medium text-sm">
+        <HandHeart aria-hidden className="size-4 text-muted-foreground" />
+        {eyebrow}
+      </p>
+      <h2 className="text-balance font-semibold text-3xl leading-[1.1] tracking-tighter md:text-4xl" id="home-charity-heading">
+        {title}
+      </h2>
+      <div className="max-w-xl text-pretty text-muted-foreground md:text-lg [&_strong]:font-medium [&_strong]:text-foreground [&_a]:text-foreground [&_a]:underline [&_a]:underline-offset-4">
+        <BodyText text={body} />
+      </div>
+    </>
+  );
+  if (centred) {
+    return (
+      <Section id="home-charity-heading">
+        <div className="px-5 md:px-12 flex flex-col items-center gap-4 py-14 text-center md:py-20">
+          {heading}
+          <div className="mt-2 flex flex-wrap justify-center gap-2">
+            {buttonLabel && buttonHref ? (
+              <SmartLink className={`${BUTTON_PRIMARY} gap-2`} href={buttonHref}>
+                {buttonLabel}
+                <ArrowRight aria-hidden className="size-4 rtl:rotate-180" />
+              </SmartLink>
+            ) : null}
+            {moreLabel && moreHref ? (
+              <SmartLink className={BUTTON_OUTLINE} href={moreHref}>
+                {moreLabel}
+              </SmartLink>
+            ) : null}
+          </div>
+        </div>
+      </Section>
+    );
+  }
+  const row = "px-5 md:px-12 flex flex-1 items-center justify-between gap-4 py-7 font-semibold text-lg lg:px-10";
+  return (
+    <Section id="home-charity-heading">
+      <div className="grid lg:grid-cols-[minmax(0,1fr)_26rem]">
+        <div className="px-5 md:px-12 flex flex-col justify-center gap-4 border-b py-14 lg:border-e lg:border-b-0 lg:py-20">{heading}</div>
+        <div className="flex flex-col">
+          {buttonLabel && buttonHref ? (
+            <SmartLink className={`${row} bg-foreground text-background hover:bg-foreground/90`} href={buttonHref}>
+              {buttonLabel}
+              <ArrowRight aria-hidden className="size-5 shrink-0 rtl:rotate-180" />
+            </SmartLink>
+          ) : null}
+          {buttonLabel && buttonHref && moreLabel && moreHref ? <span className="border-t" /> : null}
+          {moreLabel && moreHref ? (
+            <SmartLink className={`${row} hover:bg-muted/50`} href={moreHref}>
+              {moreLabel}
+              <ArrowRight aria-hidden className="size-5 shrink-0 rtl:rotate-180" />
+            </SmartLink>
+          ) : null}
+        </div>
+      </div>
+    </Section>
   );
 }
 

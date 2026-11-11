@@ -25,6 +25,8 @@ export const PUBLIC_ROUTE_PATTERNS = [
   "/what-to-expect",
   "/group-rules",
   "/walk-essentials",
+  // Charity of the Year (easyfundraising), public like the guide pages.
+  "/charity-of-the-year",
   // Saved page the service worker shows when a walk page can't be reached.
   "/offline",
   // The service worker itself (phone alerts and offline walk pages).
@@ -100,6 +102,7 @@ export const APP_TOP_LEVEL_SEGMENTS = [
   "apple-icon.png",
   "about",
   "apps",
+  "charity-of-the-year",
   "contact",
   "dashboard",
   "email-preferences",

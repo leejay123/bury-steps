@@ -1,13 +1,13 @@
 import type { ReactNode } from "react";
 import Link from "next/link";
-import { ArrowRight, Backpack, ChevronRight, Footprints, ListChecks, Mail, Route, Scale, ShieldCheck, Smile } from "lucide-react";
+import { ArrowRight, Backpack, ChevronRight, Footprints, HandHeart, ListChecks, Mail, Route, Scale, ShieldCheck, Smile } from "lucide-react";
 import { BUTTON_OUTLINE, Guides, Section, Tile } from "./parts";
 import { HeroField } from "./ascii-field";
 import { PageKindMark } from "./page-kind";
 
 export type ShadcnLegalSection = { id: string; title: string; content: ReactNode };
 
-export type ShadcnLegalIcon = "terms" | "privacy" | "about" | "how" | "expect" | "rules" | "essentials";
+export type ShadcnLegalIcon = "terms" | "privacy" | "about" | "how" | "expect" | "rules" | "essentials" | "charity";
 
 /** Which row of tiles sits under the hero: the policies, or the guide pages. */
 export type ShadcnLegalDocs = "legal" | "guide";
@@ -35,6 +35,7 @@ const ICON = {
   expect: Smile,
   rules: ListChecks,
   essentials: Backpack,
+  charity: HandHeart,
 } as const;
 
 const HERO_WORD = {
@@ -45,6 +46,7 @@ const HERO_WORD = {
   expect: "WELCOME",
   rules: "RULES",
   essentials: "ESSENTIALS",
+  charity: "CHARITY",
 } as const;
 
 /**

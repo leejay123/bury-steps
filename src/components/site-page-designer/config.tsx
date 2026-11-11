@@ -8,6 +8,7 @@ import {
   ContactFormBlock,
   ContactHeroBlock,
   HomeAboutBlock,
+  HomeCharityBlock,
   HomeCtaBlock,
   HomeExpectBlock,
   HomeFaqBlock,
@@ -21,6 +22,7 @@ import {
   LegalSectionBlock,
   WalkEssentialsListBlock,
 } from "./blocks";
+import { countsField } from "./counts-field";
 
 const text = (label: string) => ({ type: "text" as const, label });
 const area = (label: string) => ({ type: "textarea" as const, label });
@@ -70,6 +72,7 @@ export const homePageConfig = {
         "HomeGoals",
         "HomeReviews",
         "HomeFaq",
+        "HomeCharity",
         "HomeCta",
       ],
     },
@@ -84,8 +87,12 @@ export const homePageConfig = {
         headingWord: text("Word beside the logo"),
         headingAfter: text("Heading after the logo word"),
         headingRest: text("Second line of the heading"),
-        guestClose: area("Line for visitors (signed out)"),
-        memberClose: area("Line for members (signed in)"),
+        numbers: countsField(
+          "Numbers line",
+          "**{upcoming} upcoming walks, {members} members and {walks} walks so far** around {places}.",
+        ),
+        guestClose: countsField("Line for visitors (signed out)", "Join for free, and clock in on the day of the walk."),
+        memberClose: countsField("Line for members (signed in)", "Pick your next walk, and clock in when you get there."),
       },
       render: HomeHeroBlock,
     },
@@ -137,7 +144,11 @@ export const homePageConfig = {
         },
         moreStrip: stripField(),
         title: text("Heading"),
-        rest: area("Line under the heading (the walk count stays automatic)"),
+        lead: countsField("Start of the line (in full colour)", "{upcoming} walks on the calendar,", false),
+        rest: countsField(
+          "Rest of the line",
+          "each one led by a volunteer walk leader, with the meeting point, distance and grade. Members see every detail and clock in on the day.",
+        ),
       },
       // The next-walk look shows four walks, no Read more strip.
       resolveFields: (data: { props: Record<string, unknown> }, { fields }: { fields: Record<string, unknown> }) =>
@@ -325,6 +336,37 @@ export const homePageConfig = {
       },
       render: HomeFaqBlock,
     },
+    HomeCharity: {
+      label: "Charity of the Year",
+      fields: {
+        look: {
+          type: "select",
+          label: "Look",
+          options: [
+            { value: "split", label: "Words beside two big links" },
+            { value: "centred", label: "Centred, with buttons" },
+          ],
+        },
+        eyebrow: text("Small line above the heading"),
+        title: text("Heading"),
+        text: area("Words (**bold**, [link](url))"),
+        buttonLabel: text("Main button words"),
+        buttonHref: text("Main button link"),
+        moreLabel: text("Second button words (empty hides it)"),
+        moreHref: text("Second button link"),
+      },
+      defaultProps: {
+        look: "split",
+        eyebrow: "Charity of the Year",
+        title: "Shop online, raise money for free",
+        text: "We’ve partnered with **easyfundraising**: thousands of shops donate to our Charity of the Year fund when you shop through it, at no extra cost to you.",
+        buttonLabel: "Join our easyfundraising page",
+        buttonHref: "https://www.easyfundraising.org.uk/causes/bury-steps-walking-group",
+        moreLabel: "How it works",
+        moreHref: "/charity-of-the-year",
+      },
+      render: HomeCharityBlock,
+    },
     HomeCta: {
       label: "Come for a walk",
       permissions: keep,
@@ -375,6 +417,7 @@ export const legalPageConfig = {
             { label: "What to expect", value: "expect" },
             { label: "Group rules", value: "rules" },
             { label: "Walk essentials", value: "essentials" },
+            { label: "Charity of the Year", value: "charity" },
           ],
         },
         docs: {
@@ -410,7 +453,11 @@ export const legalPageConfig = {
     LegalClosing: {
       label: "Closing",
       permissions: keep,
-      fields: { closing: area("Closing line") },
+      fields: {
+        closing: area("Closing line"),
+        buttonLabel: text("Button words (empty: Ask a question)"),
+        buttonHref: text("Button link (a page like /walks, or a full web address)"),
+      },
       render: LegalClosingBlock,
     },
   },

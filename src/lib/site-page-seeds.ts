@@ -15,6 +15,7 @@ import {
 import {
   seedAboutDesign,
   seedAppsDesign,
+  seedCharityDesign,
   seedContactDesign,
   seedGroupRulesDesign,
   seedHomeDesign,
@@ -91,6 +92,7 @@ export async function seedForPage(page: SitePageKey): Promise<PuckData> {
       rules: theme.aboutRules,
     });
   }
+  if (page === "charity") return seedCharityDesign();
   return seedWalkEssentialsDesign();
 }
 
