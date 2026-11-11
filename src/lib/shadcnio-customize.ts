@@ -49,13 +49,13 @@ export const RADII = [
 ] as const;
 
 export type Customize = { theme: string; base: string; style: string; radius: string };
-export const DEFAULT_CUSTOMIZE: Customize = { theme: "neutral", base: "neutral", style: "nova", radius: "default" };
+export const DEFAULT_CUSTOMIZE: Customize = { theme: "neutral", base: "neutral", style: "nova", radius: "small" };
 
 const LISTS = [THEMES as readonly string[], BASES as readonly string[], STYLES.map((s) => s.id), RADII.map((r) => r.id)];
 const KEYS = ["theme", "base", "style", "radius"] as const;
 const ALPHABET = "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ";
 
-/** A short code for a set of choices ("b0" is the default), like shadcn.io's --preset. */
+/** A short code for a set of choices, like shadcn.io's --preset. */
 export function encodePreset(choice: Customize): string {
   return "b" + KEYS.map((key, i) => ALPHABET[Math.max(0, LISTS[i]!.indexOf(choice[key]))]).join("");
 }
@@ -72,5 +72,6 @@ export function decodePreset(code: string): Customize | null {
   return out;
 }
 
-/** Runs before the page paints: the visitor's choices onto <html> (shadcn.io design only). */
-export const CUSTOMIZE_SCRIPT = `try{var d=document.documentElement,c=JSON.parse(localStorage.getItem("${CUSTOMIZE_KEY}")||"{}");if(d.getAttribute("data-design")==="shadcnio"){["theme","base","style","radius"].forEach(function(k){if(c[k])d.setAttribute("data-sc-"+k,c[k])})}}catch(e){}`;
+/** Runs before the page paints: the visitor's choices onto <html> (shadcn.io design only).
+ * Visitors who never chose get the default corners (Small), so phones match too. */
+export const CUSTOMIZE_SCRIPT = `try{var d=document.documentElement,c=Object.assign({radius:"${DEFAULT_CUSTOMIZE.radius}"},JSON.parse(localStorage.getItem("${CUSTOMIZE_KEY}")||"{}"));if(d.getAttribute("data-design")==="shadcnio"){["theme","base","style","radius"].forEach(function(k){if(c[k])d.setAttribute("data-sc-"+k,c[k])})}}catch(e){}`;
