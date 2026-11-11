@@ -96,6 +96,7 @@ export {
   updateFooterWordmarkEnabled,
   updateFooterWordmarkMobile,
   updateAnnouncementBanner,
+  updateAnnouncementCopy,
   updateMobileNav,
   updateCookieConsentVariant,
   updateSiteFont,

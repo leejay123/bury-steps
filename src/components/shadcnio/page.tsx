@@ -17,6 +17,7 @@ import { ShadcnAccountTools } from "./account-tools";
 import { siteChrome } from "./chrome";
 import { getProgressEnabled } from "@/lib/progress-settings";
 import { PageKindMark } from "./page-kind";
+import { parseAnnouncementCopy, type AnnouncementCopy } from "@/lib/announcement";
 
 /**
  * The whole homepage in the shadcn.io site design — join bar, header, page,
@@ -43,10 +44,13 @@ export async function ShadcnHomePage({ theme }: { theme: SiteTheme }) {
     ...data.upcoming.map((walk) => ({ href: walk.href, label: walk.title, caption: walk.when, scope: "walks" as const })),
     ...faqData.faqs.map((faq) => ({ href: "/#faq", label: faq.question, caption: faq.categoryLabel, scope: "questions" as const })),
   ];
+  const strip = parseAnnouncementCopy(theme.announcementText, theme.announcementLink);
   return (
     <div className="style-nova theme-neutral radius-default flex min-h-dvh flex-col" data-shadcnio-home="">
       <PageKindMark kind="home" />
-      {theme.announcementEnabled ? (
+      {theme.announcementEnabled && strip ? (
+        <CustomStrip copy={strip} />
+      ) : theme.announcementEnabled ? (
         <aside aria-label="Join the group" className="border-b lg:relative lg:z-41">
           <Link
             className="bg-muted/60 transition-none group flex h-10 items-center justify-center gap-2 px-4 text-sm outline-none hover:bg-muted focus-visible:bg-muted focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-inset sm:gap-3"
@@ -125,5 +129,44 @@ export async function ShadcnHomePage({ theme }: { theme: SiteTheme }) {
       </div>
       <PromoBar next={data.next} />
     </div>
+  );
+}
+
+const STRIP_LINK =
+  "bg-muted/60 transition-none group flex h-10 items-center justify-center gap-2 px-4 text-sm outline-none hover:bg-muted focus-visible:bg-muted focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-inset sm:gap-3";
+
+/** The join bar with the organisers' own words and link (Settings → Site behaviour). */
+function CustomStrip({ copy }: { copy: AnnouncementCopy }) {
+  const inner = (
+    <>
+      <span className="flex shrink-0 items-center gap-2">
+        <Footprints aria-hidden className="size-4" />
+      </span>
+      <span className="min-w-0 truncate">
+        <span className="font-medium">{copy.title}</span>
+        {copy.line ? <span className="text-muted-foreground max-lg:hidden"> {copy.line}</span> : null}
+      </span>
+      {copy.href ? (
+        <span className="flex shrink-0 items-center gap-1.5 font-medium">
+          {copy.linkLabel ? <span className="underline-offset-4 group-hover:underline max-sm:hidden">{copy.linkLabel}</span> : null}
+          <ArrowRight aria-hidden className="size-4 text-muted-foreground group-hover:text-foreground rtl:rotate-180" />
+        </span>
+      ) : null}
+    </>
+  );
+  return (
+    <aside aria-label={copy.title} className="border-b lg:relative lg:z-41">
+      {!copy.href ? (
+        <div className={STRIP_LINK}>{inner}</div>
+      ) : copy.href.startsWith("/") ? (
+        <Link className={STRIP_LINK} href={copy.href}>
+          {inner}
+        </Link>
+      ) : (
+        <a className={STRIP_LINK} href={copy.href} rel="noopener noreferrer" target="_blank">
+          {inner}
+        </a>
+      )}
+    </aside>
   );
 }

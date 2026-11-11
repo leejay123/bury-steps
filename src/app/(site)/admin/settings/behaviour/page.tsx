@@ -10,6 +10,7 @@ import { SettingsMask } from "../settings-mask";
 import { PlaceholderPreview } from "@/components/placeholder-preview";
 
 import { AnnouncementSettings } from "./announcement-settings";
+import { AnnouncementCopySettings } from "./announcement-copy-settings";
 import { CookieConsentSettings } from "./cookie-consent-settings";
 import { FooterWordmarkMobileSettings, FooterWordmarkSettings } from "./display-form";
 import { ProgressToggle } from "./progress-toggle";
@@ -91,6 +92,9 @@ function SettingsView({
     <>
       <SettingsSectionGroup description="The strip at the top of the homepage." title="Join bar">
         <AnnouncementSettings enabled={theme.announcementEnabled} />
+        {theme.announcementEnabled ? (
+          <AnnouncementCopySettings link={theme.announcementLink} text={theme.announcementText} />
+        ) : null}
       </SettingsSectionGroup>
 
       <SettingsSectionGroup description="Behaviour that applies across the whole site." title="Across the site">

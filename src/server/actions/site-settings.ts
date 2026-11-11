@@ -1,6 +1,13 @@
 "use server";
 
 import { PAGE_TOP_STYLES, type PageTopStyle } from "@/lib/site-theme";
+import {
+  cleanAnnouncementHref,
+  MAX_ANNOUNCEMENT_HREF,
+  MAX_ANNOUNCEMENT_LINE,
+  MAX_ANNOUNCEMENT_LINK_LABEL,
+  MAX_ANNOUNCEMENT_TITLE,
+} from "@/lib/announcement";
 import { changedWalkWording, MAX_WALK_WORDING, parseWalkWording } from "@/lib/walk-wording";
 import { z } from "zod";
 import { parseTabStyle } from "@/lib/tab-style";
@@ -412,6 +419,41 @@ async function updateAnnouncementBannerWork(
   revalidatePath("/", "layout");
   revalidatePath("/admin/settings/behaviour");
   return { ok: true, message: enabled ? "Join bar is showing." : "Join bar is hidden." };
+}
+
+/** The join bar's own words and link (empty title: the usual join wording). */
+async function updateAnnouncementCopyWork(
+  _prev: ActionResult | null,
+  formData: FormData,
+): Promise<ActionResult> {
+  const admin = await requireAdmin();
+  if (!admin.permDisplay) return permissionDenied("permDisplay");
+  const read = (key: string, max: number) => String(formData.get(key) ?? "").trim().slice(0, max);
+  const title = read("announcementTitle", MAX_ANNOUNCEMENT_TITLE);
+  const line = read("announcementLine", MAX_ANNOUNCEMENT_LINE);
+  const linkLabel = read("announcementLinkLabel", MAX_ANNOUNCEMENT_LINK_LABEL);
+  const rawHref = read("announcementHref", MAX_ANNOUNCEMENT_HREF);
+  const href = rawHref ? cleanAnnouncementHref(rawHref) : "";
+  if (href === null) {
+    return { ok: false, error: "Enter a page on the site (starting with /) or a full web address (https://…)." };
+  }
+  const announcementText = title ? JSON.stringify({ title, line, linkLabel }) : "";
+  const announcementLink = title ? href : "";
+
+  try {
+    await prisma.siteSetting.upsert({
+      where: { id: SITE_SETTING_ID },
+      create: { id: SITE_SETTING_ID, primaryColor: DEFAULT_PRIMARY_COLOR, announcementText, announcementLink },
+      update: { announcementText, announcementLink },
+    });
+  } catch (err) {
+    return logActionError("updateAnnouncementCopy", err, "Could not save the join bar. Try again.");
+  }
+
+  revalidateTag(HOMEPAGE_CACHE_TAG, { expire: 0 });
+  revalidatePath("/", "layout");
+  revalidatePath("/admin/settings/behaviour");
+  return { ok: true, message: title ? "Join bar wording saved." : "Join bar is back to its usual wording." };
 }
 
 async function updateMobileNavWork(
@@ -1578,6 +1620,7 @@ export const updateAccidentReportRetentionDays = guardForm(
 export const updateContactMessagesOwner = guardForm("organiser", pass, readPass, updateContactMessagesOwnerWork);
 export const updateScrollToTopEnabled = guardForm("organiser", pass, readPass, updateScrollToTopEnabledWork);
 export const updateAnnouncementBanner = guardForm("organiser", pass, readPass, updateAnnouncementBannerWork);
+export const updateAnnouncementCopy = guardForm("organiser", pass, readPass, updateAnnouncementCopyWork);
 export const updateMobileNav = guardForm("organiser", pass, readPass, updateMobileNavWork);
 export const updateFooterWordmarkMobile = guardForm("organiser", pass, readPass, updateFooterWordmarkMobileWork);
 export const updateFooterWordmarkEnabled = guardForm("organiser", pass, readPass, updateFooterWordmarkEnabledWork);
