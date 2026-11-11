@@ -50,7 +50,7 @@ import {
   Tile,
   WALKS_GRID,
 } from "@/components/shadcnio/parts";
-import { HeroField } from "@/components/shadcnio/ascii-field";
+import { BandField, HeroField } from "@/components/shadcnio/ascii-field";
 import { MoreRows, stripTone } from "@/components/shadcnio/more-rows";
 import {
   CtaBandLook,
@@ -489,6 +489,8 @@ export function HomeCtaBlock(props: Record<string, unknown>) {
         className="px-5 md:px-12 flex flex-col items-center relative isolate justify-center min-h-[29rem] sm:min-h-[30rem] md:min-h-[36rem] lg:min-h-[35rem] xl:min-h-[34rem] gap-8 pt-6 pb-8 sm:pt-8 sm:pb-12 md:pt-10 md:pb-14 text-center"
         data-slot="hero"
       >
+        {/* The moving letters behind it, as on the built-in homepage (home.tsx). */}
+        <BandField heading="home-cta-heading" />
         <div className="flex max-w-2xl flex-col items-center gap-5 md:px-10">
           <p className="flex flex-wrap items-center justify-center gap-x-3 gap-y-2 text-sm">
             <span className="font-medium">{number.format(data.members)} members</span>{" "}
