@@ -72,6 +72,7 @@ import {
 import { GALLERY_GRID_3, PHONE_LIST } from "@/components/shadcnio/grids";
 import { SectionTitle } from "@/components/section-title";
 import { Button } from "@/components/ui/button";
+import { CountingNumber } from "@/components/ui/counting-number";
 import { HeroCopy } from "@/components/hero-copy";
 import { DecorIcon } from "@/components/decor-icon";
 import type { FaqCategoryView, FaqView } from "@/lib/faqs";
@@ -143,21 +144,23 @@ export function HomeHeroBlock(props: Record<string, unknown>) {
     <>
       {numbers ? (
         // Their own sentence, with the live numbers put in ({upcoming}, {members}, {walks}, {places}).
-        <CountsText counts={counts} text={numbers} />
+        <CountsText counting counts={counts} text={numbers} />
       ) : (
         <>
           <span className="font-medium text-foreground">
-            {number.format(data.upcomingCount)} upcoming walks, {number.format(data.members)} members and{" "}
-            {number.format(data.walksThisYear)} walks so far
+            {/* Counting up as they land, as the built-in homepage's (shadcnio/home.tsx). */}
+            <CountingNumber grouping trigger="view" value={data.upcomingCount} /> upcoming walks,{" "}
+            <CountingNumber grouping trigger="view" value={data.members} /> members and{" "}
+            <CountingNumber grouping trigger="view" value={data.walksThisYear} /> walks so far
           </span>{" "}
           around <CountsText counts={counts} text="{places}" />.
         </>
       )}{" "}
       <span data-guest-home="">
-        <CountsText counts={counts} text={asText(props.guestClose, "Join for free, and clock in on the day of the walk.")} />
+        <CountsText counting counts={counts} text={asText(props.guestClose, "Join for free, and clock in on the day of the walk.")} />
       </span>
       <span data-member-home="">
-        <CountsText counts={counts} text={asText(props.memberClose, "Pick your next walk, and clock in when you get there.")} />
+        <CountsText counting counts={counts} text={asText(props.memberClose, "Pick your next walk, and clock in when you get there.")} />
       </span>
     </>
   );

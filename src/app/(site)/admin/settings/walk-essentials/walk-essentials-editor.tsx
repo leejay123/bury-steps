@@ -103,8 +103,8 @@ export function IconPicker({
             <button
               aria-pressed={name === value}
               className={cn(
-                "flex flex-col items-center gap-1 rounded-md px-1 py-2 text-center text-[11px] leading-tight text-muted-foreground hover:bg-muted hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none",
-                name === value && "bg-muted text-foreground ring-1 ring-foreground/30",
+                "flex flex-col items-center gap-1 rounded-md px-1 py-2 text-center text-[11px] leading-tight text-muted-foreground hover:bg-muted hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-inset focus-visible:outline-none",
+                name === value && "bg-muted text-foreground ring-1 ring-foreground/30 ring-inset",
               )}
               key={name}
               onClick={() => pick(name)}
@@ -123,8 +123,8 @@ export function IconPicker({
               <button
                 aria-pressed={saved === value}
                 className={cn(
-                  "flex flex-col items-center gap-1 rounded-md px-1 py-2 text-center text-[11px] leading-tight text-muted-foreground hover:bg-muted hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none",
-                  saved === value && "bg-muted text-foreground ring-1 ring-foreground/30",
+                  "flex flex-col items-center gap-1 rounded-md px-1 py-2 text-center text-[11px] leading-tight text-muted-foreground hover:bg-muted hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-inset focus-visible:outline-none",
+                  saved === value && "bg-muted text-foreground ring-1 ring-foreground/30 ring-inset",
                 )}
                 key={saved}
                 onClick={() => pick(saved)}

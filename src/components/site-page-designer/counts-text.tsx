@@ -1,5 +1,6 @@
 import { Fragment, type ReactNode } from "react";
 import { MapPin } from "lucide-react";
+import { CountingNumber } from "@/components/ui/counting-number";
 
 const number = new Intl.NumberFormat("en-GB");
 
@@ -17,30 +18,33 @@ export type Counts = { upcoming: number; members: number; walks: number; places:
  * A sentence written in the page designer, with the live numbers put in:
  * {upcoming} upcoming walks, {members} members, {walks} walks so far this year
  * and {places} (the walking places, each with a map pin). **Words** stand out
- * in full colour, as the hero's own numbers do.
+ * in full colour, as the hero's own numbers do. `counting`: the numbers count up as they
+ * come into view (the homepage hero's), rather than standing still.
  */
-export function CountsText({ text, counts }: { text: string; counts: Counts }) {
+export function CountsText({ text, counts, counting = false }: { text: string; counts: Counts; counting?: boolean }) {
   const parts = text.split(/(\*\*[^*]+\*\*)/g);
   return (
     <>
       {parts.map((part, i) =>
         part.startsWith("**") && part.endsWith("**") && part.length > 4 ? (
           <span className="font-medium text-foreground" key={i}>
-            {fill(part.slice(2, -2), counts)}
+            {fill(part.slice(2, -2), counts, counting)}
           </span>
         ) : (
-          <Fragment key={i}>{fill(part, counts)}</Fragment>
+          <Fragment key={i}>{fill(part, counts, counting)}</Fragment>
         ),
       )}
     </>
   );
 }
 
-function fill(text: string, counts: Counts): ReactNode[] {
+function fill(text: string, counts: Counts, counting: boolean): ReactNode[] {
+  const count = (value: number, i: number) =>
+    counting ? <CountingNumber grouping key={i} trigger="view" value={value} /> : number.format(value);
   return text.split(/(\{(?:upcoming|members|walks|places)\})/g).map((piece, i) => {
-    if (piece === "{upcoming}") return number.format(counts.upcoming);
-    if (piece === "{members}") return number.format(counts.members);
-    if (piece === "{walks}") return number.format(counts.walks);
+    if (piece === "{upcoming}") return count(counts.upcoming, i);
+    if (piece === "{members}") return count(counts.members, i);
+    if (piece === "{walks}") return count(counts.walks, i);
     if (piece === "{places}") return <Places key={i} places={counts.places} />;
     return piece;
   });
