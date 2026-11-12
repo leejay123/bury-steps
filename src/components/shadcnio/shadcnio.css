@@ -1146,3 +1146,73 @@ html:is([data-remembered-in], [data-guest-dash]):not([data-page-kind="home"], [d
 @media print {
   [data-slot="docs-page"] { border: 0 !important; border-radius: 0 !important; box-shadow: none !important; }
 }
+
+/* ---- The homepage hero's other looks (hero-looks.tsx), chosen in the page designer. Each
+   rests in a still pose; it only moves when the Hero block's "Moving background" switch is on
+   ([data-hero-moving]) and the visitor's device hasn't asked for less motion. Colours are the
+   site's own, so the Customize panel and the dark theme carry through. ---- */
+.hero-dots { background-image: radial-gradient(color-mix(in oklab, var(--foreground) 24%, transparent) 1px, transparent 1.4px); background-size: 22px 22px; }
+.hero-dots-fade { background: radial-gradient(ellipse at center, var(--background) 25%, transparent 72%); }
+.hero-map { background-image: linear-gradient(var(--border) 1px, transparent 1px), linear-gradient(90deg, var(--border) 1px, transparent 1px); background-size: 48px 48px; }
+.hero-ring { opacity: 0; }
+.hero-step { opacity: 0.25; }
+.hero-shine { display: none; background: linear-gradient(90deg, transparent, var(--foreground), transparent); }
+.hero-band { display: inline-block; }
+.hero-trail { width: calc(100% - 1.75rem); transform: translateX(40%); }
+.hero-today { box-shadow: inset 0 3px 0 var(--foreground); }
+.hero-march { position: absolute; top: 0; left: 50%; width: 440px; margin-left: -220px; }
+/* Standing still on a phone: the whole group fits the screen, feet kept on the ground line. */
+@media (max-width: 479px) { .hero-march { transform: scale(0.76); transform-origin: 50% 138px; } }
+.hero-lf { transform: rotate(-16deg); }
+.hero-lb { transform: rotate(16deg); }
+.hero-af { transform: rotate(12deg); }
+.hero-ab { transform: rotate(-12deg); }
+@keyframes hero-drift { from { background-position: 0 0; } to { background-position: 44px 22px; } }
+@keyframes hero-slide { from { transform: translateX(0); } to { transform: translateX(-200px); } }
+@keyframes hero-marquee { from { transform: translateX(0); } to { transform: translateX(-50%); } }
+@keyframes hero-draw { from { stroke-dashoffset: 1; } to { stroke-dashoffset: 0; } }
+@keyframes hero-pulse { 0% { transform: scale(0.6); opacity: 0.7; } 100% { transform: scale(2.6); opacity: 0; } }
+@keyframes hero-step { 0%, 100% { opacity: 0.08; } 20% { opacity: 0.5; } }
+@keyframes hero-sweep { from { transform: translateX(-100%); } to { transform: translateX(100%); } }
+@keyframes hero-sway { 0%, 100% { transform: translateX(0); } 50% { transform: translateX(clamp(8px, 3vw, 40px)); } }
+@keyframes hero-sway-back { 0%, 100% { transform: translateX(0); } 50% { transform: translateX(calc(-1 * clamp(8px, 3vw, 40px))); } }
+@keyframes hero-up { from { transform: translateY(0); } to { transform: translateY(-50%); } }
+@keyframes hero-trail { from { transform: translateX(0); } to { transform: translateX(100%); } }
+@keyframes hero-glow { 0%, 100% { box-shadow: inset 0 3px 0 var(--foreground); } 50% { box-shadow: inset 0 3px 0 color-mix(in oklab, var(--foreground) 15%, transparent); } }
+@keyframes hero-march { from { transform: translateX(0); } to { transform: translateX(100%); } }
+@keyframes hero-leg-f { 0%, 100% { transform: rotate(-24deg); } 50% { transform: rotate(24deg); } }
+@keyframes hero-leg-b { 0%, 100% { transform: rotate(24deg); } 50% { transform: rotate(-24deg); } }
+@keyframes hero-arm-f { 0%, 100% { transform: rotate(20deg); } 50% { transform: rotate(-20deg); } }
+@keyframes hero-arm-b { 0%, 100% { transform: rotate(-20deg); } 50% { transform: rotate(20deg); } }
+@keyframes hero-bob { 0%, 50%, 100% { transform: translateY(0); } 25%, 75% { transform: translateY(-2.5px); } }
+@keyframes hero-stretch-1 { 0%, 100% { transform: translateX(0); } 50% { transform: translateX(26px); } }
+@keyframes hero-stretch-2 { 0%, 100% { transform: translateX(0); } 50% { transform: translateX(-22px); } }
+@keyframes hero-chat { 0%, 60%, 100% { opacity: 0; } 70%, 90% { opacity: 1; } }
+@keyframes hero-wag { 0%, 100% { transform: rotate(-25deg); } 50% { transform: rotate(15deg); } }
+@media (prefers-reduced-motion: no-preference) {
+  [data-hero-moving] .hero-dots { animation: hero-drift 6s linear infinite; }
+  [data-hero-moving] .hero-lines { animation: hero-slide 14s linear infinite alternate; }
+  [data-hero-moving] .hero-marquee { animation: hero-marquee 40s linear infinite; }
+  [data-hero-moving] .hero-route { stroke-dasharray: 1; animation: hero-draw 6s ease-in-out infinite alternate; }
+  [data-hero-moving] .hero-ring { animation: hero-pulse 2.4s ease-out infinite; }
+  [data-hero-moving] .hero-step { animation: hero-step 4s ease-in-out infinite; }
+  [data-hero-moving] .hero-shine { display: block; animation: hero-sweep 5s ease-in-out infinite; }
+  [data-hero-moving] .hero-band { animation: hero-sway 9s ease-in-out infinite; }
+  [data-hero-moving] .hero-band-back { animation-name: hero-sway-back; }
+  [data-hero-moving] .hero-band-late { animation-delay: 1.5s; }
+  [data-hero-moving] .hero-roll { animation: hero-up 36s linear infinite; }
+  [data-hero-moving] .hero-roll:is(:hover, :focus-within) { animation-play-state: paused; }
+  [data-hero-moving] .hero-trail { animation: hero-trail 12s linear infinite; }
+  [data-hero-moving] .hero-today { animation: hero-glow 2.4s ease-in-out infinite; }
+  [data-hero-moving] .hero-march { left: -440px; width: calc(100% + 440px); margin-left: 0; animation: hero-march 38s linear infinite; }
+  [data-hero-moving] .hero-lf { animation: hero-leg-f 1.1s ease-in-out infinite; }
+  [data-hero-moving] .hero-lb { animation: hero-leg-b 1.1s ease-in-out infinite; }
+  [data-hero-moving] .hero-af { animation: hero-arm-f 1.1s ease-in-out infinite; }
+  [data-hero-moving] .hero-ab { animation: hero-arm-b 1.1s ease-in-out infinite; }
+  [data-hero-moving] .hero-bob { animation: hero-bob 1.1s ease-in-out infinite; }
+  [data-hero-moving] .hero-s1 { animation: hero-stretch-1 9s ease-in-out infinite; }
+  [data-hero-moving] .hero-s2 { animation: hero-stretch-2 11s ease-in-out infinite; }
+  [data-hero-moving] .hero-chat { animation: hero-chat 6s ease-in-out infinite; }
+  [data-hero-moving] .hero-dogleg { animation-duration: 0.55s; }
+  [data-hero-moving] .hero-tail { animation: hero-wag 0.4s ease-in-out infinite; }
+}

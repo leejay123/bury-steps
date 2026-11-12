@@ -82,17 +82,57 @@ export const homePageConfig = {
       label: "Hero",
       permissions: { ...keep, delete: false },
       fields: {
+        look: {
+          type: "select",
+          label: "Look",
+          options: [
+            { value: "original", label: "Original (moving letters)" },
+            { value: "dots", label: "Centred, drifting dots" },
+            { value: "split", label: "Words beside the next walk" },
+            { value: "stats", label: "Big numbers row, places scrolling" },
+            { value: "route", label: "A route drawing itself" },
+            { value: "words", label: "Changing word in the heading" },
+            { value: "pins", label: "Map grid with pulsing pins" },
+            { value: "steps", label: "Footsteps across the page" },
+            { value: "bento", label: "Boxes: heading, numbers and buttons" },
+            { value: "bands", label: "Heading in three bands" },
+            { value: "list", label: "Heading beside a rolling list of walks" },
+            { value: "trail", label: "A trail line with mile markers" },
+            { value: "week", label: "This week along the bottom" },
+            { value: "group", label: "The group walking along the bottom" },
+          ],
+        },
+        moving: onOff("Moving background", "Moving", "Still"),
         kicker: text("Small line above the heading"),
         headingBefore: text("Heading before the logo"),
         headingWord: text("Word beside the logo"),
         headingAfter: text("Heading after the logo word"),
         headingRest: text("Second line of the heading"),
+        wordsLead: text("Heading before the changing word (usually: Come for a)"),
+        words: text("Changing words, split with · (usually: walk. · chat. · breather.)"),
         numbers: countsField(
           "Numbers line",
           "**{upcoming} upcoming walks, {members} members and {walks} walks so far** around {places}.",
         ),
         guestClose: countsField("Line for visitors (signed out)", "Join for free, and clock in on the day of the walk."),
         memberClose: countsField("Line for members (signed in)", "Pick your next walk, and clock in when you get there."),
+        freeTitle: text("Fourth box, big word (usually: Free)"),
+        freeText: text("Fourth box, small words (usually: to join, at your own pace)"),
+        trailNote: countsField("Line above the trail", "**{walks} walks** walked so far this year", false),
+        groupNote: countsField("Line above the walkers", "**Nobody gets left behind.** Walk at your own pace.", false),
+      },
+      // Each look shows only the settings it uses.
+      resolveFields: (data: { props: Record<string, unknown> }, { fields }: { fields: Record<string, unknown> }) => {
+        const look = String(data.props.look ?? "original");
+        const drop: string[] = [];
+        if (look === "original") drop.push("moving");
+        if (look !== "words") drop.push("wordsLead", "words");
+        else drop.push("headingBefore", "headingWord", "headingAfter", "headingRest");
+        if (["stats", "bento", "trail", "week"].includes(look)) drop.push("numbers", "guestClose", "memberClose");
+        if (look !== "bento") drop.push("freeTitle", "freeText");
+        if (look !== "trail") drop.push("trailNote");
+        if (look !== "group") drop.push("groupNote");
+        return dropFields(fields, drop);
       },
       render: HomeHeroBlock,
     },

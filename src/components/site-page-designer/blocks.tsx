@@ -37,12 +37,14 @@ import {
   type QuotesOptions,
 } from "@/components/shadcnio/reviews-looks";
 import { AboutSplitLook, AboutWordsLook, isAboutLook, splitWords } from "@/components/shadcnio/about-looks";
+import { HeroLooks, isHeroLook } from "@/components/shadcnio/hero-looks";
 import { DEFAULT_HOW_THIS_STARTED_EYEBROW } from "@/lib/homepage-copy";
 import { ShadcnLegal, type ShadcnLegalIcon } from "@/components/shadcnio/legal";
 import { ShadcnContactForm } from "@/app/(site)/contact/contact-form";
 import {
   BUTTON_OUTLINE,
   BUTTON_PRIMARY,
+  Guides,
   MiniNote,
   MiniWalk,
   PillLink,
@@ -94,6 +96,9 @@ function tidyPlace(name: string) {
   return words.map((word) => (shouting ? word.charAt(0) + word.slice(1).toLowerCase() : word)).join(" ");
 }
 
+/** A designer switch: on unless it's been turned off (so pages saved before it keep it on). */
+const isOn = (value: unknown) => value !== "off";
+
 function asText(value: unknown, fallback = ""): string {
   return typeof value === "string" ? value : fallback;
 }
@@ -109,7 +114,7 @@ function asItems(value: unknown): { title: string; sub?: string }[] {
 }
 
 /** Up to four short place names (Bury first), as the hero lists them. */
-function heroPlaces(places: { name: string }[]): string[] {
+function heroPlaces(places: { name: string }[], most = 4): string[] {
   return [
     "Bury",
     ...places
@@ -117,7 +122,16 @@ function heroPlaces(places: { name: string }[]): string[] {
       .filter((name) => name.length >= 3 && name.length <= 14 && !/^(bury|test)\b/i.test(name) && /[aeiou]/i.test(name)),
   ]
     .filter((name, i, all) => all.indexOf(name) === i)
-    .slice(0, 4);
+    .slice(0, most);
+}
+
+/** The words a changing heading rolls through ("walk. · chat. · breather."), up to six. */
+function heroWords(raw: string): string[] {
+  return raw
+    .split(/[·•|]/)
+    .map((word) => word.trim())
+    .filter(Boolean)
+    .slice(0, 6);
 }
 
 export function HomeHeroBlock(props: Record<string, unknown>) {
@@ -125,6 +139,62 @@ export function HomeHeroBlock(props: Record<string, unknown>) {
   const places = heroPlaces(data.places);
   const counts = { upcoming: data.upcomingCount, members: data.members, walks: data.walksThisYear, places };
   const numbers = asText(props.numbers).trim();
+  const sentence = (
+    <>
+      {numbers ? (
+        // Their own sentence, with the live numbers put in ({upcoming}, {members}, {walks}, {places}).
+        <CountsText counts={counts} text={numbers} />
+      ) : (
+        <>
+          <span className="font-medium text-foreground">
+            {number.format(data.upcomingCount)} upcoming walks, {number.format(data.members)} members and{" "}
+            {number.format(data.walksThisYear)} walks so far
+          </span>{" "}
+          around <CountsText counts={counts} text="{places}" />.
+        </>
+      )}{" "}
+      <span data-guest-home="">
+        <CountsText counts={counts} text={asText(props.guestClose, "Join for free, and clock in on the day of the walk.")} />
+      </span>
+      <span data-member-home="">
+        <CountsText counts={counts} text={asText(props.memberClose, "Pick your next walk, and clock in when you get there.")} />
+      </span>
+    </>
+  );
+  const look = isHeroLook(props.look) ? props.look : "original";
+  if (look !== "original") {
+    const words = heroWords(asText(props.words).trim() || "walk. · chat. · breather.");
+    return (
+      <HeroLooks
+        boxText={asText(props.freeText).trim() || "to join, at your own pace"}
+        boxTitle={asText(props.freeTitle).trim() || "Free"}
+        counts={counts}
+        everyPlace={heroPlaces(data.places, 12)}
+        groupNote={
+          <CountsText counts={counts} text={asText(props.groupNote).trim() || "**Nobody gets left behind.** Walk at your own pace."} />
+        }
+        heading={{
+          before: asText(props.headingBefore, "The"),
+          word: asText(props.headingWord, "walking"),
+          after: asText(props.headingAfter, "group"),
+          rest: asText(props.headingRest, "all of Bury steps out with."),
+        }}
+        joinHref={joinHref}
+        kicker={asText(props.kicker, "Bury Steps is a free, friendly walking group from Bury")}
+        logoSrc={logo.src}
+        look={look}
+        moving={isOn(props.moving)}
+        places={places}
+        sentence={sentence}
+        trailNote={
+          <CountsText counts={counts} text={asText(props.trailNote).trim() || "**{walks} walks** walked so far this year"} />
+        }
+        walks={data.upcoming}
+        words={words.length > 0 ? words : ["walk."]}
+        wordsLead={asText(props.wordsLead).trim() || "Come for a"}
+      />
+    );
+  }
   return (
     <section aria-labelledby="home-heading" className="border-t first-of-type:border-t-0">
       <div
@@ -155,26 +225,7 @@ export function HomeHeroBlock(props: Record<string, unknown>) {
             {asText(props.headingAfter, "group")}
             <br className="max-sm:hidden" /> {asText(props.headingRest, "all of Bury steps out with.")}
           </h1>
-          <p className="max-w-2xl text-muted-foreground sm:text-lg md:text-xl text-balance">
-            {numbers ? (
-              // Their own sentence, with the live numbers put in ({upcoming}, {members}, {walks}, {places}).
-              <CountsText counts={counts} text={numbers} />
-            ) : (
-              <>
-                <span className="font-medium text-foreground">
-                  {number.format(data.upcomingCount)} upcoming walks, {number.format(data.members)} members and{" "}
-                  {number.format(data.walksThisYear)} walks so far
-                </span>{" "}
-                around <CountsText counts={counts} text="{places}" />.
-              </>
-            )}{" "}
-            <span data-guest-home="">
-              <CountsText counts={counts} text={asText(props.guestClose, "Join for free, and clock in on the day of the walk.")} />
-            </span>
-            <span data-member-home="">
-              <CountsText counts={counts} text={asText(props.memberClose, "Pick your next walk, and clock in when you get there.")} />
-            </span>
-          </p>
+          <p className="max-w-2xl text-muted-foreground sm:text-lg md:text-xl text-balance">{sentence}</p>
         </div>
         <div className="flex flex-wrap justify-center gap-2">
           <Link className={BUTTON_PRIMARY} data-guest-home="" href={joinHref}>
@@ -192,8 +243,6 @@ export function HomeHeroBlock(props: Record<string, unknown>) {
   );
 }
 
-/** A designer switch: on unless it's been turned off (so pages saved before it keep it on). */
-const isOn = (value: unknown) => value !== "off";
 
 export function HomeAboutBlock(props: Record<string, unknown>) {
   const title = asText(props.title, "How this started");
@@ -594,18 +643,22 @@ export function LegalClosingBlock(props: Record<string, unknown>) {
   const label = asText(props.buttonLabel).trim();
   const href = asText(props.buttonHref).trim();
   return (
-    <div className="px-5 md:px-12 flex flex-col items-center gap-6 py-14 text-center md:py-20">
-      <p className="max-w-2xl text-pretty text-muted-foreground md:text-lg">{asText(props.closing)}</p>
-      {label && href ? (
-        <SmartLink className={`${BUTTON_PRIMARY} gap-2`} href={href}>
-          {label}
-          <ArrowRight aria-hidden className="size-4 rtl:rotate-180" />
-        </SmartLink>
-      ) : (
-        <Link className={BUTTON_OUTLINE} href="/contact">
-          Ask a question
-        </Link>
-      )}
+    // The line across the top, with its + marks, as the Terms and Privacy pages' closing has.
+    <div className="relative">
+      <Guides />
+      <div className="px-5 md:px-12 flex flex-col items-center gap-6 py-14 text-center md:py-20">
+        <p className="max-w-2xl text-pretty text-muted-foreground md:text-lg">{asText(props.closing)}</p>
+        {label && href ? (
+          <SmartLink className={`${BUTTON_PRIMARY} gap-2`} href={href}>
+            {label}
+            <ArrowRight aria-hidden className="size-4 rtl:rotate-180" />
+          </SmartLink>
+        ) : (
+          <Link className={BUTTON_OUTLINE} href="/contact">
+            Ask a question
+          </Link>
+        )}
+      </div>
     </div>
   );
 }
