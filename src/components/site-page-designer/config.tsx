@@ -105,6 +105,7 @@ export const homePageConfig = {
             { value: "shower", label: "Caught in a shower: umbrellas up, then a rainbow" },
             { value: "night", label: "Day turns to night: stars and head torches, then sunrise" },
             { value: "fineday", label: "A fine day out: a balloon, wind turbines and sheep (stars and head torches in dark mode)" },
+            { value: "scene3d", label: "A 3D landscape: the group walking through hills, trees and wind turbines (stars and head torches in dark mode)" },
           ],
         },
         moving: onOff("Moving background", "Moving", "Still"),
@@ -137,7 +138,7 @@ export const homePageConfig = {
         if (["stats", "bento", "trail", "week"].includes(look)) drop.push("numbers", "guestClose", "memberClose");
         if (look !== "bento") drop.push("freeTitle", "freeText");
         if (look !== "trail") drop.push("trailNote");
-        if (!["group", "countryside", "busyday", "shower", "night", "fineday"].includes(look)) drop.push("groupNote");
+        if (!["group", "countryside", "busyday", "shower", "night", "fineday", "scene3d"].includes(look)) drop.push("groupNote");
         return dropFields(fields, drop);
       },
       render: HomeHeroBlock,

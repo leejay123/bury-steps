@@ -5,6 +5,7 @@ import { ArrowRight } from "lucide-react";
 import { IntentLink as Link } from "@/components/intent-link";
 import { cn } from "@/lib/utils";
 import type { HomeWalk } from "./home-data";
+import { Hero3D } from "./hero-3d";
 import { BUTTON_OUTLINE, BUTTON_PRIMARY } from "./parts";
 
 /**
@@ -34,6 +35,7 @@ export const HERO_LOOKS = [
   "shower",
   "night",
   "fineday",
+  "scene3d",
 ] as const;
 export type HeroLook = (typeof HERO_LOOKS)[number];
 export const isHeroLook = (v: unknown): v is HeroLook => HERO_LOOKS.includes(v as HeroLook);
@@ -1481,6 +1483,27 @@ function OutdoorsLook(p: HeroLookProps) {
   );
 }
 
+// ── W: the same walk as a real 3D landscape ─────────────────────────────────
+
+function Scene3DLook(p: HeroLookProps) {
+  // Signposts as the flat looks: the walks most recently finished, or places before any walk has.
+  const signs = p.signs.length > 0 ? p.signs.slice(0, 5) : (p.places.length > 0 ? p.places : p.everyPlace).slice(0, 3);
+  return (
+    <div className={cn("flex flex-col", TALL)}>
+      <div className="hero-3d relative isolate flex flex-1 flex-col overflow-hidden">
+        <Hero3D moving={p.moving} signs={signs} />
+        <div className={cn(PAD, "relative flex flex-1 flex-col items-center justify-center gap-8 pt-12 pb-6")}>
+          <Centre p={p} />
+          <Buttons className="justify-center" joinHref={p.joinHref} />
+        </div>
+        {/* The band along the bottom the land is drawn in: the words sit above it. */}
+        <div aria-hidden className="hero-3d-band" />
+      </div>
+      <p className="border-t px-5 py-2.5 text-center text-muted-foreground text-xs sm:py-3 md:text-sm">{p.groupNote}</p>
+    </div>
+  );
+}
+
 const LOOKS: Record<HeroLookProps["look"], (p: HeroLookProps) => ReactNode> = {
   dots: DotsLook,
   split: SplitLook,
@@ -1500,6 +1523,7 @@ const LOOKS: Record<HeroLookProps["look"], (p: HeroLookProps) => ReactNode> = {
   shower: OutdoorsLook,
   night: OutdoorsLook,
   fineday: OutdoorsLook,
+  scene3d: Scene3DLook,
 };
 
 export function HeroLooks(props: HeroLookProps) {
