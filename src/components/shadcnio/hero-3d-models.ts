@@ -38,13 +38,13 @@ function cssColour(ctx: CanvasRenderingContext2D, value: string, fallback: strin
   return new THREE.Color().setRGB((r ?? 0) / 255, (g ?? 0) / 255, (b ?? 0) / 255, THREE.SRGBColorSpace);
 }
 
-const brightness = (c: THREE.Color) => {
+export const brightness = (c: THREE.Color) => {
   const s = c.clone().convertLinearToSRGB();
   return 0.2126 * s.r + 0.7152 * s.g + 0.0722 * s.b;
 };
 
 /** Mixes two colours as they look on screen (not in linear light), so the greys step evenly. */
-function mix(a: THREE.Color, b: THREE.Color, t: number) {
+export function mix(a: THREE.Color, b: THREE.Color, t: number) {
   const x = a.clone().convertLinearToSRGB();
   const y = b.clone().convertLinearToSRGB();
   return new THREE.Color().setRGB(x.r + (y.r - x.r) * t, x.g + (y.g - x.g) * t, x.b + (y.b - x.b) * t, THREE.SRGBColorSpace);

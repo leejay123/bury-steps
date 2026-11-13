@@ -23,6 +23,8 @@ fs.rmSync(outDir, { recursive: true, force: true });
 const revision = process.env.VERCEL_GIT_COMMIT_SHA ?? "local";
 const { GET } = createSerwistRoute({
   additionalPrecacheEntries: [{ url: "/offline", revision }],
+  // The 3D hero look's characters (about 1 MB) are only fetched by pages that show them.
+  globIgnores: ["public/hero-3d/**"],
   swSrc: "src/sw.ts",
   useNativeEsbuild: true,
 });

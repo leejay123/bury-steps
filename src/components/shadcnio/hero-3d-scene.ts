@@ -17,6 +17,7 @@ import {
   type Palette,
   type WalkerKind,
 } from "./hero-3d-models";
+import { castPerson, loadPeople, type Person } from "./hero-3d-people";
 
 /**
  * The 3D hero look: a real landscape the group walks through, drawn with
@@ -53,16 +54,20 @@ const STILL_AT = 9;
 /** How far the camera stands from the group. */
 const REACH = 18;
 
-/** Eight walkers, front to back (x is along the path, z is across it), as the flat looks cast them. */
-const PARTY: (WalkerKind & { x: number; z: number; drift?: number })[] = [
-  { x: 3.7, z: 0.25, scale: 1.02, pack: true, wave: true, jacket: 0, legs: 4 },
-  { x: 2.3, z: -0.45, scale: 1, jacket: 1, legs: 0 },
-  { x: 1.1, z: 0.4, scale: 1.04, pack: true, poles: true, jacket: 3, legs: 2 },
-  { x: -0.1, z: -0.35, scale: 1.06, hat: "brim", jacket: 2, legs: 0 },
-  { x: -0.9, z: 0.55, scale: 0.64, hat: "bobble", jacket: 5, legs: 1 },
-  { x: -2.1, z: -0.3, scale: 0.97, hat: "cap", jacket: 4, legs: 3 },
-  { x: -3.1, z: 0.4, scale: 1.02, hair: true, jacket: 0, legs: 5 },
-  { x: -5.2, z: -0.1, scale: 0.92, pack: true, jacket: 2, legs: 4, drift: 1 },
+/**
+ * Eight walkers, front to back (x is along the path, z is across it). `model` is which
+ * character plays them (see hero-3d-people.ts); the rest dresses the simple stand-in
+ * drawn if the characters can't be fetched.
+ */
+const PARTY: (WalkerKind & { x: number; z: number; model: number; drift?: number })[] = [
+  { x: 3.7, z: 0.25, model: 0, scale: 1.02, pack: true, wave: true, jacket: 0, legs: 4 },
+  { x: 2.3, z: -0.45, model: 1, scale: 1, jacket: 1, legs: 0 },
+  { x: 1.1, z: 0.4, model: 2, scale: 1.04, pack: true, poles: true, jacket: 3, legs: 2 },
+  { x: -0.1, z: -0.35, model: 5, scale: 1.06, hat: "brim", jacket: 2, legs: 0 },
+  { x: -0.9, z: 0.55, model: 1, scale: 0.8, hat: "bobble", jacket: 5, legs: 1 },
+  { x: -2.1, z: -0.3, model: 4, scale: 0.97, hat: "cap", jacket: 4, legs: 3 },
+  { x: -3.1, z: 0.4, model: 3, scale: 1.02, hair: true, jacket: 0, legs: 5 },
+  { x: -5.2, z: -0.1, model: 0, scale: 0.92, pack: true, jacket: 2, legs: 4, drift: 1 },
 ];
 const DOG = { x: 2.9, z: 0.95 };
 
@@ -86,6 +91,9 @@ export function startHero3D({ canvas, host, strip, signs, moving, onReady }: Her
   let frame = 0;
   let seen = true;
   let ready = false;
+  // The characters, once fetched. Nothing is drawn until they are in (or have failed).
+  let people: Person[] | null = null;
+  let started = false;
   // The scene's own clock: it only runs while the picture is being drawn.
   let now = STILL_AT;
   let last = 0;
@@ -243,6 +251,33 @@ export function startHero3D({ canvas, host, strip, signs, moving, onReady }: Her
       ? keep(new THREE.MeshBasicMaterial({ color: palette.foreground, transparent: true, opacity: 0.13, depthWrite: false, side: THREE.DoubleSide, fog: false }))
       : null;
     PARTY.forEach((who, index) => {
+      const person = people?.[who.model];
+      if (person) {
+        const s = who.scale;
+        const root = new THREE.Group();
+        // The same character twice wears a different grey the second time.
+        const cast = castPerson(person, palette, s, index >= 4 ? 0.14 : 0, PACE, keep);
+        keep(cast.done);
+        root.add(cast.figure);
+        if (beamShape && beamSkin && index % 2 === 0) {
+          const beam = new THREE.Mesh(beamShape, beamSkin);
+          beam.position.set(0.16 * s, 1.6 * s, 0);
+          beam.scale.setScalar(s);
+          const torch = new THREE.PointLight(0xffffff, 9, 7, 1.6);
+          torch.position.set(2.2, 0.97 * s, 0);
+          root.add(beam, torch);
+        }
+        scene.add(root);
+        const start = index * 0.37;
+        rigs.push({
+          update: (t) => {
+            const lag = who.drift ? Math.sin(t * 0.21) * 1.3 : Math.sin(t * 0.3 + index * 2.1) * 0.12;
+            root.position.set(who.x + lag, 0, who.z);
+            cast.walkTo(t + start);
+          },
+        });
+        return;
+      }
       const shapes = buildWalker(palette, who);
       for (const g of Object.values(shapes)) keep(g);
       const s = who.scale;
@@ -350,7 +385,7 @@ export function startHero3D({ canvas, host, strip, signs, moving, onReady }: Her
   }
 
   function draw() {
-    if (stopped || size.w === 0) return;
+    if (stopped || !started || size.w === 0) return;
     for (const rig of rigs) rig.update(now);
     frameCamera(now);
     renderer.render(scene, camera);
@@ -437,9 +472,21 @@ export function startHero3D({ canvas, host, strip, signs, moving, onReady }: Her
     draw();
   });
 
-  repaint();
-  measure();
-  refresh();
+  void loadPeople()
+    .then((cast) => {
+      if (stopped) for (const person of cast) person.dispose();
+      else people = cast;
+    })
+    // The characters didn't arrive: the simple stand-in people walk instead.
+    .catch(() => undefined)
+    .finally(() => {
+      if (stopped) return;
+      started = true;
+      paletteKey = "";
+      repaint();
+      measure();
+      refresh();
+    });
 
   return {
     stop: () => {
@@ -452,6 +499,7 @@ export function startHero3D({ canvas, host, strip, signs, moving, onReady }: Her
       less.removeEventListener("change", refresh);
       for (const thing of bin) thing.dispose();
       bin = [];
+      for (const person of people ?? []) person.dispose();
       renderer.dispose();
     },
   };

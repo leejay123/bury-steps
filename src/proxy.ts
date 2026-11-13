@@ -84,7 +84,7 @@ export const config = {
     // /api/site-version is skipped: the same public answer for everyone,
     // asked for every 30 seconds by every open page, so it shouldn't cost a
     // sign-in check each time (see its route.ts).
-    "/((?!_next|api/site-version|[^?]*\\.(?:html?|css|js(?!on)|jpe?g|webp|png|gif|svg|ttf|woff2?|ico|mp4|webm|mov)).*)",
+    "/((?!_next|api/site-version|[^?]*\\.(?:html?|css|js(?!on)|jpe?g|webp|png|gif|svg|ttf|woff2?|ico|mp4|webm|mov|glb)).*)",
     "/(api(?!/site-version)|trpc)(.*)",
     "/__clerk/:path*",
   ],
