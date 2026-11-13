@@ -20,6 +20,7 @@ const EMPTY: SitePageLive = {
     year: new Date().getFullYear(),
     upcoming: [],
     places: [],
+    finished: [],
     next: null,
   },
   logo: { src: "/bury-steps-logo.png", width: 96, height: 96 },

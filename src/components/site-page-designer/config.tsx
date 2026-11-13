@@ -104,9 +104,11 @@ export const homePageConfig = {
             { value: "busyday", label: "A busy day out: a balloon, a kite, wind turbines and sheep" },
             { value: "shower", label: "Caught in a shower: umbrellas up, then a rainbow" },
             { value: "night", label: "Day turns to night: stars and head torches, then sunrise" },
+            { value: "fineday", label: "A fine day out: a balloon, wind turbines and sheep (stars and head torches in dark mode)" },
           ],
         },
         moving: onOff("Moving background", "Moving", "Still"),
+        logo: onOff("Logo in the heading"),
         kicker: text("Small line above the heading"),
         headingBefore: text("Heading before the logo"),
         headingWord: text("Word beside the logo"),
@@ -131,11 +133,11 @@ export const homePageConfig = {
         const drop: string[] = [];
         if (look === "original") drop.push("moving");
         if (look !== "words") drop.push("wordsLead", "words");
-        else drop.push("headingBefore", "headingWord", "headingAfter", "headingRest");
+        else drop.push("logo", "headingBefore", "headingWord", "headingAfter", "headingRest");
         if (["stats", "bento", "trail", "week"].includes(look)) drop.push("numbers", "guestClose", "memberClose");
         if (look !== "bento") drop.push("freeTitle", "freeText");
         if (look !== "trail") drop.push("trailNote");
-        if (!["group", "countryside", "busyday", "shower", "night"].includes(look)) drop.push("groupNote");
+        if (!["group", "countryside", "busyday", "shower", "night", "fineday"].includes(look)) drop.push("groupNote");
         return dropFields(fields, drop);
       },
       render: HomeHeroBlock,

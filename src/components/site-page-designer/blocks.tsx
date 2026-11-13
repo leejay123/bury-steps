@@ -126,6 +126,20 @@ function heroPlaces(places: { name: string }[], most = 4): string[] {
     .slice(0, most);
 }
 
+/** Up to five signpost names: the walks most recently finished, newest first, in a few words each ("Greenmount Circular wellbeing walk" → "Greenmount"). */
+function heroSigns(titles: string[], most = 5): string[] {
+  return titles
+    .map((title) =>
+      title
+        .split(/[,(\n]/)[0]!
+        .replace(/(\s+(circular|well-?being|walk))+\s*$/i, "")
+        .trim(),
+    )
+    .filter((name) => name.length >= 3 && !/^test\b/i.test(name))
+    .filter((name, i, all) => all.findIndex((other) => other.toLowerCase() === name.toLowerCase()) === i)
+    .slice(0, most);
+}
+
 /** The words a changing heading rolls through ("walk. · chat. · breather."), up to six. */
 function heroWords(raw: string): string[] {
   return raw
@@ -184,11 +198,12 @@ export function HomeHeroBlock(props: Record<string, unknown>) {
         }}
         joinHref={joinHref}
         kicker={asText(props.kicker, "Bury Steps is a free, friendly walking group from Bury")}
-        logoSrc={logo.src}
+        logoSrc={isOn(props.logo) ? logo.src : ""}
         look={look}
         moving={isOn(props.moving)}
         places={places}
         sentence={sentence}
+        signs={heroSigns(data.finished)}
         trailNote={
           <CountsText counts={counts} text={asText(props.trailNote).trim() || "**{walks} walks** walked so far this year"} />
         }
@@ -215,14 +230,16 @@ export function HomeHeroBlock(props: Record<string, unknown>) {
           >
             {asText(props.headingBefore, "The")}{" "}
             <span className="whitespace-nowrap">
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img
-                alt=""
-                className="me-[0.18em] inline-block size-[0.82em] -translate-y-[0.05em] rounded-full border border-foreground/[0.12] object-contain bg-background align-middle"
-                height={96}
-                src={logo.src}
-                width={96}
-              />
+              {isOn(props.logo) ? (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img
+                  alt=""
+                  className="me-[0.18em] inline-block size-[0.82em] -translate-y-[0.05em] rounded-full border border-foreground/[0.12] object-contain bg-background align-middle"
+                  height={96}
+                  src={logo.src}
+                  width={96}
+                />
+              ) : null}
               {asText(props.headingWord, "walking")}
             </span>{" "}
             {asText(props.headingAfter, "group")}

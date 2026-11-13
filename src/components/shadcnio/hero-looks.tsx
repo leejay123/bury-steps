@@ -33,6 +33,7 @@ export const HERO_LOOKS = [
   "busyday",
   "shower",
   "night",
+  "fineday",
 ] as const;
 export type HeroLook = (typeof HERO_LOOKS)[number];
 export const isHeroLook = (v: unknown): v is HeroLook => HERO_LOOKS.includes(v as HeroLook);
@@ -42,6 +43,7 @@ export type HeroLookProps = {
   moving: boolean;
   kicker: string;
   heading: { before: string; word: string; after: string; rest: string };
+  /** The logo in the heading. Empty when the hero's logo is switched off. */
   logoSrc: string;
   /** The numbers sentence with the visitor / member line, as the original hero words it. */
   sentence: ReactNode;
@@ -50,6 +52,8 @@ export type HeroLookProps = {
   places: string[];
   /** Every place the group walks (the scrolling strip). */
   everyPlace: string[];
+  /** Up to five names for the signposts: the walks most recently finished, newest first. */
+  signs: string[];
   walks: HomeWalk[];
   joinHref: string;
   /** Changing word: the words before it, and the words it changes between. */
@@ -102,14 +106,16 @@ function HeadingStart({ heading, logoSrc }: Pick<HeroLookProps, "heading" | "log
     <>
       {heading.before}{" "}
       <span className="whitespace-nowrap">
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img
-          alt=""
-          className="me-[0.18em] inline-block size-[0.82em] -translate-y-[0.05em] rounded-full border border-foreground/[0.12] object-contain bg-background align-middle"
-          height={96}
-          src={logoSrc}
-          width={96}
-        />
+        {logoSrc ? (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img
+            alt=""
+            className="me-[0.18em] inline-block size-[0.82em] -translate-y-[0.05em] rounded-full border border-foreground/[0.12] object-contain bg-background align-middle"
+            height={96}
+            src={logoSrc}
+            width={96}
+          />
+        ) : null}
         {heading.word}
       </span>{" "}
       {heading.after}
@@ -981,7 +987,7 @@ function Cloud({ className, width, storm }: { className: string; width: number; 
 }
 
 function Signpost({ x, name }: { x: number; name: string }) {
-  const label = name.length > 18 ? `${name.slice(0, 17).trimEnd()}…` : name;
+  const label = name.length > 24 ? `${name.slice(0, 23).trimEnd()}…` : name;
   const width = Math.round(label.length * 6.8 + 10);
   return (
     <g transform={`translate(${x},0)`}>
@@ -1019,8 +1025,9 @@ function Hiker({ x, scale, start, step, pack, poles, hair, hat, lead, wave, brol
       <g className={cn("hero-c-ua", back && "hero-c-alt")}>
         {poles ? (
           <>
-            <line y2="30" />
-            <line strokeWidth="1.4" x1="0" x2="3" y1="30" y2="92" />
+            {/* The pole is thinner and lighter than the bent arm holding it, so it doesn't read as one long arm. */}
+            <path className="stroke-muted-foreground" d="M10.2 20L3 92M0.5 85.5h6" strokeWidth="1.2" />
+            <path d="M0 0V18L9.3 29" />
           </>
         ) : (
           <>
@@ -1260,12 +1267,15 @@ function Storm() {
   );
 }
 
-/** Night spreads out from the sun: everything under it swaps light for dark, then the stars and moon come out. */
-function NightSky() {
+/**
+ * Night spreads out from the sun: everything under it swaps light for dark, then the stars and moon come out.
+ * `darkOnly` leaves the day alone: the stars and moon only come out where the site is already in dark mode.
+ */
+function NightSky({ darkOnly }: { darkOnly?: boolean }) {
   return (
     <>
-      <div aria-hidden className="hero-w-night pointer-events-none absolute inset-0 bg-white mix-blend-difference dark:hidden" />
-      <div aria-hidden className="hero-w-night pointer-events-none absolute inset-0 text-background dark:text-foreground">
+      {darkOnly ? null : <div aria-hidden className="hero-w-night pointer-events-none absolute inset-0 bg-white mix-blend-difference dark:hidden" />}
+      <div aria-hidden className={cn("hero-w-night pointer-events-none absolute inset-0 text-background dark:text-foreground", darkOnly && "hidden dark:block")}>
         {STARS.map(([left, top, size, twinkle, start]) => {
           const style = { left: `${left}%`, top: `${top}%`, "--tw": `${twinkle}s`, "--td": `${start}s` } as CSSProperties;
           return size === 0 ? (
@@ -1289,9 +1299,9 @@ function NightSky() {
 }
 
 /** What only shows after dark, kept above the night so it stays bright: fireflies, and three head torches. */
-function AfterDark({ id }: { id: string }) {
+function AfterDark({ id, darkOnly }: { id: string; darkOnly?: boolean }) {
   return (
-    <div aria-hidden className="hero-c-scene hero-w-top pointer-events-none text-background dark:text-foreground">
+    <div aria-hidden className={cn("hero-c-scene hero-w-top pointer-events-none text-background dark:text-foreground", darkOnly && "hidden dark:block")}>
       {FIREFLIES.map(([left, top, wander, start]) => (
         <span
           className="hero-w-ff absolute size-1 rounded-full bg-current"
@@ -1319,16 +1329,22 @@ function AfterDark({ id }: { id: string }) {
   );
 }
 
-/** The countryside walk, and the three bigger days out built on it. */
+/** Where the signposts stand along the path, by how many there are. */
+const SIGN_SPOTS = [[], [300], [300, 1480], [300, 1480, 2250], [300, 800, 1480, 2250], [300, 800, 1480, 1960, 2250]] as const;
+
+/** The countryside walk, and the bigger days out built on it. */
 function OutdoorsLook(p: HeroLookProps) {
-  // Signposts name up to three of the places the group walks.
-  const [first, second, third] = p.places.length > 0 ? p.places : p.everyPlace;
+  // Signposts name the walks most recently finished (up to five). Before any walk has finished, three of the places the group walks.
+  const signs = p.signs.length > 0 ? p.signs.slice(0, 5) : (p.places.length > 0 ? p.places : p.everyPlace).slice(0, 3);
+  const spots = SIGN_SPOTS[signs.length] ?? [];
   const id = useId().replace(/[^a-zA-Z0-9_-]/g, "");
   const shower = p.look === "shower";
   const night = p.look === "night";
   const kite = p.look === "busyday";
+  // The night look without the night: it stays day, and the stars and head torches only come out in dark mode.
+  const fine = p.look === "fineday";
   // The busy day's extras stay out for the night as well.
-  const busy = kite || night;
+  const busy = kite || night || fine;
   return (
     <div className={cn("@container relative flex flex-col overflow-hidden", night && "isolate bg-background", TALL)}>
       {shower ? <Rain id={`${id}-rain`} /> : null}
@@ -1442,25 +1458,25 @@ function OutdoorsLook(p: HeroLookProps) {
               {[520, 2440].map((x) => (
                 <path d={ROCK} key={x} transform={`translate(${x},0)`} />
               ))}
-              {first ? <Signpost name={first} x={300} /> : null}
+              {signs.map((name, i) => (
+                <Signpost key={spots[i]} name={name} x={spots[i] ?? 0} />
+              ))}
               <g transform="translate(700,0)">
                 <path d="M0 0v-70M0 -40l-14 -16M0 -52l12 -14" />
                 <circle className="fill-background" cy="-96" r="34" />
                 <path d="M-14 -100q8 -10 18 -4M-4 -84q10 -6 18 2" />
               </g>
               <path d="M0 0v-26M22 0v-26M44 0v-26M-6 -18h56M-6 -9h56" transform="translate(1050,0)" />
-              {second ? <Signpost name={second} x={1480} /> : null}
               <path d="M0 -14h36M4 -14v14M32 -14v14M0 -26h36M2 -26v12M34 -26v12" transform="translate(1700,0)" />
               <path className="fill-background" d="M0 0v-18M-20 -18h40l-20 -34zM-15 -46h30l-15 -30zM-10 -72h20l-10 -22z" transform="translate(1900,0)" />
-              {third ? <Signpost name={third} x={2250} /> : null}
             </g>
           </Scenery>
           <Ramblers brolly={shower} kite={kite} />
         </div>
-        {night ? <AfterDark id={`${id}-torch`} /> : null}
-        <p className="hero-c-note px-5 pb-2 text-center text-muted-foreground text-xs sm:pb-3 md:text-sm">{p.groupNote}</p>
+        {night || fine ? <AfterDark darkOnly={fine} id={`${id}-torch`} /> : null}
+        <p className="hero-c-note px-5 text-center text-muted-foreground text-xs md:text-sm">{p.groupNote}</p>
       </div>
-      {night ? <NightSky /> : null}
+      {night || fine ? <NightSky darkOnly={fine} /> : null}
     </div>
   );
 }
@@ -1483,6 +1499,7 @@ const LOOKS: Record<HeroLookProps["look"], (p: HeroLookProps) => ReactNode> = {
   busyday: OutdoorsLook,
   shower: OutdoorsLook,
   night: OutdoorsLook,
+  fineday: OutdoorsLook,
 };
 
 export function HeroLooks(props: HeroLookProps) {

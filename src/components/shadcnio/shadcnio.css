@@ -1168,8 +1168,9 @@ html:is([data-remembered-in], [data-guest-dash]):not([data-page-kind="home"], [d
 /* Countryside look: the scene is drawn 270 tall, and shrinks as one piece (--s) so every walker fits a narrow page. */
 .hero-c-land { --s: 1; position: relative; overflow-x: clip; padding-top: calc(270px * var(--s)); }
 .hero-c-scene { position: absolute; top: 0; left: 0; width: calc(100% / var(--s)); height: 270px; transform: scale(var(--s)); transform-origin: 0 0; }
-/* The line under the walkers sits just below the ground line, whatever the size. */
-.hero-c-note { position: relative; margin-top: calc(6px - 44px * var(--s)); }
+/* The line under the walkers sits midway between the ground line and the bottom edge (--g above and below it), whatever the size. */
+.hero-c-note { --g: 10px; position: relative; margin-top: calc(var(--g) - 44px * var(--s)); padding-bottom: var(--g); }
+@media (min-width: 40rem) { .hero-c-note { --g: 12px; } }
 @container (max-width: 659px) { .hero-c-land { --s: 0.75; } }
 @container (max-width: 499px) { .hero-c-land { --s: 0.62; } }
 @container (max-width: 399px) { .hero-c-land { --s: 0.5; } }

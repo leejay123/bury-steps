@@ -2,6 +2,7 @@ import { cacheLife, cacheTag } from "next/cache";
 import { prisma } from "@/lib/db";
 import { HOMEPAGE_CACHE_TAG } from "@/lib/homepage-cache";
 import { walkSharePath } from "@/lib/walk-slug";
+import { effectiveEndsAt } from "@/lib/walk-window";
 
 export type HomeWalk = {
   id: string;
@@ -23,6 +24,8 @@ export type ShadcnHomeData = {
   year: number;
   upcoming: HomeWalk[];
   places: HomePlace[];
+  /** The titles of the walks most recently finished, newest first (the hero's signposts). */
+  finished: string[];
   /** The next walk, for the bar along the bottom (ISO start time). */
   next: { title: string; startsAt: string; href: string } | null;
 };
@@ -50,7 +53,7 @@ export async function getShadcnHomeData(): Promise<ShadcnHomeData> {
   cacheLife({ revalidate: 15 * 60 });
   const now = new Date();
   const startOfYear = new Date(now.getFullYear(), 0, 1);
-  const [upcoming, upcomingCount, members, walksThisYear, recent] = await Promise.all([
+  const [upcoming, upcomingCount, members, walksThisYear, recent, started] = await Promise.all([
     prisma.walk.findMany({
       where: { cancelledAt: null, startsAt: { gte: now } },
       orderBy: { startsAt: "asc" },
@@ -65,6 +68,13 @@ export async function getShadcnHomeData(): Promise<ShadcnHomeData> {
       orderBy: { startsAt: "desc" },
       take: 200,
       select: { location: true },
+    }),
+    // Walks that have started, newest first: the ones already over name the hero's signposts.
+    prisma.walk.findMany({
+      where: { cancelledAt: null, startsAt: { lt: now } },
+      orderBy: { startsAt: "desc" },
+      take: 30,
+      select: { title: true, startsAt: true, durationMins: true, endedAt: true },
     }),
   ]);
 
@@ -93,6 +103,7 @@ export async function getShadcnHomeData(): Promise<ShadcnHomeData> {
       .sort((a, b) => b[1] - a[1])
       .slice(0, 8)
       .map(([name, walks]) => ({ name, walks })),
+    finished: started.filter((walk) => effectiveEndsAt(walk).getTime() <= now.getTime()).map((walk) => walk.title),
     next: first ? { title: first.title, startsAt: first.startsAt.toISOString(), href: walkSharePath(first) } : null,
   };
 }
