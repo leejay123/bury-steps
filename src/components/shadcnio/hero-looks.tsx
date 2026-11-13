@@ -30,6 +30,9 @@ export const HERO_LOOKS = [
   "week",
   "group",
   "countryside",
+  "busyday",
+  "shower",
+  "night",
 ] as const;
 export type HeroLook = (typeof HERO_LOOKS)[number];
 export const isHeroLook = (v: unknown): v is HeroLook => HERO_LOOKS.includes(v as HeroLook);
@@ -962,10 +965,17 @@ function Scenery({ className, tile, tiles, children }: { className: string; tile
   );
 }
 
-function Cloud({ className, width }: { className: string; width: number }) {
+function Cloud({ className, width, storm }: { className: string; width: number; storm?: boolean }) {
   return (
-    <svg className={cn("absolute overflow-visible", className)} fill="none" strokeLinejoin="round" strokeWidth="1.5" viewBox="-12 -24 88 44" width={width}>
-      <path className="fill-background" d={CLOUD} />
+    <svg
+      className={cn("absolute overflow-visible", className)}
+      fill="none"
+      strokeLinejoin="round"
+      strokeWidth={storm ? 0.7 : 1.5}
+      viewBox="-12 -24 88 44"
+      width={width}
+    >
+      <path className={storm ? "fill-muted" : "fill-background"} d={CLOUD} />
     </svg>
   );
 }
@@ -998,10 +1008,12 @@ type HikerProps = {
   lead?: boolean;
   /** Waving the front arm. */
   wave?: boolean;
+  /** An umbrella that opens when the shower comes. */
+  brolly?: boolean;
 };
 
 /** A walker with knees and elbows, so the step reads as a real stride. */
-function Hiker({ x, scale, start, step, pack, poles, hair, hat, lead, wave }: HikerProps) {
+function Hiker({ x, scale, start, step, pack, poles, hair, hat, lead, wave, brolly }: HikerProps) {
   const arm = (back: boolean) => (
     <g transform="translate(2,-94)">
       <g className={cn("hero-c-ua", back && "hero-c-alt")}>
@@ -1038,6 +1050,18 @@ function Hiker({ x, scale, start, step, pack, poles, hair, hat, lead, wave }: Hi
   return (
     <g transform={`translate(${x},0) scale(${scale})`}>
       <g className="hero-c-bob" style={pace(start, step)}>
+        {brolly ? (
+          <g transform="translate(6,-93)">
+            <g className="hero-w-brolly">
+              <line y2="-36" />
+              <path
+                className="fill-background"
+                d="M-27 -36a27 21 0 0 1 54 0q-6.75 -5 -13.5 0q-6.75 -5 -13.5 0q-6.75 -5 -13.5 0q-6.75 -5 -13.5 0z"
+              />
+              <line y1="-57" y2="-61" />
+            </g>
+          </g>
+        ) : null}
         {arm(true)}
         {leg(true)}
         {pack ? <rect className="fill-background" height="24" rx="4" width="10" x="-10.5" y="-95" /> : null}
@@ -1088,27 +1112,37 @@ function Hiker({ x, scale, start, step, pack, poles, hair, hat, lead, wave }: Hi
 }
 
 /** Eight walkers and a dog, walking on the spot while the scenery rolls past them. */
-function Ramblers() {
+function Ramblers({ brolly, kite }: { brolly?: boolean; kite?: boolean }) {
   return (
     <svg className="hero-c-party" fill="none" height="270" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.2" viewBox="0 0 640 270" width="640">
       <g transform={`translate(-340,${GROUND - SCENE_TOP})`}>
         {/* One further back, catching up and dropping back. */}
         <g className="hero-c-gap stroke-muted-foreground/60">
-          <Hiker pack scale={0.98} start={-0.2} step={1.02} x={380} />
+          <Hiker brolly={brolly} pack scale={0.98} start={-0.2} step={1.02} x={380} />
         </g>
         <g className="stroke-foreground">
-          <Hiker hair scale={1.1} start={-0.7} step={1.15} x={455} />
-          <Hiker hat="cap" scale={1.04} start={-0.35} step={1.09} x={505} />
-          <g className="hero-chat" strokeWidth="1.5" transform="translate(462,-158)">
+          <Hiker brolly={brolly} hair scale={1.1} start={-0.7} step={1.15} x={455} />
+          <Hiker brolly={brolly} hat="cap" scale={1.04} start={-0.35} step={1.09} x={505} />
+          <g className="hero-chat" strokeWidth="1.5" transform={`translate(462,${brolly ? -196 : -158})`}>
             <path className="fill-background" d="M0 0h30a6 6 0 0 1 6 6v8a6 6 0 0 1-6 6H12l-6 6v-6H0a6 6 0 0 1-6-6V6A6 6 0 0 1 0 0z" />
             <circle className="fill-foreground" cx="7" cy="10" r="1.4" stroke="none" />
             <circle className="fill-foreground" cx="15" cy="10" r="1.4" stroke="none" />
             <circle className="fill-foreground" cx="23" cy="10" r="1.4" stroke="none" />
           </g>
-          <Hiker hat="bobble" scale={0.66} start={-0.1} step={0.69} x={578} />
-          <Hiker hat="brim" scale={1.15} start={-0.5} step={1.2} x={625} />
-          <Hiker pack poles scale={1.12} start={-0.9} step={1.17} x={715} />
-          <Hiker lead scale={1.08} start={-0.25} step={1.13} x={800} />
+          <Hiker brolly={brolly} hat="bobble" scale={0.66} start={-0.1} step={0.69} x={578} />
+          {kite ? (
+            <g transform="translate(579,-62)">
+              <g className="hero-w-kite">
+                <path d="M0 0Q14 -84 56 -134" strokeWidth="1.1" />
+                <path className="fill-background" d="M56 -184l13 22l-13 28l-13 -28z" strokeWidth="1.8" />
+                <path d="M56 -184v50M43 -162h26" strokeWidth="1.1" />
+                <path d="M56 -134q-5 7 0 13t0 13" strokeWidth="1.1" />
+              </g>
+            </g>
+          ) : null}
+          <Hiker brolly={brolly} hat="brim" scale={1.15} start={-0.5} step={1.2} x={625} />
+          <Hiker brolly={brolly} pack poles scale={1.12} start={-0.9} step={1.17} x={715} />
+          <Hiker brolly={brolly} lead scale={1.08} start={-0.25} step={1.13} x={800} />
           <g style={{ "--t": "0.5s" } as CSSProperties} transform="translate(866,0)">
             <g style={{ "--d": "-0.13s" } as CSSProperties} transform="translate(-11,-14)">
               <line className="hero-c-dl" y2="14" />
@@ -1126,21 +1160,181 @@ function Ramblers() {
             <path d="M24 -28l7 2" />
             <path className="fill-foreground" d="M16 -33l-3 -6l6 3z" />
           </g>
-          <Hiker pack scale={1.1} start={-0.6} step={1.15} wave x={940} />
+          {kite ? (
+            <g transform="translate(894,-62)">
+              <g className="hero-w-wander">
+                <path className="hero-c-flap" d="M-5 -5q1 5 5 5q4 0 5 -5M-3 4l3 -4l3 4" strokeWidth="1.4" style={{ animationDuration: "0.28s" }} />
+              </g>
+            </g>
+          ) : null}
+          <Hiker brolly={brolly} pack scale={1.1} start={-0.6} step={1.15} wave x={940} />
         </g>
       </g>
     </svg>
   );
 }
 
-function CountrysideLook(p: HeroLookProps) {
+// ── S, T, U: the same walk on a busy day, in a shower, and as day turns to night ──
+
+/** Wind turbines on the far hills: x, y, size, and how far round the blades start (seconds). */
+const TURBINES = [
+  [230, 444, 1, 0],
+  [256, 448, 0.78, -1.7],
+  [950, 454, 0.9, -3.1],
+] as const;
+/** Sheep on the middle hills: x, y, and how far into grazing each one starts (seconds). */
+const SHEEP = [
+  [152, 511, 0],
+  [184, 508, -1.4],
+  [760, 518, -2.2],
+  [810, 510.5, -0.6],
+] as const;
+/** Stars: left %, top %, size (0 is a sparkle), seconds per twinkle, and where in the twinkle it starts. */
+const STARS = [
+  [6.6, 10.9, 1.1, 4, -0.4], [2.2, 31.6, 0, 2.3, -2.2], [2.7, 26.7, 1.4, 4.5, -0.6], [17, 35.6, 0, 3.3, -4.9], [15.5, 18.9, 1.5, 2.6, -0.6],
+  [4.2, 35.8, 0.9, 4, -1.9], [2.3, 14.1, 1.3, 4.1, -2.1], [8.8, 19.5, 1.3, 4.4, -3.5], [13.4, 18.9, 1.5, 4.9, -0.6], [3.8, 30.5, 1.3, 2.3, -3.3],
+  [15.8, 20.3, 1.2, 4.1, -3], [9.1, 40.6, 1.7, 2.4, -3.5], [14.8, 18.6, 0, 3.3, -3.3], [8.9, 11.9, 0.9, 2.5, -0.3], [5.3, 24.8, 1.3, 4.6, -0.4],
+  [15.5, 18.3, 1.7, 3.4, -1.8], [3.8, 12.3, 1.3, 2.8, -1.2], [86.6, 2.5, 1.7, 3.4, -1.8], [93.6, 32, 0, 3.9, -3.4], [97.1, 47.3, 1.2, 4.6, -4],
+  [83.9, 38.9, 0, 2.4, -0.3], [83, 2.2, 0.8, 2.6, -0.5], [96.6, 37.7, 1.1, 2.6, -1.3], [84.2, 51.2, 0.9, 5, -2.3], [86.6, 50.2, 1.3, 2.7, -0.1],
+  [84.6, 33.6, 1.6, 2.3, -2.6], [95, 33, 1.5, 4.4, -1.6], [98.5, 51.4, 1, 4.5, -4.1], [82.7, 3.8, 1.7, 3, -1.3], [89.6, 56.4, 1, 5, -4.8],
+  [85.5, 38.3, 1.4, 4.7, -4.2], [95.5, 7, 1.5, 4, -4.5], [95.2, 21.4, 1.2, 4.4, -4.9], [97.9, 44.1, 0, 2.7, -0.6], [75.4, 56.7, 1.4, 2.6, -4.1],
+  [41.2, 54.7, 1.4, 2.6, -0.1], [52, 57.7, 1, 3.4, -4.4], [35.1, 52.8, 1.2, 2.9, -2.9], [27.7, 57.5, 1.6, 3.2, -2.3], [45.5, 57.5, 0.8, 3.6, -2.7],
+  [46.7, 52, 0, 2.2, -4], [48.8, 56.1, 1.3, 3.8, -1.6], [68, 51.4, 1.5, 3.8, -1.2], [50.9, 3.6, 1.4, 4.3, -4.6], [50.7, 3.3, 1.2, 4.1, -2.3],
+  [77.7, 4.1, 1.3, 4.7, -4.7], [77.7, 4.7, 0.9, 2.6, -0.6], [34.4, 1.6, 0.9, 4.1, -3.9], [63.8, 3.9, 1, 2.6, -4.4],
+] as const;
+const SPARKLE = "M0 -5q.6 4.4 5 5q-4.4 .6 -5 5q-.6 -4.4 -5 -5q4.4 -.6 5 -5z";
+/** Fireflies: left %, how far down the scene, seconds per wander, and where in the wander it starts. */
+const FIREFLIES = [
+  [91, 166, 6.2, -7.9], [80.2, 148, 6, -4.1], [35.4, 150, 5.6, -5.8], [6.5, 179, 6, -0.1], [34.8, 184, 6.3, -0.5],
+  [94, 197, 7.9, -0.8], [28.8, 138, 7.2, -2.2], [16.4, 168, 7.7, -6.6], [28.1, 147, 7.7, -4.6],
+] as const;
+/** Head torches, on three of the walkers: where the lamp sits, and that walker's own step so the beam bobs with them. */
+const TORCHES = [
+  [178, 113, -0.35, 1.09],
+  [390, 104, -0.9, 1.17],
+  [614, 106, -0.6, 1.15],
+] as const;
+const SUN_SPOT = "absolute top-6 right-6 overflow-visible @7xl:top-[4.25rem] @7xl:right-[6.5rem]";
+
+/** Rain over the whole hero, falling on a slant. */
+function Rain({ id }: { id: string }) {
+  return (
+    <div aria-hidden className="hero-w-rain pointer-events-none absolute inset-0 overflow-hidden">
+      <svg className="hero-w-fall absolute -top-40 left-0 h-[calc(100%+160px)] w-[calc(100%+40px)] max-w-none">
+        <defs>
+          <pattern height="80" id={id} patternUnits="userSpaceOnUse" width="40">
+            <path className="stroke-foreground/25" d="M12 4l-3 12M32 44l-3 12" fill="none" strokeLinecap="round" strokeWidth="1.2" />
+          </pattern>
+        </defs>
+        <rect fill={`url(#${id})`} height="100%" width="100%" />
+      </svg>
+    </div>
+  );
+}
+
+/** Two banks of storm cloud that roll in from the sides, with a flash of lightning under each on a wide page. */
+function Storm() {
+  const bank = "relative size-0 scale-50 stroke-muted-foreground/60 @4xl:scale-75 @7xl:scale-100";
+  const bolt = "absolute hidden overflow-visible stroke-foreground @4xl:block";
+  return (
+    <div aria-hidden className="pointer-events-none absolute inset-0">
+      <div className="hero-w-bank-l absolute top-0 left-0">
+        <div className={cn(bank, "origin-top-left")}>
+          <svg className={cn("hero-w-bolt top-[220px] left-[146px]", bolt)} fill="none" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" viewBox="146 220 34 104" width="34">
+            <path d="M176 222l-20 44h15l-22 56" />
+          </svg>
+          <Cloud className="top-[62px] left-[11px]" storm width={211} />
+          <Cloud className="top-[164px] left-[102px]" storm width={132} />
+        </div>
+      </div>
+      <div className="hero-w-bank-r absolute top-0 right-0">
+        <div className={cn(bank, "origin-top-right")}>
+          <svg className={cn("hero-w-bolt-2 top-[188px] right-[170px]", bolt)} fill="none" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" viewBox="1082 188 28 94" width="28">
+            <path d="M1108 190l-18 40h14l-20 50" />
+          </svg>
+          <Cloud className="top-[52px] right-[8px]" storm width={141} />
+          <Cloud className="top-[78px] right-[42px]" storm width={229} />
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/** Night spreads out from the sun: everything under it swaps light for dark, then the stars and moon come out. */
+function NightSky() {
+  return (
+    <>
+      <div aria-hidden className="hero-w-night pointer-events-none absolute inset-0 bg-white mix-blend-difference dark:hidden" />
+      <div aria-hidden className="hero-w-night pointer-events-none absolute inset-0 text-background dark:text-foreground">
+        {STARS.map(([left, top, size, twinkle, start]) => {
+          const style = { left: `${left}%`, top: `${top}%`, "--tw": `${twinkle}s`, "--td": `${start}s` } as CSSProperties;
+          return size === 0 ? (
+            <svg className="hero-w-star absolute" fill="currentColor" key={`${left}-${top}`} style={style} viewBox="-5 -5 10 10" width="10">
+              <path d={SPARKLE} />
+            </svg>
+          ) : (
+            <span className="hero-w-star absolute rounded-full bg-current" key={`${left}-${top}`} style={{ ...style, width: size * 2, height: size * 2 }} />
+          );
+        })}
+        <div className="absolute top-[6%] left-[2.5%] rotate-[24deg]">
+          <span className="hero-w-shoot block h-px w-[50px] bg-gradient-to-r from-transparent to-current" />
+        </div>
+        <svg className={cn(SUN_SPOT, "hidden @4xl:block")} viewBox="0 0 100 100" width="100">
+          <circle cx="50" cy="50" fill="currentColor" r="21" />
+          <circle className="fill-black dark:fill-background" cx="60" cy="42" r="18" />
+        </svg>
+      </div>
+    </>
+  );
+}
+
+/** What only shows after dark, kept above the night so it stays bright: fireflies, and three head torches. */
+function AfterDark({ id }: { id: string }) {
+  return (
+    <div aria-hidden className="hero-c-scene hero-w-top pointer-events-none text-background dark:text-foreground">
+      {FIREFLIES.map(([left, top, wander, start]) => (
+        <span
+          className="hero-w-ff absolute size-1 rounded-full bg-current"
+          key={`${left}-${top}`}
+          style={{ left: `${left}%`, top, animationDuration: `${wander}s`, animationDelay: `${start}s` }}
+        />
+      ))}
+      <svg className="hero-c-party" fill="none" height="270" viewBox="0 0 640 270" width="640">
+        <defs>
+          <linearGradient gradientUnits="userSpaceOnUse" id={id} x1="0" x2="125" y1="0" y2="45">
+            <stop offset="0" stopColor="currentColor" stopOpacity="0.6" />
+            <stop offset="1" stopColor="currentColor" stopOpacity="0" />
+          </linearGradient>
+        </defs>
+        {TORCHES.map(([x, y, start, step]) => (
+          <g key={x} transform={`translate(${x},${y})`}>
+            <g className="hero-c-bob" style={pace(start, step)}>
+              <path d="M0 0L128 14L112 84z" fill={`url(#${id})`} />
+              <circle fill="currentColor" r="2.4" />
+            </g>
+          </g>
+        ))}
+      </svg>
+    </div>
+  );
+}
+
+/** The countryside walk, and the three bigger days out built on it. */
+function OutdoorsLook(p: HeroLookProps) {
   // Signposts name up to three of the places the group walks.
   const [first, second, third] = p.places.length > 0 ? p.places : p.everyPlace;
+  const id = useId().replace(/[^a-zA-Z0-9_-]/g, "");
+  const shower = p.look === "shower";
+  const night = p.look === "night";
+  const kite = p.look === "busyday";
+  // The busy day's extras stay out for the night as well.
+  const busy = kite || night;
   return (
-    <div className={cn("@container relative flex flex-col overflow-hidden", TALL)}>
+    <div className={cn("@container relative flex flex-col overflow-hidden", night && "isolate bg-background", TALL)}>
+      {shower ? <Rain id={`${id}-rain`} /> : null}
       {/* The sky, where the page is wide enough to have room around the heading: the sun and one cloud first, the rest on a wider page. */}
       <div aria-hidden className="pointer-events-none absolute inset-0 hidden stroke-foreground/20 @4xl:block">
-        <svg className="absolute top-6 right-6 overflow-visible @7xl:top-[4.25rem] @7xl:right-[6.5rem]" fill="none" strokeLinecap="round" strokeWidth="1.5" viewBox="0 0 100 100" width="100">
+        <svg className={SUN_SPOT} fill="none" strokeLinecap="round" strokeWidth="1.5" viewBox="0 0 100 100" width="100">
           <g transform="translate(50,50)">
             <circle r="20" />
             <g className="hero-c-sun">
@@ -1152,16 +1346,51 @@ function CountrysideLook(p: HeroLookProps) {
         <Cloud className="hero-c-cloud-2 top-10 left-10 @7xl:top-14 @7xl:left-40" width={62} />
         <Cloud className="hero-c-cloud-2 top-[14rem] right-32 hidden @7xl:block" width={79} />
       </div>
-      <div className={cn(PAD, "relative flex flex-1 flex-col items-center justify-center gap-8 pt-12 pb-6")}>
+      {shower ? <Storm /> : null}
+      {/* A little more room under the buttons where something flies above the scene (the balloon, the kite, the rainbow). */}
+      <div className={cn(PAD, "relative flex flex-1 flex-col items-center justify-center gap-8 pt-12", p.look === "countryside" ? "pb-6" : "pb-12")}>
         <Centre p={p} />
         <Buttons className="justify-center" joinHref={p.joinHref} />
       </div>
       <div className="hero-c-land">
         <div aria-hidden className="hero-c-scene pointer-events-none select-none">
+          {shower ? (
+            <svg className="absolute top-[-32px] left-1/2 -ml-[202px] max-w-none overflow-visible" fill="none" height="202" strokeWidth="2" viewBox="438 338 404 202" width="404">
+              <path className="hero-w-bow stroke-muted-foreground/60" d="M440 540A200 200 0 0 1 840 540" pathLength="100" strokeDasharray="100" />
+              <path className="hero-w-bow stroke-foreground/30" d="M452 540A188 188 0 0 1 828 540" pathLength="100" strokeDasharray="100" style={{ animationDelay: "0.5s" }} />
+              <path className="hero-w-bow stroke-foreground/20" d="M464 540A176 176 0 0 1 816 540" pathLength="100" strokeDasharray="100" style={{ animationDelay: "1s" }} />
+            </svg>
+          ) : null}
           <Scenery className="hero-c-far stroke-border" tile={1280} tiles={4}>
             <path d={FAR_HILLS} />
             <path className="fill-background" d="M696 407l4 -28l4 28z" />
+            {busy
+              ? TURBINES.map(([x, y, size, start]) => (
+                  <g className="stroke-foreground/20" key={x} transform={`translate(${x},${y}) scale(${size})`}>
+                    <line y2="-42" />
+                    <g transform="translate(0,-42)">
+                      <path className="hero-w-blades" d="M0 0v-17M0 0l14.7 8.5M0 0l-14.7 8.5" style={{ animationDelay: `${start}s` }} />
+                    </g>
+                  </g>
+                ))
+              : null}
           </Scenery>
+          {busy ? (
+            <svg
+              className="hero-w-balloon absolute top-[-76px] left-[95px] overflow-visible stroke-muted-foreground/60"
+              fill="none"
+              height="74"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth="1.5"
+              viewBox="-25 -36 50 74"
+              width="50"
+            >
+              <path className="fill-background" d="M0 -34a22 22 0 0 1 22 22c0 14-12 22-17 32h-10c-5-10-17-18-17-32a22 22 0 0 1 22-22z" />
+              <path d="M0 -34c-9 10-9 40-3 54M0 -34c9 10 9 40 3 54M-5 20l1 8M5 20l-1 8" />
+              <rect className="fill-background" height="8" rx="1.5" width="10" x="-5" y="28" />
+            </svg>
+          ) : null}
           <div className="hero-c-fly">
             <svg className="overflow-visible stroke-muted-foreground/60" fill="none" height="50" strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" viewBox="0 0 70 50" width="70">
               <g transform="translate(50,22)">
@@ -1192,6 +1421,17 @@ function CountrysideLook(p: HeroLookProps) {
               <line y2="-12" />
               <circle className="fill-background" cy="-23" r="11" />
             </g>
+            {busy
+              ? SHEEP.map(([x, y, start]) => (
+                  <g className="stroke-muted-foreground/60" key={x} transform={`translate(${x},${y})`}>
+                    <path d="M-5 -3v3M4 -3v3" />
+                    <rect className="fill-background" height="8" rx="4" width="15" x="-8" y="-11" />
+                    <g transform="translate(7,-9)">
+                      <circle className="hero-w-graze fill-muted-foreground" cx="3" r="2.6" stroke="none" style={{ animationDelay: `${start}s` }} />
+                    </g>
+                  </g>
+                ))
+              : null}
           </Scenery>
           <Scenery className="hero-c-near stroke-muted-foreground/60" tile={2560} tiles={3}>
             <g transform={`translate(0,${GROUND})`}>
@@ -1215,10 +1455,12 @@ function CountrysideLook(p: HeroLookProps) {
               {third ? <Signpost name={third} x={2250} /> : null}
             </g>
           </Scenery>
-          <Ramblers />
+          <Ramblers brolly={shower} kite={kite} />
         </div>
+        {night ? <AfterDark id={`${id}-torch`} /> : null}
         <p className="hero-c-note px-5 pb-2 text-center text-muted-foreground text-xs sm:pb-3 md:text-sm">{p.groupNote}</p>
       </div>
+      {night ? <NightSky /> : null}
     </div>
   );
 }
@@ -1237,7 +1479,10 @@ const LOOKS: Record<HeroLookProps["look"], (p: HeroLookProps) => ReactNode> = {
   trail: TrailLook,
   week: WeekLook,
   group: GroupLook,
-  countryside: CountrysideLook,
+  countryside: OutdoorsLook,
+  busyday: OutdoorsLook,
+  shower: OutdoorsLook,
+  night: OutdoorsLook,
 };
 
 export function HeroLooks(props: HeroLookProps) {

@@ -101,6 +101,9 @@ export const homePageConfig = {
             { value: "week", label: "This week along the bottom" },
             { value: "group", label: "The group walking along the bottom" },
             { value: "countryside", label: "Out in the countryside, the scenery rolling by" },
+            { value: "busyday", label: "A busy day out: a balloon, a kite, wind turbines and sheep" },
+            { value: "shower", label: "Caught in a shower: umbrellas up, then a rainbow" },
+            { value: "night", label: "Day turns to night: stars and head torches, then sunrise" },
           ],
         },
         moving: onOff("Moving background", "Moving", "Still"),
@@ -132,7 +135,7 @@ export const homePageConfig = {
         if (["stats", "bento", "trail", "week"].includes(look)) drop.push("numbers", "guestClose", "memberClose");
         if (look !== "bento") drop.push("freeTitle", "freeText");
         if (look !== "trail") drop.push("trailNote");
-        if (look !== "group" && look !== "countryside") drop.push("groupNote");
+        if (!["group", "countryside", "busyday", "shower", "night"].includes(look)) drop.push("groupNote");
         return dropFields(fields, drop);
       },
       render: HomeHeroBlock,

@@ -1166,7 +1166,7 @@ html:is([data-remembered-in], [data-guest-dash]):not([data-page-kind="home"], [d
 /* The second group only joins in while the strip moves. */
 .hero-march-2 { display: none; }
 /* Countryside look: the scene is drawn 270 tall, and shrinks as one piece (--s) so every walker fits a narrow page. */
-.hero-c-land { --s: 1; position: relative; overflow: hidden; padding-top: calc(270px * var(--s)); }
+.hero-c-land { --s: 1; position: relative; overflow-x: clip; padding-top: calc(270px * var(--s)); }
 .hero-c-scene { position: absolute; top: 0; left: 0; width: calc(100% / var(--s)); height: 270px; transform: scale(var(--s)); transform-origin: 0 0; }
 /* The line under the walkers sits just below the ground line, whatever the size. */
 .hero-c-note { position: relative; margin-top: calc(6px - 44px * var(--s)); }
@@ -1186,6 +1186,17 @@ html:is([data-remembered-in], [data-guest-dash]):not([data-page-kind="home"], [d
 .hero-c-bob { transform: translateY(2px); }
 .hero-c-dl { transform: rotate(-14deg); }
 .hero-c-dl.hero-c-alt { transform: rotate(14deg); }
+/* The bigger days out (busy day, shower, night) add to the countryside scene. Standing still, the shower is
+   mid-downpour (clouds in, umbrellas up, no lightning or rainbow) and the night look is still in daylight. */
+.hero-w-bolt, .hero-w-bolt-2, .hero-w-bow, .hero-w-shoot { opacity: 0; }
+.hero-w-top { z-index: 2; opacity: 0; }
+.hero-w-ff { box-shadow: 0 0 6px 1px currentColor; }
+/* Night spreads out from where the sun sits (the corner, on a page too narrow to show the sun). */
+.hero-w-night { --nx: 100%; --ny: 0px; clip-path: circle(0% at var(--nx) var(--ny)); }
+@container (min-width: 56rem) { .hero-w-night { --nx: calc(100% - 74px); --ny: 74px; } }
+@container (min-width: 80rem) { .hero-w-night { --nx: calc(100% - 154px); --ny: 118px; } }
+/* The logo keeps its own colours through the night. */
+[data-hero-look="night"] h1 img { position: relative; z-index: 3; }
 .hero-lf { transform: rotate(-16deg); }
 .hero-lb { transform: rotate(16deg); }
 .hero-af { transform: rotate(12deg); }
@@ -1227,6 +1238,23 @@ html:is([data-remembered-in], [data-guest-dash]):not([data-page-kind="home"], [d
 @keyframes hero-c-sun { to { transform: rotate(360deg); } }
 @keyframes hero-c-flap { 0%, 100% { transform: scaleY(1); } 50% { transform: scaleY(-0.35); } }
 @keyframes hero-c-fly { from { transform: translateX(0); } to { transform: translateX(100%); } }
+@keyframes hero-w-graze { 0%, 40%, 100% { transform: rotate(0deg); } 55%, 85% { transform: rotate(38deg); } }
+@keyframes hero-w-balloon { 0% { transform: translate(0, 0); } 50% { transform: translate(46px, -16px); } 100% { transform: translate(90px, 6px); } }
+@keyframes hero-w-kite { 0%, 100% { transform: rotate(-5deg); } 50% { transform: rotate(6deg); } }
+@keyframes hero-w-wander { 0%, 100% { transform: translate(0, 0); } 25% { transform: translate(10px, -12px); } 50% { transform: translate(22px, -2px); } 75% { transform: translate(8px, 8px); } }
+@keyframes hero-w-bank-r { 0%, 26% { transform: translateX(320px); } 36%, 66% { transform: translateX(0); } 76%, 100% { transform: translateX(320px); } }
+@keyframes hero-w-bank-l { 0%, 26% { transform: translateX(-300px); } 36%, 66% { transform: translateX(0); } 76%, 100% { transform: translateX(-300px); } }
+@keyframes hero-w-rain { 0%, 35% { opacity: 0; } 39%, 64% { opacity: 1; } 69%, 100% { opacity: 0; } }
+@keyframes hero-w-fall { to { transform: translate(-40px, 160px); } }
+@keyframes hero-w-brolly { 0%, 36% { transform: scale(0); } 38.6% { transform: scale(1.14); } 40%, 65% { transform: scale(1); } 68%, 100% { transform: scale(0); } }
+@keyframes hero-w-bolt { 0%, 45.9% { opacity: 0; } 46% { opacity: 1; } 46.5% { opacity: 0; } 46.9% { opacity: 1; } 47.7%, 100% { opacity: 0; } }
+@keyframes hero-w-bolt-2 { 0%, 56.9% { opacity: 0; } 57% { opacity: 1; } 57.5% { opacity: 0; } 57.9% { opacity: 1; } 58.7%, 100% { opacity: 0; } }
+@keyframes hero-w-bow { 0%, 69% { stroke-dashoffset: 100; opacity: 0; } 70% { stroke-dashoffset: 100; opacity: 1; } 80%, 90% { stroke-dashoffset: 0; opacity: 1; } 96%, 100% { stroke-dashoffset: 0; opacity: 0; } }
+@keyframes hero-w-night { 0%, 30% { clip-path: circle(0% at var(--nx) var(--ny)); } 44%, 88% { clip-path: circle(150% at var(--nx) var(--ny)); } 100% { clip-path: circle(0% at var(--nx) var(--ny)); } }
+@keyframes hero-w-dusk { 0%, 36% { opacity: 0; } 42%, 92% { opacity: 1; } 96%, 100% { opacity: 0; } }
+@keyframes hero-w-star { 0%, 100% { opacity: 0.25; } 50% { opacity: 1; } }
+@keyframes hero-w-shoot { 0%, 80% { transform: translateX(-60px); opacity: 0; } 83% { opacity: 1; } 92%, 100% { transform: translateX(150px); opacity: 0; } }
+@keyframes hero-w-ff { 0%, 100% { transform: translate(0, 0); opacity: 0.15; } 30% { transform: translate(14px, -12px); opacity: 1; } 60% { transform: translate(-8px, -22px); opacity: 0.3; } 80% { transform: translate(-16px, -6px); opacity: 1; } }
 @media (prefers-reduced-motion: no-preference) {
   [data-hero-moving] .hero-dots { animation: hero-drift 6s linear infinite; }
   [data-hero-moving] .hero-lines { animation: hero-slide 14s linear infinite alternate; }
@@ -1273,4 +1301,25 @@ html:is([data-remembered-in], [data-guest-dash]):not([data-page-kind="home"], [d
   [data-hero-moving] .hero-c-sun { animation: hero-c-sun 60s linear infinite; }
   [data-hero-moving] .hero-c-flap { animation: hero-c-flap 0.6s ease-in-out infinite; }
   [data-hero-moving] .hero-c-fly { animation: hero-c-fly 48s linear infinite; }
+  [data-hero-moving] .hero-w-blades { animation: hero-c-sun 5s linear infinite; }
+  [data-hero-moving] .hero-w-graze { animation: hero-w-graze 6s ease-in-out infinite; }
+  [data-hero-moving] .hero-w-balloon { animation: hero-w-balloon 26s ease-in-out infinite alternate; }
+  [data-hero-moving] .hero-w-kite { animation: hero-w-kite 4.2s ease-in-out infinite; }
+  [data-hero-moving] .hero-w-wander { animation: hero-w-wander 5s ease-in-out infinite; }
+  /* The shower comes and goes on one 32 second loop: clouds in, rain and umbrellas, lightning, then a rainbow. */
+  [data-hero-moving] .hero-w-bank-l { animation: hero-w-bank-l 32s ease-in-out infinite; }
+  [data-hero-moving] .hero-w-bank-r { animation: hero-w-bank-r 32s ease-in-out infinite; }
+  [data-hero-moving] .hero-w-rain { animation: hero-w-rain 32s linear infinite; }
+  [data-hero-moving] .hero-w-fall { animation: hero-w-fall 0.55s linear infinite; }
+  /* Each walker opens their umbrella a moment apart. */
+  [data-hero-moving] .hero-w-brolly { animation: hero-w-brolly 32s linear infinite backwards; animation-delay: calc(var(--d, 0s) * -1); }
+  [data-hero-moving] .hero-w-bolt { animation: hero-w-bolt 32s linear infinite; }
+  [data-hero-moving] .hero-w-bolt-2 { animation: hero-w-bolt-2 32s linear infinite; }
+  [data-hero-moving] .hero-w-bow { animation: hero-w-bow 32s ease-in-out infinite; }
+  /* Night falls and lifts on one 40 second loop. */
+  [data-hero-moving] .hero-w-night { animation: hero-w-night 40s ease-in-out infinite; }
+  [data-hero-moving] .hero-w-top { animation: hero-w-dusk 40s ease-in-out infinite; }
+  [data-hero-moving] .hero-w-star { animation: hero-w-star var(--tw, 3s) ease-in-out infinite; animation-delay: var(--td, 0s); }
+  [data-hero-moving] .hero-w-shoot { animation: hero-w-shoot 8s ease-in infinite; }
+  [data-hero-moving] .hero-w-ff { animation: hero-w-ff 6s ease-in-out infinite; }
 }
