@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useId, useState, useSyncExternalStore, type ReactNode } from "react";
+import { useEffect, useId, useState, useSyncExternalStore, type CSSProperties, type ReactNode } from "react";
 import { ArrowRight } from "lucide-react";
 import { IntentLink as Link } from "@/components/intent-link";
 import { cn } from "@/lib/utils";
@@ -29,6 +29,7 @@ export const HERO_LOOKS = [
   "trail",
   "week",
   "group",
+  "countryside",
 ] as const;
 export type HeroLook = (typeof HERO_LOOKS)[number];
 export const isHeroLook = (v: unknown): v is HeroLook => HERO_LOOKS.includes(v as HeroLook);
@@ -913,6 +914,310 @@ function GroupLook(p: HeroLookProps) {
         <div aria-hidden className="hero-march">
           <WalkingGroup />
         </div>
+        {/* A second group half a lap behind, so the strip is never empty while it moves. */}
+        <div aria-hidden className="hero-march hero-march-2">
+          <WalkingGroup />
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ── R: out in the countryside, the scenery rolling by ───────────────────────
+
+/** The scene is 270 tall. Its drawings keep the numbers they were drawn with: the top is 370, the ground 596. */
+const SCENE_TOP = 370;
+const GROUND = 596;
+const FAR_HILLS = "M0 484C80 454 150 434 230 444S380 484 460 464S600 394 700 406S860 466 950 454S1100 414 1180 444S1240 499 1280 484";
+const MID_HILLS = "M0 534C100 514 200 500 320 510S520 550 640 536S860 492 980 506S1180 554 1280 534";
+const CLOUD = "M0 0a13 13 0 0 1 24 -9a17 17 0 0 1 32 3a12 12 0 0 1 4 23h-58a9 9 0 0 1 -2 -17z";
+const TUFT = "M0 0q-1 -7 -4 -9M1 0q0 -8 2 -11M2 0q2 -6 6 -7";
+const ROCK = "M0 0q2 -8 9 -7q7 1 8 7z";
+const BIRD = "M-9 0q4.5 -7 9 0q4.5 -7 9 0";
+
+/** How far into the step a walker starts, and how long one step takes (seconds). */
+const pace = (start: number, step: number) => ({ "--d": `${start}s`, "--t": `${step}s` }) as CSSProperties;
+
+/** One strip of scenery, drawn several times side by side so it can roll past without an end showing. */
+function Scenery({ className, tile, tiles, children }: { className: string; tile: number; tiles: number; children: ReactNode }) {
+  return (
+    <svg
+      className={cn("absolute top-0 left-0 max-w-none", className)}
+      fill="none"
+      height="270"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      strokeWidth="1.5"
+      viewBox={`0 0 ${tile * tiles} 270`}
+      width={tile * tiles}
+    >
+      <g transform={`translate(0,${-SCENE_TOP})`}>
+        {Array.from({ length: tiles }, (_, i) => (
+          <g key={i} transform={`translate(${i * tile},0)`}>
+            {children}
+          </g>
+        ))}
+      </g>
+    </svg>
+  );
+}
+
+function Cloud({ className, width }: { className: string; width: number }) {
+  return (
+    <svg className={cn("absolute overflow-visible", className)} fill="none" strokeLinejoin="round" strokeWidth="1.5" viewBox="-12 -24 88 44" width={width}>
+      <path className="fill-background" d={CLOUD} />
+    </svg>
+  );
+}
+
+function Signpost({ x, name }: { x: number; name: string }) {
+  const label = name.length > 18 ? `${name.slice(0, 17).trimEnd()}…` : name;
+  const width = Math.round(label.length * 6.8 + 10);
+  return (
+    <g transform={`translate(${x},0)`}>
+      <line y2="-92" />
+      <path className="fill-background" d={`M-4 -90h${width}l9 9l-9 9h-${width}z`} />
+      <text className="fill-muted-foreground font-medium text-[11.5px]" stroke="none" x="6" y="-76.5">
+        {label}
+      </text>
+    </g>
+  );
+}
+
+type HikerProps = {
+  x: number;
+  scale: number;
+  /** How far into the step this walker starts, and how long their step takes (seconds). */
+  start: number;
+  step: number;
+  pack?: boolean;
+  poles?: boolean;
+  hair?: boolean;
+  hat?: "cap" | "bobble" | "brim";
+  /** Holding the dog's lead: the front arm reaches out instead of swinging. */
+  lead?: boolean;
+  /** Waving the front arm. */
+  wave?: boolean;
+};
+
+/** A walker with knees and elbows, so the step reads as a real stride. */
+function Hiker({ x, scale, start, step, pack, poles, hair, hat, lead, wave }: HikerProps) {
+  const arm = (back: boolean) => (
+    <g transform="translate(2,-94)">
+      <g className={cn("hero-c-ua", back && "hero-c-alt")}>
+        {poles ? (
+          <>
+            <line y2="30" />
+            <line strokeWidth="1.4" x1="0" x2="3" y1="30" y2="92" />
+          </>
+        ) : (
+          <>
+            <line y2="19" />
+            <g transform="translate(0,19)">
+              <g className={cn("hero-c-fa", back && "hero-c-alt")}>
+                <line y2="17" />
+              </g>
+            </g>
+          </>
+        )}
+      </g>
+    </g>
+  );
+  const leg = (back: boolean) => (
+    <g transform="translate(0,-60)">
+      <g className={cn("hero-c-th", back && "hero-c-alt")}>
+        <line y2="30" />
+        <g transform="translate(0,30)">
+          <g className={cn("hero-c-sh", back && "hero-c-alt")}>
+            <path d="M0 0V30h7" />
+          </g>
+        </g>
+      </g>
+    </g>
+  );
+  return (
+    <g transform={`translate(${x},0) scale(${scale})`}>
+      <g className="hero-c-bob" style={pace(start, step)}>
+        {arm(true)}
+        {leg(true)}
+        {pack ? <rect className="fill-background" height="24" rx="4" width="10" x="-10.5" y="-95" /> : null}
+        <path d="M0 -60L3 -97" />
+        {leg(false)}
+        {hair ? (
+          <g transform="translate(-2,-111)">
+            <path className="hero-c-hair" d="M0 0q-8 3 -8 13" />
+          </g>
+        ) : null}
+        <circle className="fill-background" cx="5" cy="-107" r={hat === "bobble" ? 9.5 : 8.5} />
+        {hat === "cap" ? (
+          <>
+            <path className="fill-foreground" d="M-3.5 -109a8.5 8.5 0 0 1 17 0z" />
+            <line x1="13" x2="19" y1="-109" y2="-108" />
+          </>
+        ) : null}
+        {hat === "bobble" ? (
+          <>
+            <path className="fill-foreground" d="M-4.5 -109a9.5 9.5 0 0 1 19 0z" />
+            <circle className="fill-foreground" cx="5" cy="-121" r="3" />
+          </>
+        ) : null}
+        {hat === "brim" ? (
+          <>
+            <path d="M-9 -112h28" />
+            <path className="fill-foreground" d="M-2 -112a7 7 0 0 1 14 0z" />
+          </>
+        ) : null}
+        {lead ? (
+          <>
+            <path d="M2 -94l5 17l12 8" />
+            <path d="M19 -69Q48 -30 74 -23" strokeWidth="1.2" />
+          </>
+        ) : wave ? (
+          <g transform="translate(2,-94)">
+            <path d="M0 0l9 -5" />
+            <g transform="translate(9,-5)">
+              <line className="hero-c-wave" x2="2" y2="-21" />
+            </g>
+          </g>
+        ) : (
+          arm(false)
+        )}
+      </g>
+    </g>
+  );
+}
+
+/** Eight walkers and a dog, walking on the spot while the scenery rolls past them. */
+function Ramblers() {
+  return (
+    <svg className="hero-c-party" fill="none" height="270" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.2" viewBox="0 0 640 270" width="640">
+      <g transform={`translate(-340,${GROUND - SCENE_TOP})`}>
+        {/* One further back, catching up and dropping back. */}
+        <g className="hero-c-gap stroke-muted-foreground/60">
+          <Hiker pack scale={0.98} start={-0.2} step={1.02} x={380} />
+        </g>
+        <g className="stroke-foreground">
+          <Hiker hair scale={1.1} start={-0.7} step={1.15} x={455} />
+          <Hiker hat="cap" scale={1.04} start={-0.35} step={1.09} x={505} />
+          <g className="hero-chat" strokeWidth="1.5" transform="translate(462,-158)">
+            <path className="fill-background" d="M0 0h30a6 6 0 0 1 6 6v8a6 6 0 0 1-6 6H12l-6 6v-6H0a6 6 0 0 1-6-6V6A6 6 0 0 1 0 0z" />
+            <circle className="fill-foreground" cx="7" cy="10" r="1.4" stroke="none" />
+            <circle className="fill-foreground" cx="15" cy="10" r="1.4" stroke="none" />
+            <circle className="fill-foreground" cx="23" cy="10" r="1.4" stroke="none" />
+          </g>
+          <Hiker hat="bobble" scale={0.66} start={-0.1} step={0.69} x={578} />
+          <Hiker hat="brim" scale={1.15} start={-0.5} step={1.2} x={625} />
+          <Hiker pack poles scale={1.12} start={-0.9} step={1.17} x={715} />
+          <Hiker lead scale={1.08} start={-0.25} step={1.13} x={800} />
+          <g style={{ "--t": "0.5s" } as CSSProperties} transform="translate(866,0)">
+            <g style={{ "--d": "-0.13s" } as CSSProperties} transform="translate(-11,-14)">
+              <line className="hero-c-dl" y2="14" />
+              <line className="hero-c-dl hero-c-alt" y2="14" />
+            </g>
+            <g transform="translate(9,-14)">
+              <line className="hero-c-dl hero-c-alt" y2="14" />
+              <line className="hero-c-dl" y2="14" />
+            </g>
+            <g transform="translate(-16,-21)">
+              <path className="hero-tail" d="M0 0q-6 -4 -7 -11" />
+            </g>
+            <rect className="fill-background" height="11" rx="5.5" width="30" x="-16" y="-25" />
+            <circle className="fill-background" cx="19" cy="-29" r="6" />
+            <path d="M24 -28l7 2" />
+            <path className="fill-foreground" d="M16 -33l-3 -6l6 3z" />
+          </g>
+          <Hiker pack scale={1.1} start={-0.6} step={1.15} wave x={940} />
+        </g>
+      </g>
+    </svg>
+  );
+}
+
+function CountrysideLook(p: HeroLookProps) {
+  // Signposts name up to three of the places the group walks.
+  const [first, second, third] = p.places.length > 0 ? p.places : p.everyPlace;
+  return (
+    <div className={cn("@container relative flex flex-col overflow-hidden", TALL)}>
+      {/* The sky, where the page is wide enough to have room around the heading: the sun and one cloud first, the rest on a wider page. */}
+      <div aria-hidden className="pointer-events-none absolute inset-0 hidden stroke-foreground/20 @4xl:block">
+        <svg className="absolute top-6 right-6 overflow-visible @7xl:top-[4.25rem] @7xl:right-[6.5rem]" fill="none" strokeLinecap="round" strokeWidth="1.5" viewBox="0 0 100 100" width="100">
+          <g transform="translate(50,50)">
+            <circle r="20" />
+            <g className="hero-c-sun">
+              <path d="M0 -30v-10M0 30v10M-30 0h-10M30 0h10M21 -21l7 -7M-21 21l-7 7M21 21l7 7M-21 -21l-7 -7" />
+            </g>
+          </g>
+        </svg>
+        <Cloud className="hero-c-cloud top-[7.5rem] left-14 hidden @7xl:block" width={106} />
+        <Cloud className="hero-c-cloud-2 top-10 left-10 @7xl:top-14 @7xl:left-40" width={62} />
+        <Cloud className="hero-c-cloud-2 top-[14rem] right-32 hidden @7xl:block" width={79} />
+      </div>
+      <div className={cn(PAD, "relative flex flex-1 flex-col items-center justify-center gap-8 pt-12 pb-6")}>
+        <Centre p={p} />
+        <Buttons className="justify-center" joinHref={p.joinHref} />
+      </div>
+      <div className="hero-c-land">
+        <div aria-hidden className="hero-c-scene pointer-events-none select-none">
+          <Scenery className="hero-c-far stroke-border" tile={1280} tiles={4}>
+            <path d={FAR_HILLS} />
+            <path className="fill-background" d="M696 407l4 -28l4 28z" />
+          </Scenery>
+          <div className="hero-c-fly">
+            <svg className="overflow-visible stroke-muted-foreground/60" fill="none" height="50" strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" viewBox="0 0 70 50" width="70">
+              <g transform="translate(50,22)">
+                <path className="hero-c-flap" d={BIRD} />
+              </g>
+              <g transform="translate(16,34) scale(0.8)">
+                <path className="hero-c-flap" d={BIRD} style={{ animationDelay: "-0.25s" }} />
+              </g>
+              <g transform="translate(28,10) scale(0.7)">
+                <path className="hero-c-flap" d={BIRD} style={{ animationDelay: "-0.4s" }} />
+              </g>
+            </svg>
+          </div>
+          <Scenery className="hero-c-mid stroke-foreground/20" tile={1280} tiles={4}>
+            <path d={MID_HILLS} />
+            <g transform="translate(320,510)">
+              <line y2="-12" />
+              <circle className="fill-background" cy="-22" r="10" />
+            </g>
+            <g transform="translate(346,512)">
+              <line y2="-9" />
+              <circle className="fill-background" cy="-16" r="7" />
+            </g>
+            <g transform="translate(640,536)">
+              <path className="fill-background" d="M0 0v-7M-8 -7h16l-8 -22z" />
+            </g>
+            <g transform="translate(980,506)">
+              <line y2="-12" />
+              <circle className="fill-background" cy="-23" r="11" />
+            </g>
+          </Scenery>
+          <Scenery className="hero-c-near stroke-muted-foreground/60" tile={2560} tiles={3}>
+            <g transform={`translate(0,${GROUND})`}>
+              <line className="stroke-foreground/20" strokeDasharray="2 8" x1="0" x2="2560" y1="0" y2="0" />
+              {[120, 860, 1300, 2060].map((x) => (
+                <path d={TUFT} key={x} transform={`translate(${x},0)`} />
+              ))}
+              {[520, 2440].map((x) => (
+                <path d={ROCK} key={x} transform={`translate(${x},0)`} />
+              ))}
+              {first ? <Signpost name={first} x={300} /> : null}
+              <g transform="translate(700,0)">
+                <path d="M0 0v-70M0 -40l-14 -16M0 -52l12 -14" />
+                <circle className="fill-background" cy="-96" r="34" />
+                <path d="M-14 -100q8 -10 18 -4M-4 -84q10 -6 18 2" />
+              </g>
+              <path d="M0 0v-26M22 0v-26M44 0v-26M-6 -18h56M-6 -9h56" transform="translate(1050,0)" />
+              {second ? <Signpost name={second} x={1480} /> : null}
+              <path d="M0 -14h36M4 -14v14M32 -14v14M0 -26h36M2 -26v12M34 -26v12" transform="translate(1700,0)" />
+              <path className="fill-background" d="M0 0v-18M-20 -18h40l-20 -34zM-15 -46h30l-15 -30zM-10 -72h20l-10 -22z" transform="translate(1900,0)" />
+              {third ? <Signpost name={third} x={2250} /> : null}
+            </g>
+          </Scenery>
+          <Ramblers />
+        </div>
+        <p className="hero-c-note px-5 pb-2 text-center text-muted-foreground text-xs sm:pb-3 md:text-sm">{p.groupNote}</p>
       </div>
     </div>
   );
@@ -932,6 +1237,7 @@ const LOOKS: Record<HeroLookProps["look"], (p: HeroLookProps) => ReactNode> = {
   trail: TrailLook,
   week: WeekLook,
   group: GroupLook,
+  countryside: CountrysideLook,
 };
 
 export function HeroLooks(props: HeroLookProps) {

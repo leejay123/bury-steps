@@ -100,6 +100,7 @@ export const homePageConfig = {
             { value: "trail", label: "A trail line with mile markers" },
             { value: "week", label: "This week along the bottom" },
             { value: "group", label: "The group walking along the bottom" },
+            { value: "countryside", label: "Out in the countryside, the scenery rolling by" },
           ],
         },
         moving: onOff("Moving background", "Moving", "Still"),
@@ -119,7 +120,7 @@ export const homePageConfig = {
         freeTitle: text("Fourth box, big word (usually: Free)"),
         freeText: text("Fourth box, small words (usually: to join, at your own pace)"),
         trailNote: countsField("Line above the trail", "**{walks} walks** walked so far this year", false),
-        groupNote: countsField("Line above the walkers", "**Nobody gets left behind.** Walk at your own pace.", false),
+        groupNote: countsField("Line with the walkers", "**Nobody gets left behind.** Walk at your own pace.", false),
       },
       // Each look shows only the settings it uses.
       resolveFields: (data: { props: Record<string, unknown> }, { fields }: { fields: Record<string, unknown> }) => {
@@ -131,7 +132,7 @@ export const homePageConfig = {
         if (["stats", "bento", "trail", "week"].includes(look)) drop.push("numbers", "guestClose", "memberClose");
         if (look !== "bento") drop.push("freeTitle", "freeText");
         if (look !== "trail") drop.push("trailNote");
-        if (look !== "group") drop.push("groupNote");
+        if (look !== "group" && look !== "countryside") drop.push("groupNote");
         return dropFields(fields, drop);
       },
       render: HomeHeroBlock,
