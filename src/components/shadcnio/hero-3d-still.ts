@@ -12,7 +12,7 @@
  */
 
 /** Bump when the scene itself changes, so old snapshots are thrown away. */
-const VERSION = 2;
+const VERSION = 3;
 const SIG_KEY = "bs-hero-3d-sig";
 const IMG_KEY = "bs-hero-3d-img";
 /** The biggest snapshot worth keeping, in characters of storage. */

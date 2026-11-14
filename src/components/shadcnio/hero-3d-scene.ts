@@ -80,6 +80,8 @@ const PARTY: (WalkerKind & { x: number; z: number; model: number; drift?: number
   { x: -5.2, z: -0.1, model: 0, scale: 0.92, pack: true, jacket: 2, legs: 4, drift: 1 },
 ];
 const DOG = { x: 2.9, z: 0.95 };
+/** After dark only the two leaders wear head torches: the one at the front and the one at the back. */
+const leads = (index: number) => index === 0 || index === PARTY.length - 1;
 
 type Rig = { update: (t: number) => void };
 
@@ -300,7 +302,7 @@ export function startHero3D({ canvas, host, strip, signs, moving, onReady, onCas
         const cast = castPerson(person, palette, TALL * s, index >= 4 ? 0.14 : 0, PACE, keep);
         keep(cast.done);
         root.add(cast.figure);
-        if (beamShape && beamSkin && index % 2 === 0) {
+        if (beamShape && beamSkin && leads(index)) {
           const beam = new THREE.Mesh(beamShape, beamSkin);
           beam.position.set(0.16 * s, 1.6 * s, 0);
           beam.scale.setScalar(s);
@@ -339,7 +341,7 @@ export function startHero3D({ canvas, host, strip, signs, moving, onReady, onCas
       const shins = [limb(shapes.shin, 0, -0.45, 0, thighs[0]), limb(shapes.shin, 0, -0.45, 0, thighs[1])] as const;
       const arms = [limb(shapes.arm, 0, 0.55, 0.255, hips), limb(shapes.arm, 0, 0.55, -0.255, hips)] as const;
       if (who.poles) for (const arm of arms) limb(shapes.pole, 0.02, -0.52, 0, arm).rotation.z = -0.5;
-      if (beamShape && beamSkin && index % 2 === 0) {
+      if (beamShape && beamSkin && leads(index)) {
         const beam = new THREE.Mesh(beamShape, beamSkin);
         beam.position.set(0.14, 0.8, 0);
         hips.add(beam);

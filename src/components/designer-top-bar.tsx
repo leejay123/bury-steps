@@ -31,9 +31,11 @@ export const DESIGNER_VIEWPORTS: Viewports = SIZES.map((size) => ({
   label: size.label,
 }));
 
-/** Puck's starting view (its `ui` prop): the phone size, and Puck's own small size
+/** Puck's starting view (its `ui` prop): the phone size, the Blocks panel closed
+ * (the top bar's Blocks panel switch opens it), and Puck's own small size
  * controls under the page hidden — the top bar has them instead. */
 export const DESIGNER_UI: Partial<UiState> = {
+  leftSideBarVisible: false,
   viewports: {
     current: { width: 390, height: "auto" },
     controlsVisible: false,
