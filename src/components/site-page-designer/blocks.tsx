@@ -69,7 +69,7 @@ import {
   isExpectLook,
   isWalksLook,
 } from "@/components/shadcnio/home-section-looks";
-import { GALLERY_GRID_3, PHONE_LIST } from "@/components/shadcnio/grids";
+import { GALLERY_GRID, GALLERY_GRID_3, PHONE_LIST } from "@/components/shadcnio/grids";
 import { SectionTitle } from "@/components/section-title";
 import { Button } from "@/components/ui/button";
 import { CountingNumber } from "@/components/ui/counting-number";
@@ -99,6 +99,20 @@ function tidyPlace(name: string) {
 
 /** A designer switch: on unless it's been turned off (so pages saved before it keep it on). */
 const isOn = (value: unknown) => value !== "off";
+
+/**
+ * A grid section's own settings: 3 or 4 columns on computers, the Read more
+ * button on or off, and one or two full rows before it. Unset is today's look:
+ * three columns, Read more on, one row. Any empty cells are filled with lines (MoreRows).
+ */
+function gridChoice(props: Record<string, unknown>) {
+  const columns = props.columns === "4" ? 4 : 3;
+  const rows = props.showFirst === "2" ? 2 : 1;
+  const readMore = isOn(props.readMore);
+  return { columns, first: readMore ? columns * rows : Number.POSITIVE_INFINITY, most: columns === 4 ? 8 : 6 };
+}
+const WALKS_GRID_4 = WALKS_GRID.replace("lg:grid-cols-3", "lg:grid-cols-4");
+const tileGrid = (columns: number) => (columns === 4 ? WALKS_GRID_4 : WALKS_GRID);
 
 function asText(value: unknown, fallback = ""): string {
   return typeof value === "string" ? value : fallback;
@@ -312,6 +326,7 @@ export function HomeAboutBlock(props: Record<string, unknown>) {
 
 export function HomeWalksBlock(props: Record<string, unknown>) {
   const { data } = useSitePageLive();
+  const grid = gridChoice(props);
   const walksLook = isWalksLook(props.look) ? props.look : "original";
   const counts = { upcoming: data.upcomingCount, members: data.members, walks: data.walksThisYear, places: heroPlaces(data.places) };
   return (
@@ -338,8 +353,8 @@ export function HomeWalksBlock(props: Record<string, unknown>) {
       ) : walksLook === "week" ? (
         <WalksWeekLook walks={data.upcoming} />
       ) : (
-      <MoreRows className={WALKS_GRID} columns={3} first={3} label="Walks coming up" tone={stripTone(props.moreStrip)}>
-        {data.upcoming.slice(0, 6).map((walk, i, shownWalks) => (
+      <MoreRows className={tileGrid(grid.columns)} columns={grid.columns} first={grid.first} label="Walks coming up" tone={stripTone(props.moreStrip)}>
+        {data.upcoming.slice(0, grid.most).map((walk, i, shownWalks) => (
           <Tile
             href={walk.href}
             key={walk.id}
@@ -361,8 +376,10 @@ export function HomeWalksBlock(props: Record<string, unknown>) {
 }
 
 export function HomeExpectBlock(props: Record<string, unknown>) {
-  const items = asItems(props.items).slice(0, 6);
+  const grid = gridChoice(props);
   const look = isExpectLook(props.look) ? props.look : "original";
+  // Only the original cards take a column count, so only they can show more than six.
+  const items = asItems(props.items).slice(0, look === "original" ? grid.most : 6);
   const lead = asText(props.lead, "A friendly, welcoming group");
   const rest = asText(props.rest, "for every age and every pace. No pressure, no judgement, just good company on the paths.");
   const title = asText(props.title, "What you can expect");
@@ -394,7 +411,13 @@ export function HomeExpectBlock(props: Record<string, unknown>) {
         rest={asText(props.rest, "for every age and every pace. No pressure, no judgement, just good company on the paths.")}
         title={asText(props.title, "What you can expect")}
       />
-      <MoreRows className={`${GALLERY_GRID_3} ${PHONE_LIST}`} columns={3} first={3} label="What you can expect" tone={stripTone(props.moreStrip)}>
+      <MoreRows
+        className={`${grid.columns === 4 ? GALLERY_GRID : GALLERY_GRID_3} ${PHONE_LIST}`}
+        columns={grid.columns}
+        first={grid.first}
+        label="What you can expect"
+        tone={stripTone(props.moreStrip)}
+      >
         {items.map((item, i) => (
           <li key={`${item.title}-${i}`}>
             <a>
@@ -413,7 +436,8 @@ export function HomeExpectBlock(props: Record<string, unknown>) {
 }
 
 export function HomeHowItWorksBlock(props: Record<string, unknown>) {
-  const steps = asItems(props.steps).slice(0, 6);
+  const grid = gridChoice(props);
+  const steps = asItems(props.steps).slice(0, grid.most);
   return (
     <div data-guest-home="">
       <Section id="home-how-heading">
@@ -424,7 +448,7 @@ export function HomeHowItWorksBlock(props: Record<string, unknown>) {
           rest={asText(props.rest, "that's all there is to it. The leader knows who's out walking, and you can look back on every walk you've done.")}
           title={asText(props.title, "How it works")}
         />
-        <MoreRows className={WALKS_GRID} columns={3} first={3} label="How it works" tone={stripTone(props.moreStrip)}>
+        <MoreRows className={tileGrid(grid.columns)} columns={grid.columns} first={grid.first} label="How it works" tone={stripTone(props.moreStrip)}>
           {steps.map((step, i) => (
             <Tile
               key={`${step.title}-${i}`}
@@ -441,7 +465,8 @@ export function HomeHowItWorksBlock(props: Record<string, unknown>) {
 }
 
 export function HomeGoalsBlock(props: Record<string, unknown>) {
-  const items = asItems(props.items).slice(0, 6);
+  const grid = gridChoice(props);
+  const items = asItems(props.items).slice(0, grid.most);
   return (
     <Section id="home-goals-heading">
       <SectionHead
@@ -450,7 +475,7 @@ export function HomeGoalsBlock(props: Record<string, unknown>) {
         rest={asText(props.rest, "at whatever pace suits you. Members walk to get moving again, to feel better and to make friends.")}
         title={asText(props.title, "More than just a walking group")}
       />
-      <MoreRows className={WALKS_GRID} columns={3} first={3} label="Group goals" tone={stripTone(props.moreStrip)}>
+      <MoreRows className={tileGrid(grid.columns)} columns={grid.columns} first={grid.first} label="Group goals" tone={stripTone(props.moreStrip)}>
         {items.map((goal, i) => (
           <Tile key={`${goal.title}-${i}`} phoneRow sub="A reason to walk" title={goal.title} visual={{ kind: "circle", icon: GOAL_ICONS[i % 4] }} />
         ))}

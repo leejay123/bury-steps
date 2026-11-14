@@ -54,6 +54,33 @@ const stripField = (label = "Read more strip") => ({
   ],
 });
 
+/** A grid's settings: columns on computers, the Read more button, and how many rows show before it. */
+const gridFields = {
+  columns: {
+    type: "radio" as const,
+    label: "Columns (on computers)",
+    options: [
+      { label: "3", value: "3" },
+      { label: "4", value: "4" },
+    ],
+  },
+  readMore: onOff("Read more button"),
+  showFirst: {
+    type: "radio" as const,
+    label: "Show at first",
+    options: [
+      { label: "One row", value: "1" },
+      { label: "Two rows", value: "2" },
+    ],
+  },
+};
+/** The grid settings that don't apply: none of them when the look has no grid, and only
+ * the button itself (no count, no strip) while Read more is off. */
+function gridDrop(props: Record<string, unknown>, hasGrid = true): string[] {
+  if (!hasGrid) return ["columns", "readMore", "showFirst"];
+  return props.readMore === "off" ? ["showFirst", "moreStrip"] : [];
+}
+
 /** The settings without those in `drop` (they belong to another look). */
 function dropFields<F extends Record<string, unknown>>(fields: F, drop: string[]): F {
   return Object.fromEntries(Object.entries(fields).filter(([key]) => !drop.includes(key))) as F;
@@ -189,6 +216,7 @@ export const homePageConfig = {
             { value: "week", label: "By date, in columns" },
           ],
         },
+        ...gridFields,
         moreStrip: stripField(),
         title: text("Heading"),
         lead: countsField("Start of the line (in full colour)", "{upcoming} walks on the calendar,", false),
@@ -197,9 +225,14 @@ export const homePageConfig = {
           "each one led by a volunteer walk leader, with the meeting point, distance and grade. Members see every detail and clock in on the day.",
         ),
       },
-      // The next-walk look shows four walks, no Read more strip.
-      resolveFields: (data: { props: Record<string, unknown> }, { fields }: { fields: Record<string, unknown> }) =>
-        data.props.look === "next" || data.props.look === "week" ? dropFields(fields, ["moreStrip"]) : fields,
+      // Columns, Read more and Show at first are for the original cards; the next-walk
+      // and columns-by-date looks show a set number of walks, with no Read more strip.
+      resolveFields: (data: { props: Record<string, unknown> }, { fields }: { fields: Record<string, unknown> }) => {
+        const look = String(data.props.look ?? "original");
+        const drop = gridDrop(data.props, look === "original");
+        if (look === "next" || look === "week") drop.push("moreStrip");
+        return dropFields(fields, drop);
+      },
       render: HomeWalksBlock,
     },
     HomeExpect: {
@@ -216,18 +249,23 @@ export const homePageConfig = {
             { value: "cells", label: "Icon cells" },
           ],
         },
+        ...gridFields,
         moreStrip: stripField(),
         title: text("Heading"),
         lead: text("Opening words"),
         rest: area("Rest of the intro"),
         items: list("Items"),
       },
+      // Columns, Read more and Show at first are for the original cards only.
+      resolveFields: (data: { props: Record<string, unknown> }, { fields }: { fields: Record<string, unknown> }) =>
+        dropFields(fields, gridDrop(data.props, String(data.props.look ?? "original") === "original")),
       render: HomeExpectBlock,
     },
     HomeHowItWorks: {
       label: "How it works",
       permissions: keep,
       fields: {
+        ...gridFields,
         moreStrip: stripField(),
         title: text("Heading"),
         lead: text("Opening words"),
@@ -240,18 +278,23 @@ export const homePageConfig = {
           getItemSummary: (item: { title?: string }) => item.title || "Step",
         },
       },
+      resolveFields: (data: { props: Record<string, unknown> }, { fields }: { fields: Record<string, unknown> }) =>
+        dropFields(fields, gridDrop(data.props)),
       render: HomeHowItWorksBlock,
     },
     HomeGoals: {
       label: "More than just a walking group",
       permissions: keep,
       fields: {
+        ...gridFields,
         moreStrip: stripField(),
         title: text("Heading"),
         lead: text("Opening words"),
         rest: area("Rest of the intro"),
         items: list("Goals"),
       },
+      resolveFields: (data: { props: Record<string, unknown> }, { fields }: { fields: Record<string, unknown> }) =>
+        dropFields(fields, gridDrop(data.props)),
       render: HomeGoalsBlock,
     },
     HomeReviews: {
