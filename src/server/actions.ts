@@ -122,7 +122,12 @@ export {
   updateWalkEssentials,
 } from "./actions/site-settings";
 
-export { saveSitePageDraft, publishSitePageDesign, discardSitePageDraft } from "./actions/site-page-designs";
+export {
+  saveSitePageDraft,
+  publishSitePageDesign,
+  discardSitePageDraft,
+  resetPublishedSitePageDesigns,
+} from "./actions/site-page-designs";
 
 export { summarizeWalkDescription } from "./actions/walk-summarize";
 

@@ -7,7 +7,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { Paintbrush, Search } from "lucide-react";
-import { discardSitePageDraft } from "@/server/actions";
+import { discardSitePageDraft, resetPublishedSitePageDesigns } from "@/server/actions";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { EmptyState } from "@/components/empty-state";
@@ -94,7 +94,14 @@ const ROW = "items-center gap-x-6 gap-y-3 px-4 py-5 sm:px-6";
 /** The three totals across the top, edge to edge (data-edge-stats): two
  * side by side on a phone with the last across the width, three in a row
  * from tablet up. */
-function Totals({ counts }: { counts: Record<PageStatus, number> | null }) {
+function Totals({
+  counts,
+  reset,
+}: {
+  counts: Record<PageStatus, number> | null;
+  /** Under Published: how many pages have a published design, and what to do once they're reset. */
+  reset?: { pages: number; onReset: () => void };
+}) {
   const cells: { key: PageStatus; label: string }[] = [
     { key: "published", label: "Published" },
     { key: "draft", label: "Drafts waiting" },
@@ -105,11 +112,18 @@ function Totals({ counts }: { counts: Record<PageStatus, number> | null }) {
       {cells.map((cell, index) => (
         <div className={cn("flex flex-col gap-1", index === 2 && "col-span-2 md:col-span-1")} key={cell.key}>
           <p className="text-sm text-muted-foreground">{cell.label}</p>
-          {counts ? (
-            <p className="text-2xl font-semibold tabular-nums tracking-tight">{counts[cell.key]}</p>
-          ) : (
-            <Skeleton className="h-8 w-10" />
-          )}
+          <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
+            {counts ? (
+              <p className="text-2xl font-semibold tabular-nums tracking-tight">{counts[cell.key]}</p>
+            ) : (
+              <Skeleton className="h-8 w-10" />
+            )}
+            {cell.key !== "published" ? null : reset ? (
+              <ResetPublishedButton onReset={reset.onReset} pages={reset.pages} />
+            ) : (
+              <Skeleton className="h-8 w-44 rounded-md" />
+            )}
+          </div>
         </div>
       ))}
     </div>
@@ -168,7 +182,10 @@ export function SitePageDesignList({
 
   return (
     <>
-      <Totals counts={counts} />
+      <Totals
+        counts={counts}
+        reset={{ pages: SITE_PAGES.filter((page) => pageHasPublished(designs[page.key])).length, onReset: () => router.refresh() }}
+      />
       <EdgeBar>
         {/* The four filters share the strip's whole width equally. */}
         <div aria-label="Show" className="flex w-full *:flex-1" role="group">
@@ -275,6 +292,61 @@ export function SitePageDesignList({
           )
         : null}
     </>
+  );
+}
+
+/** Takes every published design off, so those pages go back to their default look. Drafts with real changes are kept. */
+function ResetPublishedButton({ onReset, pages }: { onReset: () => void; pages: number }) {
+  const [open, setOpen] = useState(false);
+  const [busy, setBusy] = useState(false);
+
+  async function reset() {
+    if (busy) return;
+    setBusy(true);
+    const result = await resetPublishedSitePageDesigns();
+    if (result && !result.ok) {
+      toast.error(result.error);
+      setBusy(false);
+      return;
+    }
+    toast.success(result?.message ?? "Pages are back to the default design.");
+    setBusy(false);
+    setOpen(false);
+    onReset();
+  }
+
+  const which = pages === 1 ? "The 1 page" : `The ${pages} pages`;
+  return (
+    <AlertDialog
+      closeDisabled={busy}
+      onOpenChange={(next) => {
+        if (busy) return;
+        setOpen(next);
+      }}
+      open={open}
+    >
+      <AlertDialogTrigger asChild>
+        <Button disabled={pages === 0} size="sm" type="button" variant="outline">
+          Reset published designs
+        </Button>
+      </AlertDialogTrigger>
+      <AlertDialogContent closeDisabled={busy}>
+        <AlertDialogHeader>
+          <AlertDialogTitle>Reset published designs?</AlertDialogTitle>
+          <AlertDialogDescription>
+            {`${which} with a published design go back to the default design on the live site straight away. This can't be undone. Drafts with unpublished changes are kept.`}
+          </AlertDialogDescription>
+        </AlertDialogHeader>
+        <AlertDialogFooter>
+          <AlertDialogCancel disabled={busy} type="button">
+            Keep designs
+          </AlertDialogCancel>
+          <Button disabled={busy} onClick={() => void reset()} type="button" variant="destructive">
+            {busy ? "Resetting…" : "Reset to default"}
+          </Button>
+        </AlertDialogFooter>
+      </AlertDialogContent>
+    </AlertDialog>
   );
 }
 

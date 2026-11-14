@@ -15,6 +15,7 @@ import {
   parseSitePageDesigns,
   SITE_PAGE_DESIGNS_TAG,
   publicPathFor,
+  withoutPublished,
   type SitePageKey,
 } from "@/lib/site-page-designs";
 import { defaultContactForm, defaultHomeHero } from "@/lib/site-page-copy";
@@ -99,6 +100,39 @@ async function publishSitePageDesignWork(input: { page: string; data: string }):
   return result;
 }
 
+/** Settings → Page designs → Reset published designs: every published page back to its built-in look. */
+async function resetPublishedSitePageDesignsWork(): Promise<ActionResult> {
+  const admin = await requireAdmin();
+  if (!admin.permDisplay) return permissionDenied("permDisplay");
+  let pages: SitePageKey[] = [];
+  try {
+    const row = await prisma.siteSetting.findUnique({
+      where: { id: SITE_SETTING_ID },
+      select: { sitePageDesigns: true },
+    });
+    const reset = withoutPublished(parseSitePageDesigns(row?.sitePageDesigns));
+    pages = reset.pages;
+    if (pages.length === 0) return { ok: true, message: "No pages have a published design." };
+    await prisma.siteSetting.update({
+      where: { id: SITE_SETTING_ID },
+      data: { sitePageDesigns: JSON.stringify(reset.designs) },
+    });
+  } catch (err) {
+    return logActionError("resetPublishedSitePageDesigns", err, "Could not reset the designs. Try again.");
+  }
+  revalidateTag(SITE_PAGE_DESIGNS_TAG, { expire: 0 });
+  revalidateTag(HOMEPAGE_CACHE_TAG, { expire: 0 });
+  revalidatePath("/admin/settings");
+  revalidatePath("/admin/settings/page-designs");
+  for (const page of pages) {
+    revalidatePath(publicPathFor(page));
+    if (page === "privacy") revalidatePath("/privacy");
+    if (page === "home") revalidatePath("/", "layout");
+  }
+  const count = pages.length === 1 ? "1 page is" : `${pages.length} pages are`;
+  return { ok: true, message: `${count} back to the default design.` };
+}
+
 const payload = z.object({
   page: z.string().max(20),
   data: z.string().max(800_000, "That design is too big to save."),
@@ -113,6 +147,14 @@ const publishSitePageDesignGuarded = guardArgs("organiser", payload, (value) =>
 const discardSitePageDraftGuarded = guardArgs("organiser", z.object({ page: z.string().max(20) }), (value) =>
   discardSitePageDraftWork(value as { page: string }),
 );
+
+const resetPublishedSitePageDesignsGuarded = guardArgs("organiser", z.object({}), () =>
+  resetPublishedSitePageDesignsWork(),
+);
+
+export async function resetPublishedSitePageDesigns(): Promise<ActionResult> {
+  return resetPublishedSitePageDesignsGuarded({});
+}
 
 export async function saveSitePageDraft(page: string, data: string): Promise<ActionResult> {
   return saveSitePageDraftGuarded({ page, data });

@@ -87,3 +87,20 @@ describe("site page designs", () => {
     expect(pageHasUnpublishedDraft({ draft: null, published: live })).toBe(false);
   });
 });
+
+describe("withoutPublished", () => {
+  it("takes published designs off, drops copies of them, and keeps real drafts", async () => {
+    const { emptySitePageDesigns, puckPage, puckBlock, withoutPublished } = await import("./site-page-designs");
+    const a = puckPage([puckBlock("Text", 0)]);
+    const b = puckPage([puckBlock("Text", 1)]);
+    const designs = emptySitePageDesigns();
+    designs.home = { draft: a, published: a };
+    designs.contact = { draft: b, published: a };
+    designs.privacy = { draft: b, published: null };
+    const { designs: next, pages } = withoutPublished(designs);
+    expect(pages.sort()).toEqual(["contact", "home"]);
+    expect(next.home).toEqual({ draft: null, published: null });
+    expect(next.contact).toEqual({ draft: b, published: null });
+    expect(next.privacy).toEqual({ draft: b, published: null });
+  });
+});

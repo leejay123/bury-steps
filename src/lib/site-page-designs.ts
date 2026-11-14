@@ -141,6 +141,23 @@ export function pageHasUnpublishedDraft(slot: SitePageSlot): boolean {
   return JSON.stringify(slot.draft) !== JSON.stringify(slot.published);
 }
 
+/**
+ * Every published design taken off, so those pages go back to their built-in look.
+ * A draft that is only a copy of what was published goes too (otherwise the old
+ * design would come straight back as a "draft waiting"); real unpublished work is kept.
+ */
+export function withoutPublished(designs: SitePageDesigns): { designs: SitePageDesigns; pages: SitePageKey[] } {
+  const next = { ...designs };
+  const pages: SitePageKey[] = [];
+  for (const key of SITE_PAGE_KEYS) {
+    const slot = designs[key];
+    if (!pageHasPublished(slot)) continue;
+    pages.push(key);
+    next[key] = { draft: pageHasUnpublishedDraft(slot) ? slot.draft : null, published: null };
+  }
+  return { designs: next, pages };
+}
+
 export function publicPathFor(page: SitePageKey): string {
   return SITE_PAGES.find((item) => item.key === page)?.path ?? "/";
 }
