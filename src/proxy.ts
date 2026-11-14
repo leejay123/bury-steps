@@ -50,6 +50,19 @@ export default clerkMiddleware(
       }
     }
 
+    // Organisers have their own Walks page. The members' one sends them there
+    // too, but only once it has started drawing, so for a moment they saw an
+    // empty card; going straight there from here skips that. A token without
+    // a role yet still gets the page's own redirect.
+    if (pathname === "/walks") {
+      const { sessionClaims } = await auth();
+      if ((sessionClaims as RoleClaims | null)?.metadata?.role === "ADMIN") {
+        const organisers = req.nextUrl.clone();
+        organisers.pathname = "/admin/walks";
+        return NextResponse.redirect(organisers, 307);
+      }
+    }
+
     // First page after signing in: no remembered menu yet, so the header and
     // phone bar would be empty until the server sent them. Save the menu first
     // (once per browser session), then come straight back to this page.
