@@ -241,6 +241,15 @@ export const homePageConfig = {
             { value: "rows", label: "Date rows" },
             { value: "next", label: "Next walk big, the rest beside" },
             { value: "week", label: "By date, in columns" },
+            { value: "facts", label: "Next walk with a facts row" },
+            { value: "calendar", label: "This month's calendar" },
+            { value: "routes", label: "Route cards with a grade meter" },
+            { value: "hills", label: "Hill profiles" },
+            { value: "timeline", label: "Next walk, then a timeline" },
+            { value: "hilltop", label: "Next walk over a wide hill, the rest below" },
+            { value: "dateline", label: "A date line with hill cards under it" },
+            { value: "hillrows", label: "Heading on the left, rows with a hill line each" },
+            { value: "bighill", label: "Next walk big with its hill, three beside" },
           ],
         },
         ...headFields,
@@ -258,8 +267,19 @@ export const homePageConfig = {
       // and columns-by-date looks show a set number of walks, with no Read more strip.
       resolveFields: (data: { props: Record<string, unknown> }, { fields }: { fields: Record<string, unknown> }) => {
         const look = String(data.props.look ?? "original");
-        const drop = [...headDrop(data.props), ...gridDrop(data.props, look === "original")];
-        if (look === "next" || look === "week") drop.push("moreStrip");
+        // Which grid settings each look uses: columns, Read more (with Show at first) and the strip.
+        const uses = {
+          columns: ["original", "hills", "dateline"].includes(look),
+          readMore: ["original", "hills", "routes"].includes(look),
+          strip: ["original", "hills", "routes", "rows"].includes(look),
+        };
+        const drop = headDrop(data.props);
+        if (!uses.columns) drop.push("columns");
+        if (!uses.readMore) drop.push("readMore", "showFirst");
+        else if (data.props.readMore === "off") drop.push("showFirst");
+        if (!uses.strip || (uses.readMore && data.props.readMore === "off")) drop.push("moreStrip");
+        // Only the heading-beside look has nowhere else for the heading's position to go.
+        if (look === "hillrows") drop.push("headAlign");
         return dropFields(fields, drop);
       },
       render: HomeWalksBlock,

@@ -2,6 +2,7 @@
 
 import { createElement, type ReactNode } from "react";
 import { IntentLink as Link } from "@/components/intent-link";
+import { cn } from "@/lib/utils";
 import {
   Apple,
   ArrowRight,
@@ -56,6 +57,18 @@ import {
 } from "@/components/shadcnio/parts";
 import { BandField, HeroField } from "@/components/shadcnio/ascii-field";
 import { MoreRows, stripTone } from "@/components/shadcnio/more-rows";
+import {
+  WalksBigHillLook,
+  WalksCalendarLook,
+  WalksDateLineLook,
+  WalksFactsLook,
+  WalksHillRowsLook,
+  WalksHillTopLook,
+  WalksHillsLook,
+  WalksRoutesLook,
+  WalksTimelineLook,
+  type WalksGrid,
+} from "@/components/shadcnio/walks-looks";
 import {
   CtaBandLook,
   CtaNextLook,
@@ -340,25 +353,80 @@ export function HomeWalksBlock(props: Record<string, unknown>) {
   const grid = gridChoice(props);
   const walksLook = isWalksLook(props.look) ? props.look : "original";
   const counts = { upcoming: data.upcomingCount, members: data.members, walks: data.walksThisYear, places: heroPlaces(data.places) };
+  const head = headChoice(props);
+  const title = asText(props.title, "Walks coming up, every week");
+  const lead = <CountsText counts={counts} text={asText(props.lead).trim() || "{upcoming} walks on the calendar,"} />;
+  const rest = (
+    <CountsText
+      counts={counts}
+      text={asText(
+        props.rest,
+        "each one led by a volunteer walk leader, with the meeting point, distance and grade. Members see every detail and clock in on the day.",
+      )}
+    />
+  );
+  const walksGrid: WalksGrid = {
+    columns: grid.columns,
+    rows: props.showFirst === "2" ? 2 : 1,
+    readMore: isOn(props.readMore),
+    most: grid.most,
+    tone: stripTone(props.moreStrip),
+  };
+  // Heading on the left, rows with a hill line each: the heading sits beside the list, so it brings its own.
+  if (walksLook === "hillrows")
+    return (
+      <Section id="home-walks-heading">
+        <WalksHillRowsLook
+          side={
+            <>
+              <h2 className={cn("text-balance font-semibold text-3xl leading-tight tracking-tighter md:text-4xl", head.title === false && "sr-only")} id="home-walks-heading">
+                {title}
+              </h2>
+              {head.intro === false ? null : (
+                <p className="text-pretty text-muted-foreground">
+                  <span className="font-medium text-foreground">{lead}</span> {rest}
+                </p>
+              )}
+              {head.button === false ? null : (
+                <span className="lg:mt-auto">
+                  <PillLink arrow href="/walks">
+                    {head.buttonLabel || "See all walks"}
+                  </PillLink>
+                </span>
+              )}
+            </>
+          }
+          walks={data.upcoming}
+        />
+      </Section>
+    );
   return (
     <Section id="home-walks-heading">
       <SectionHead
         action={{ href: "/walks", label: "See all walks" }}
-        choice={headChoice(props)}
+        choice={head}
         id="home-walks-heading"
-        lead={<CountsText counts={counts} text={asText(props.lead).trim() || "{upcoming} walks on the calendar,"} />}
-        rest={
-          <CountsText
-            counts={counts}
-            text={asText(
-              props.rest,
-              "each one led by a volunteer walk leader, with the meeting point, distance and grade. Members see every detail and clock in on the day.",
-            )}
-          />
-        }
-        title={asText(props.title, "Walks coming up, every week")}
+        lead={lead}
+        rest={rest}
+        title={title}
       />
-      {walksLook === "rows" ? (
+      {walksLook === "facts" ? (
+        <WalksFactsLook walks={data.upcoming} />
+      ) : walksLook === "calendar" ? (
+        <WalksCalendarLook walks={data.upcoming} />
+      ) : walksLook === "routes" ? (
+        <WalksRoutesLook grid={walksGrid} walks={data.upcoming} />
+      ) : walksLook === "hills" ? (
+        <WalksHillsLook grid={walksGrid} walks={data.upcoming} />
+      ) : walksLook === "timeline" ? (
+        <WalksTimelineLook walks={data.upcoming} />
+      ) : walksLook === "hilltop" ? (
+        <WalksHillTopLook walks={data.upcoming} />
+      ) : walksLook === "dateline" ? (
+        <WalksDateLineLook grid={walksGrid} walks={data.upcoming} />
+      ) : walksLook === "bighill" ? (
+        <WalksBigHillLook walks={data.upcoming} />
+      ) : walksLook === "rows" ? (
         <WalksRowsLook tone={stripTone(props.moreStrip)} walks={data.upcoming} />
       ) : walksLook === "next" ? (
         <WalksNextLook walks={data.upcoming} />

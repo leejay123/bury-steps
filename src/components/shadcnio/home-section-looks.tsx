@@ -17,11 +17,12 @@ import { BUTTON_SMALL_OUTLINE } from "./parts";
  * - What you can expect: ticks (two columns), numbered (beside the heading), cells (icons)
  * - Come for a walk: split (words beside the buttons), band (dark), next (with the next walk)
  */
-export type WalksLook = "original" | "rows" | "next" | "week";
+export const WALKS_LOOKS = ["original", "rows", "next", "week", "facts", "calendar", "routes", "hills", "timeline", "hilltop", "dateline", "hillrows", "bighill"] as const;
+export type WalksLook = (typeof WALKS_LOOKS)[number];
 export type ExpectLook = "original" | "ticks" | "numbered" | "cells";
 export type CtaLook = "original" | "split" | "band" | "next";
 
-export const isWalksLook = (v: unknown): v is WalksLook => v === "original" || v === "rows" || v === "next" || v === "week";
+export const isWalksLook = (v: unknown): v is WalksLook => (WALKS_LOOKS as readonly unknown[]).includes(v);
 export const isExpectLook = (v: unknown): v is ExpectLook =>
   v === "original" || v === "ticks" || v === "numbered" || v === "cells";
 export const isCtaLook = (v: unknown): v is CtaLook => v === "original" || v === "split" || v === "band" || v === "next";
