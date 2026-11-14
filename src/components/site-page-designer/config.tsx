@@ -81,6 +81,33 @@ function gridDrop(props: Record<string, unknown>, hasGrid = true): string[] {
   return props.readMore === "off" ? ["showFirst", "moreStrip"] : [];
 }
 
+/** A section heading's settings: the heading and intro shown or hidden, and centred or on the left. */
+const headFields = {
+  showHeading: onOff("Heading", "Show", "Hide"),
+  showIntro: onOff("Intro line", "Show", "Hide"),
+  headAlign: {
+    type: "radio" as const,
+    label: "Heading position",
+    options: [
+      { label: "Centred", value: "centre" },
+      { label: "Left", value: "left" },
+    ],
+  },
+};
+/** The button under a section's heading: shown or hidden, and its words. */
+const buttonFields = {
+  showButton: onOff("Button", "Show", "Hide"),
+  buttonLabel: text("Button words (empty: the usual words)"),
+};
+/** The heading settings that don't apply, and the words fields for a hidden heading or intro. */
+function headDrop(props: Record<string, unknown>, hasHead = true): string[] {
+  if (!hasHead) return ["showHeading", "showIntro", "headAlign", "showButton", "buttonLabel"];
+  const drop: string[] = [];
+  if (props.showButton === "off") drop.push("buttonLabel");
+  if (props.showIntro === "off") drop.push("lead", "rest");
+  return drop;
+}
+
 /** The settings without those in `drop` (they belong to another look). */
 function dropFields<F extends Record<string, unknown>>(fields: F, drop: string[]): F {
   return Object.fromEntries(Object.entries(fields).filter(([key]) => !drop.includes(key))) as F;
@@ -216,6 +243,8 @@ export const homePageConfig = {
             { value: "week", label: "By date, in columns" },
           ],
         },
+        ...headFields,
+        ...buttonFields,
         ...gridFields,
         moreStrip: stripField(),
         title: text("Heading"),
@@ -229,7 +258,7 @@ export const homePageConfig = {
       // and columns-by-date looks show a set number of walks, with no Read more strip.
       resolveFields: (data: { props: Record<string, unknown> }, { fields }: { fields: Record<string, unknown> }) => {
         const look = String(data.props.look ?? "original");
-        const drop = gridDrop(data.props, look === "original");
+        const drop = [...headDrop(data.props), ...gridDrop(data.props, look === "original")];
         if (look === "next" || look === "week") drop.push("moreStrip");
         return dropFields(fields, drop);
       },
@@ -249,6 +278,7 @@ export const homePageConfig = {
             { value: "cells", label: "Icon cells" },
           ],
         },
+        ...headFields,
         ...gridFields,
         moreStrip: stripField(),
         title: text("Heading"),
@@ -256,15 +286,20 @@ export const homePageConfig = {
         rest: area("Rest of the intro"),
         items: list("Items"),
       },
-      // Columns, Read more and Show at first are for the original cards only.
-      resolveFields: (data: { props: Record<string, unknown> }, { fields }: { fields: Record<string, unknown> }) =>
-        dropFields(fields, gridDrop(data.props, String(data.props.look ?? "original") === "original")),
+      // Columns, Read more and Show at first are for the original cards only; the heading
+      // beside a numbered list is laid out its own way, so it has no heading settings.
+      resolveFields: (data: { props: Record<string, unknown> }, { fields }: { fields: Record<string, unknown> }) => {
+        const look = String(data.props.look ?? "original");
+        return dropFields(fields, [...headDrop(data.props, look !== "numbered"), ...gridDrop(data.props, look === "original")]);
+      },
       render: HomeExpectBlock,
     },
     HomeHowItWorks: {
       label: "How it works",
       permissions: keep,
       fields: {
+        ...headFields,
+        ...buttonFields,
         ...gridFields,
         moreStrip: stripField(),
         title: text("Heading"),
@@ -279,13 +314,14 @@ export const homePageConfig = {
         },
       },
       resolveFields: (data: { props: Record<string, unknown> }, { fields }: { fields: Record<string, unknown> }) =>
-        dropFields(fields, gridDrop(data.props)),
+        dropFields(fields, [...headDrop(data.props), ...gridDrop(data.props)]),
       render: HomeHowItWorksBlock,
     },
     HomeGoals: {
       label: "More than just a walking group",
       permissions: keep,
       fields: {
+        ...headFields,
         ...gridFields,
         moreStrip: stripField(),
         title: text("Heading"),
@@ -294,7 +330,7 @@ export const homePageConfig = {
         items: list("Goals"),
       },
       resolveFields: (data: { props: Record<string, unknown> }, { fields }: { fields: Record<string, unknown> }) =>
-        dropFields(fields, gridDrop(data.props)),
+        dropFields(fields, [...headDrop(data.props), ...gridDrop(data.props)]),
       render: HomeGoalsBlock,
     },
     HomeReviews: {

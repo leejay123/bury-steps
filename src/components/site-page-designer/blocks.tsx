@@ -50,6 +50,7 @@ import {
   PillLink,
   Section,
   SectionHead,
+  type HeadChoice,
   Tile,
   WALKS_GRID,
 } from "@/components/shadcnio/parts";
@@ -110,6 +111,16 @@ function gridChoice(props: Record<string, unknown>) {
   const rows = props.showFirst === "2" ? 2 : 1;
   const readMore = isOn(props.readMore);
   return { columns, first: readMore ? columns * rows : Number.POSITIVE_INFINITY, most: columns === 4 ? 8 : 6 };
+}
+/** A section heading's settings from the designer (see SectionHead). Unset is the usual heading. */
+function headChoice(props: Record<string, unknown>): HeadChoice {
+  return {
+    title: isOn(props.showHeading),
+    intro: isOn(props.showIntro),
+    left: props.headAlign === "left",
+    button: isOn(props.showButton),
+    buttonLabel: asText(props.buttonLabel),
+  };
 }
 const WALKS_GRID_4 = WALKS_GRID.replace("lg:grid-cols-3", "lg:grid-cols-4");
 const tileGrid = (columns: number) => (columns === 4 ? WALKS_GRID_4 : WALKS_GRID);
@@ -333,6 +344,7 @@ export function HomeWalksBlock(props: Record<string, unknown>) {
     <Section id="home-walks-heading">
       <SectionHead
         action={{ href: "/walks", label: "See all walks" }}
+        choice={headChoice(props)}
         id="home-walks-heading"
         lead={<CountsText counts={counts} text={asText(props.lead).trim() || "{upcoming} walks on the calendar,"} />}
         rest={
@@ -395,7 +407,7 @@ export function HomeExpectBlock(props: Record<string, unknown>) {
   if (look === "ticks" || look === "cells")
     return (
       <Section id="home-expect-heading">
-        <SectionHead id="home-expect-heading" lead={lead} rest={rest} title={title} />
+        <SectionHead choice={headChoice(props)} id="home-expect-heading" lead={lead} rest={rest} title={title} />
         {look === "ticks" ? (
           <ExpectTicksLook items={points} tone={tone} />
         ) : (
@@ -406,6 +418,7 @@ export function HomeExpectBlock(props: Record<string, unknown>) {
   return (
     <Section id="home-expect-heading">
       <SectionHead
+        choice={headChoice(props)}
         id="home-expect-heading"
         lead={asText(props.lead, "A friendly, welcoming group")}
         rest={asText(props.rest, "for every age and every pace. No pressure, no judgement, just good company on the paths.")}
@@ -443,6 +456,7 @@ export function HomeHowItWorksBlock(props: Record<string, unknown>) {
       <Section id="home-how-heading">
         <SectionHead
           action={{ href: "/walks", label: "See the walks" }}
+          choice={headChoice(props)}
           id="home-how-heading"
           lead={asText(props.lead, "Join, see the walks, clock in:")}
           rest={asText(props.rest, "that's all there is to it. The leader knows who's out walking, and you can look back on every walk you've done.")}
@@ -470,6 +484,7 @@ export function HomeGoalsBlock(props: Record<string, unknown>) {
   return (
     <Section id="home-goals-heading">
       <SectionHead
+        choice={headChoice(props)}
         id="home-goals-heading"
         lead={asText(props.lead, "Fitter, happier and less alone,")}
         rest={asText(props.rest, "at whatever pace suits you. Members walk to get moving again, to feel better and to make friends.")}

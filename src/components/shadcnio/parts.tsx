@@ -91,6 +91,9 @@ export function Section({
   );
 }
 
+/** What a page designer can change about a section's heading. Unset is the usual heading. */
+export type HeadChoice = { title?: boolean; intro?: boolean; left?: boolean; button?: boolean; buttonLabel?: string };
+
 /** Title, intro (its first words in full colour) and optional pill — centred like the hero. */
 export function SectionHead({
   id,
@@ -98,29 +101,41 @@ export function SectionHead({
   lead,
   rest,
   action,
+  choice = {},
 }: {
   id: string;
   title: string;
   lead: ReactNode;
   rest: ReactNode;
   action?: { href: string; label: string };
+  /** From the page designer: heading or intro hidden, left-aligned, button hidden or reworded. */
+  choice?: HeadChoice;
 }) {
+  const showTitle = choice.title !== false;
+  const showIntro = choice.intro !== false;
+  const button = action && choice.button !== false ? { ...action, label: choice.buttonLabel?.trim() || action.label } : null;
+  // Nothing left to show: the title stays for screen readers (it names the section), with no gap above the grid.
+  if (!showTitle && !showIntro && !button)
+    return <SectionTitle className="sr-only" id={id} text={title} />;
+  const left = choice.left === true;
   return (
-    <div className="px-5 md:px-12 flex flex-col items-center gap-5 py-12 text-center md:py-16">
-      <div className="mx-auto flex max-w-2xl min-w-0 flex-col items-center gap-3 lg:gap-4">
+    <div className={cn("px-5 md:px-12 flex flex-col gap-5 py-12 md:py-16", left ? "items-start text-left" : "items-center text-center")}>
+      <div className={cn("flex max-w-2xl min-w-0 flex-col gap-3 lg:gap-4", left ? "items-start" : "mx-auto items-center")}>
         <SectionTitle
-          className="text-balance font-semibold text-3xl tracking-tighter md:text-4xl"
+          className={cn("text-balance font-semibold text-3xl tracking-tighter md:text-4xl", !showTitle && "sr-only")}
           id={id}
           text={title}
         />
-        <p className="text-pretty text-muted-foreground md:text-lg">
-          <span className="font-medium text-foreground">{lead}</span> {rest}
-        </p>
+        {showIntro ? (
+          <p className="text-pretty text-muted-foreground md:text-lg">
+            <span className="font-medium text-foreground">{lead}</span> {rest}
+          </p>
+        ) : null}
       </div>
-      {action ? (
-        <div className="flex shrink-0 justify-center gap-2">
-          <PillLink arrow href={action.href}>
-            {action.label}
+      {button ? (
+        <div className={cn("flex shrink-0 gap-2", left ? "justify-start" : "justify-center")}>
+          <PillLink arrow href={button.href}>
+            {button.label}
           </PillLink>
         </div>
       ) : null}
