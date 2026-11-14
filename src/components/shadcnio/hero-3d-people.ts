@@ -1,17 +1,18 @@
 import * as THREE from "three";
 import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";
 import { clone } from "three/examples/jsm/utils/SkeletonUtils.js";
+import { DOG, PEOPLE, characterFile } from "./hero-3d-files";
 import { brightness, mix, type Palette } from "./hero-3d-models";
 
 /**
- * The people for the 3D hero look: ready-made human characters with a recorded
- * walk (public-domain models by Quaternius, slimmed down, in public/hero-3d/).
- * They are shown in the site's own greys, not the colours they came with.
+ * The people and the dog for the 3D hero look: ready-made characters with a
+ * recorded walk (public-domain models by Quaternius, slimmed down; see
+ * hero-3d-files.ts). They are shown in the site's own greys, not the colours they came with.
  */
 
-const FILES = ["hiker-man", "hiker-woman", "casual-man", "hoodie-man", "farmer", "casual-woman"] as const;
-/** How tall a full-size walker stands, in metres. */
-const TALL = 1.72;
+/** How tall a full-size walker stands, and the dog to the tips of its ears, in metres. */
+export const TALL = 1.72;
+export const DOG_TALL = 0.68;
 
 export type Person = {
   figure: THREE.Object3D;
@@ -21,35 +22,50 @@ export type Person = {
   floor: number;
   /** How far one full turn of the walk carries the body, in the model's own units. */
   stride: number;
+  /** Frees its graphics memory. The character itself is kept, ready for the next scene. */
   dispose: () => void;
 };
 
-export async function loadPeople(): Promise<Person[]> {
+export type Cast = { people: Person[]; dog: Person | null };
+
+let cast: Promise<Cast> | null = null;
+
+/** The characters, fetched and measured once and then shared by every scene on every page. */
+export function loadCast(): Promise<Cast> {
+  cast ??= fetchCast().catch((error: unknown) => {
+    cast = null;
+    throw error;
+  });
+  return cast;
+}
+
+async function fetchCast(): Promise<Cast> {
   const loader = new GLTFLoader();
-  return Promise.all(
-    FILES.map(async (name) => {
-      const file = await loader.loadAsync(`/hero-3d/${name}.glb`);
-      const figure = file.scene;
-      const walk = file.animations.find((clip) => clip.name === "Walk") ?? file.animations[0];
-      if (!walk) throw new Error(`No walk in ${name}`);
-      const shapes: THREE.BufferGeometry[] = [];
-      const skins: THREE.Material[] = [];
-      figure.traverse((part) => {
-        const mesh = part as THREE.Mesh;
-        if (!mesh.isMesh) return;
-        shapes.push(mesh.geometry);
-        skins.push(...(Array.isArray(mesh.material) ? mesh.material : [mesh.material]));
-      });
-      return {
-        figure,
-        walk,
-        ...sizeUp(figure, walk),
-        dispose: () => {
-          for (const thing of [...shapes, ...skins]) thing.dispose();
-        },
-      };
-    }),
-  );
+  const one = async (name: string): Promise<Person> => {
+    const file = await loader.loadAsync(characterFile(name));
+    const figure = file.scene;
+    const walk = file.animations.find((clip) => clip.name === "Walk") ?? file.animations[0];
+    if (!walk) throw new Error(`No walk in ${name}`);
+    const shapes: THREE.BufferGeometry[] = [];
+    const skins: THREE.Material[] = [];
+    figure.traverse((part) => {
+      const mesh = part as THREE.Mesh;
+      if (!mesh.isMesh) return;
+      shapes.push(mesh.geometry);
+      skins.push(...(Array.isArray(mesh.material) ? mesh.material : [mesh.material]));
+    });
+    return {
+      figure,
+      walk,
+      ...sizeUp(figure, walk),
+      dispose: () => {
+        for (const thing of [...shapes, ...skins]) thing.dispose();
+      },
+    };
+  };
+  // All the people or none (a mixed group would look odd); the dog can be missing on its own.
+  const [people, dog] = await Promise.all([Promise.all(PEOPLE.map(one)), one(DOG).catch(() => null)]);
+  return { people, dog };
 }
 
 /** Measures a character mid-walk: its height, its soles, and the length of its step. */
@@ -106,12 +122,12 @@ function tone(palette: Palette, name: string, came: THREE.Color, shift: number) 
 
 /**
  * One walker made from a character: stood on the ground, facing along the
- * path, sized to `scale`, and dressed in greys. `walkTo(t)` puts it at that
+ * path, `tall` metres high, and dressed in greys. `walkTo(t)` puts it at that
  * moment of its walk, with steps timed to `pace` (metres a second) so the feet don't slide.
  */
-export function castPerson(person: Person, palette: Palette, scale: number, shift: number, pace: number, keep: <T extends { dispose: () => void }>(thing: T) => T) {
+export function castPerson(person: Person, palette: Palette, tall: number, shift: number, pace: number, keep: <T extends { dispose: () => void }>(thing: T) => T) {
   const figure = clone(person.figure);
-  const k = (TALL * scale) / person.height;
+  const k = tall / person.height;
   figure.scale.multiplyScalar(k);
   figure.rotation.y = Math.PI / 2;
   figure.position.y = -person.floor * k;

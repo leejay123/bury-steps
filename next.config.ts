@@ -148,6 +148,13 @@ const nextConfig: NextConfig = {
         headers: [{ key: "Service-Worker-Allowed", value: "/" }],
       },
       {
+        // The 3D hero look's characters. Each lives in a numbered folder and is
+        // never changed in place (see hero-3d-files.ts), so a browser can keep
+        // its copy for good instead of asking about every file on every visit.
+        source: "/hero-3d/:path*",
+        headers: [{ key: "Cache-Control", value: "public, max-age=31536000, immutable" }],
+      },
+      {
         source: "/:path*",
         headers: [
           { key: "X-Content-Type-Options", value: "nosniff" },

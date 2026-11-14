@@ -1181,6 +1181,10 @@ html:is([data-remembered-in], [data-guest-dash]):not([data-page-kind="home"], [d
 @media (min-width: 64rem) { .hero-3d { --band: 290px; } }
 .hero-3d-band { height: var(--band); }
 .hero-3d-canvas { mask-image: linear-gradient(to top, #000 calc(var(--band) * 0.8), transparent calc(var(--band) + 5rem)); }
+/* The remembered picture (see hero-3d-still.ts): the bottom of the scene, as far up as the fade goes. */
+.hero-3d-still { position: absolute; inset-inline: 0; bottom: 0; width: 100%; max-width: none; height: calc(var(--band) + 5rem); }
+.hero-3d-still:not([src]) { display: none; }
+[data-still] > .hero-3d-band > svg { display: none; }
 .hero-c-party { position: absolute; top: 0; left: 50%; margin-left: -320px; overflow: visible; }
 .hero-c-fly { position: absolute; top: 0; left: -80px; width: calc(100% + 80px); transform: translateX(22%); }
 .hero-c-th { transform: rotate(-17deg); }

@@ -1,23 +1,25 @@
 import * as THREE from "three";
 import {
+  BIRD,
   SIGN_X,
   TILE,
   TURBINES,
   buildBalloon,
   buildBeam,
+  buildBird,
   buildBlades,
   buildCloud,
   buildDog,
   buildGround,
   buildScenery,
   buildWalker,
-  buildWing,
   readPalette,
   turbineHub,
   type Palette,
   type WalkerKind,
 } from "./hero-3d-models";
-import { castPerson, loadPeople, type Person } from "./hero-3d-people";
+import { DOG_TALL, TALL, castPerson, loadCast, type Cast } from "./hero-3d-people";
+import { heroRatio, stillHeight } from "./hero-3d-still";
 
 /**
  * The 3D hero look: a real landscape the group walks through, drawn with
@@ -31,6 +33,12 @@ import { castPerson, loadPeople, type Person } from "./hero-3d-people";
 export type Hero3D = {
   /** Stops everything and frees the graphics memory. */
   stop: () => void;
+  /**
+   * A copy of the opening frame (the bottom of it, as far up as the fade goes) on
+   * the page's background colour, for showing straight away on the next visit.
+   * Nothing if the real characters aren't in, or the picture is too short to need one.
+   */
+  snapshot: () => HTMLCanvasElement | null;
 };
 
 export type Hero3DOptions = {
@@ -49,7 +57,7 @@ export type Hero3DOptions = {
 const TAU = Math.PI * 2;
 /** Metres a second the land rolls by. */
 const PACE = 1.25;
-/** The moment the still picture shows (the "Still" setting, or a device that asks for less motion). */
+/** The moment the scene opens on, and the one the still picture shows (the "Still" setting, or a device that asks for less motion). */
 const STILL_AT = 9;
 /** How far the camera stands from the group. */
 const REACH = 18;
@@ -92,8 +100,9 @@ export function startHero3D({ canvas, host, strip, signs, moving, onReady }: Her
   let seen = true;
   let ready = false;
   // The characters, once fetched. Nothing is drawn until they are in (or have failed).
-  let people: Person[] | null = null;
+  let cast: Cast | null = null;
   let started = false;
+  let backdrop = "#ffffff";
   // The scene's own clock: it only runs while the picture is being drawn.
   let now = STILL_AT;
   let last = 0;
@@ -109,6 +118,7 @@ export function startHero3D({ canvas, host, strip, signs, moving, onReady }: Her
     rigs = [];
     scene = new THREE.Scene();
     scene.fog = new THREE.Fog(palette.background, 34, 105);
+    backdrop = `#${palette.background.getHexString()}`;
 
     const solid = keep(new THREE.MeshLambertMaterial({ vertexColors: true, flatShading: true }));
     const flat = keep(new THREE.MeshLambertMaterial({ vertexColors: true, flatShading: true, side: THREE.DoubleSide }));
@@ -195,21 +205,35 @@ export function startHero3D({ canvas, host, strip, signs, moving, onReady }: Her
     const balloon = new THREE.Mesh(keep(buildBalloon(palette)), solid);
     balloon.scale.setScalar(1.5);
     scene.add(balloon);
-    const wing = keep(buildWing(palette));
+    // Five birds in a loose V, each with two wings that bend at the elbow.
+    const bird = buildBird(palette);
+    for (const g of Object.values(bird)) keep(g);
     const flock = new THREE.Group();
-    const flappers = [
+    const flyers = [
       [0, 0, 0, 0],
-      [-0.9, 0.25, 0.7, 0.9],
-      [-1.5, -0.2, -0.6, 1.7],
-    ].map(([x, y, z, start]) => {
-      const bird = new THREE.Group();
-      bird.position.set(x ?? 0, y ?? 0, z ?? 0);
-      const left = new THREE.Mesh(wing, flat);
-      const right = new THREE.Mesh(wing, flat);
-      right.scale.z = -1;
-      bird.add(left, right);
-      flock.add(bird);
-      return { left, right, start: start ?? 0 };
+      [1.4, 0.4, 0.8, 0.9],
+      [2.3, -0.3, -0.9, 1.7],
+      [3.7, 0.65, 1.7, 2.6],
+      [4.7, -0.1, -1.85, 3.4],
+    ].map(([x = 0, y = 0, z = 0, start = 0]) => {
+      const root = new THREE.Group();
+      root.add(new THREE.Mesh(bird.body, flat));
+      const wings = [1, -1].map((side) => {
+        // The far wing is the near one seen in a mirror.
+        const mirror = new THREE.Group();
+        mirror.scale.z = side;
+        const arm = new THREE.Group();
+        arm.position.set(...BIRD.shoulder);
+        const hand = new THREE.Group();
+        hand.position.z = BIRD.elbow;
+        hand.add(new THREE.Mesh(bird.hand, flat));
+        arm.add(new THREE.Mesh(bird.arm, flat), hand);
+        mirror.add(arm);
+        root.add(mirror);
+        return { arm, hand };
+      });
+      flock.add(root);
+      return { root, wings, x, y, z, start };
     });
     scene.add(flock);
     const wrap = (v: number, span: number) => ((((v + span / 2) % span) + span) % span) - span / 2;
@@ -218,11 +242,17 @@ export function startHero3D({ canvas, host, strip, signs, moving, onReady }: Her
         for (const c of clouds) c.mesh.position.x = wrap(c.x - t * 0.35, 150);
         balloon.position.set(wrap(-14 - t * 0.7, 150), 8.2 + Math.sin(t * 0.45) * 0.35, -44);
         balloon.rotation.y = t * 0.12;
-        flock.position.set(wrap(30 - t * 3.1, 130), 6.1 + Math.sin(t * 0.7) * 0.4, -9);
-        for (const f of flappers) {
-          const flap = Math.sin(t * 7.5 + f.start) * 0.62;
-          f.left.rotation.x = -flap;
-          f.right.rotation.x = flap;
+        flock.position.set(wrap(30 - t * 3.1, 130), 5.5 + Math.sin(t * 0.7) * 0.4, -9);
+        for (const f of flyers) {
+          // A few beats, then a glide with the wings held just above level.
+          const power = Math.min(1, Math.max(0, Math.sin(t * 0.8 + f.start * 1.3) * 1.5 + 0.7));
+          const beat = t * 11 + f.start * 2.3;
+          for (const wing of f.wings) {
+            wing.arm.rotation.x = -(0.1 + Math.sin(beat) * 0.6 * power);
+            // The outer half follows a moment behind, so the wing bends as it beats.
+            wing.hand.rotation.x = 0.1 - Math.sin(beat - 1) * 0.55 * power;
+          }
+          f.root.position.set(f.x, f.y + Math.sin(beat - 1.5) * 0.04 * power, f.z);
         }
       },
     });
@@ -251,12 +281,12 @@ export function startHero3D({ canvas, host, strip, signs, moving, onReady }: Her
       ? keep(new THREE.MeshBasicMaterial({ color: palette.foreground, transparent: true, opacity: 0.13, depthWrite: false, side: THREE.DoubleSide, fog: false }))
       : null;
     PARTY.forEach((who, index) => {
-      const person = people?.[who.model];
+      const person = cast?.people[who.model];
       if (person) {
         const s = who.scale;
         const root = new THREE.Group();
         // The same character twice wears a different grey the second time.
-        const cast = castPerson(person, palette, s, index >= 4 ? 0.14 : 0, PACE, keep);
+        const cast = castPerson(person, palette, TALL * s, index >= 4 ? 0.14 : 0, PACE, keep);
         keep(cast.done);
         root.add(cast.figure);
         if (beamShape && beamSkin && index % 2 === 0) {
@@ -336,34 +366,50 @@ export function startHero3D({ canvas, host, strip, signs, moving, onReady }: Her
       });
     });
 
-    const dog = buildDog(palette);
-    for (const g of Object.values(dog)) keep(g);
-    const pup = new THREE.Group();
-    const trunk = new THREE.Mesh(dog.body, solid);
-    trunk.castShadow = true;
-    pup.add(trunk);
-    const paws = [[0.22, 0.08], [0.22, -0.08], [-0.24, 0.08], [-0.24, -0.08]].map(([x, z]) => {
-      const leg = new THREE.Mesh(dog.leg, solid);
-      leg.position.set(x ?? 0, -0.1, z ?? 0);
-      leg.castShadow = true;
-      pup.add(leg);
-      return leg;
-    });
-    const tail = new THREE.Mesh(dog.tail, solid);
-    tail.position.set(-0.3, 0.08, 0);
-    pup.add(tail);
-    scene.add(pup);
-    rigs.push({
-      update: (t) => {
-        const a = t * 9;
-        pup.position.set(DOG.x + Math.sin(t * 0.37) * 0.5, 0.4 + Math.abs(Math.sin(a)) * 0.02, DOG.z + Math.sin(t * 0.23) * 0.15);
-        paws.forEach((leg, i) => {
-          leg.rotation.z = Math.sin(a + (i === 0 || i === 3 ? 0 : Math.PI)) * 0.55;
-        });
-        tail.rotation.x = Math.sin(t * 13) * 0.5;
-        tail.rotation.z = 0.5;
-      },
-    });
+    const hound = cast?.dog;
+    if (hound) {
+      const walker = castPerson(hound, palette, DOG_TALL, 0, PACE, keep);
+      keep(walker.done);
+      const root = new THREE.Group();
+      root.add(walker.figure);
+      scene.add(root);
+      rigs.push({
+        update: (t) => {
+          root.position.set(DOG.x + Math.sin(t * 0.37) * 0.5, 0, DOG.z + Math.sin(t * 0.23) * 0.15);
+          walker.walkTo(t);
+        },
+      });
+    } else {
+      // The dog didn't arrive: a simple stand-in trots along instead.
+      const dog = buildDog(palette);
+      for (const g of Object.values(dog)) keep(g);
+      const pup = new THREE.Group();
+      const trunk = new THREE.Mesh(dog.body, solid);
+      trunk.castShadow = true;
+      pup.add(trunk);
+      const paws = [[0.22, 0.08], [0.22, -0.08], [-0.24, 0.08], [-0.24, -0.08]].map(([x, z]) => {
+        const leg = new THREE.Mesh(dog.leg, solid);
+        leg.position.set(x ?? 0, -0.1, z ?? 0);
+        leg.castShadow = true;
+        pup.add(leg);
+        return leg;
+      });
+      const tail = new THREE.Mesh(dog.tail, solid);
+      tail.position.set(-0.3, 0.08, 0);
+      pup.add(tail);
+      scene.add(pup);
+      rigs.push({
+        update: (t) => {
+          const a = t * 9;
+          pup.position.set(DOG.x + Math.sin(t * 0.37) * 0.5, 0.4 + Math.abs(Math.sin(a)) * 0.02, DOG.z + Math.sin(t * 0.23) * 0.15);
+          paws.forEach((leg, i) => {
+            leg.rotation.z = Math.sin(a + (i === 0 || i === 3 ? 0 : Math.PI)) * 0.55;
+          });
+          tail.rotation.x = Math.sin(t * 13) * 0.5;
+          tail.rotation.z = 0.5;
+        },
+      });
+    }
   }
 
   function frameCamera(t: number) {
@@ -429,7 +475,7 @@ export function startHero3D({ canvas, host, strip, signs, moving, onReady }: Her
     const band = strip.clientHeight || h * 0.45;
     if (w === size.w && h === size.h && band === size.strip) return false;
     size = { w, h, strip: band };
-    renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
+    renderer.setPixelRatio(heroRatio(w));
     renderer.setSize(w, h, false);
     return true;
   }
@@ -472,10 +518,9 @@ export function startHero3D({ canvas, host, strip, signs, moving, onReady }: Her
     draw();
   });
 
-  void loadPeople()
-    .then((cast) => {
-      if (stopped) for (const person of cast) person.dispose();
-      else people = cast;
+  void loadCast()
+    .then((arrived) => {
+      if (!stopped) cast = arrived;
     })
     // The characters didn't arrive: the simple stand-in people walk instead.
     .catch(() => undefined)
@@ -499,8 +544,28 @@ export function startHero3D({ canvas, host, strip, signs, moving, onReady }: Her
       less.removeEventListener("change", refresh);
       for (const thing of bin) thing.dispose();
       bin = [];
-      for (const person of people ?? []) person.dispose();
+      for (const person of [...(cast?.people ?? []), cast?.dog]) person?.dispose();
       renderer.dispose();
+    },
+    snapshot: () => {
+      if (stopped || !ready || !cast || size.w === 0) return null;
+      const tall = Math.round(stillHeight(size.strip) * renderer.getPixelRatio());
+      if (tall > canvas.height) return null;
+      const shot = document.createElement("canvas");
+      shot.width = canvas.width;
+      shot.height = tall;
+      const ctx = shot.getContext("2d");
+      if (!ctx) return null;
+      ctx.fillStyle = backdrop;
+      ctx.fillRect(0, 0, shot.width, tall);
+      // Draw the opening frame, copy it, and put the moving picture straight back, all before the screen is next refreshed.
+      const live = now;
+      now = STILL_AT;
+      draw();
+      ctx.drawImage(canvas, 0, canvas.height - tall, canvas.width, tall, 0, 0, shot.width, tall);
+      now = live;
+      draw();
+      return shot;
     },
   };
 }

@@ -384,15 +384,38 @@ export function buildCloud(p: Palette, seed: number) {
   return fuse(parts);
 }
 
-/** One wing of a bird (the other is its mirror), hinged at the body. */
-export function buildWing(p: Palette) {
+/** A flat piece cut from triangles (three corners each, as x, y, z). */
+function sheet(corners: number[]) {
   const g = new THREE.BufferGeometry();
-  g.setAttribute("position", new THREE.Float32BufferAttribute([0, 0, -0.1, 0, 0, 0.12, 0, 0.04, 0.62, 0, 0, -0.1, 0, 0.04, 0.62, -0.22, 0, 0.4], 3));
-  const colours: number[] = [];
-  for (let i = 0; i < 6; i++) colours.push(p.wood.r, p.wood.g, p.wood.b);
-  g.setAttribute("color", new THREE.Float32BufferAttribute(colours, 3));
+  g.setAttribute("position", new THREE.Float32BufferAttribute(corners, 3));
   g.computeVertexNormals();
   return g;
+}
+
+export type BirdShapes = { body: THREE.BufferGeometry; arm: THREE.BufferGeometry; hand: THREE.BufferGeometry };
+/** Where a wing joins the body, and how far along it the wing bends. */
+export const BIRD = { shoulder: [-0.03, 0.03, 0.045], elbow: 0.3 } as const;
+
+/**
+ * A bird flying towards -x: its body (with head, beak and tail), and one wing
+ * in two halves so it can bend as it beats. The other wing is its mirror.
+ */
+export function buildBird(p: Palette): BirdShapes {
+  // Darker than the land, so they stand out against the sky.
+  const plain = mix(p.wood, p.foreground, 0.35);
+  const dark = mix(p.wood, p.foreground, 0.6);
+  const body: Parts = [];
+  add(body, SHAPES.round, plain, at(0, 0, 0, 0.25, 0.08, 0.085));
+  add(body, SHAPES.round, plain, at(-0.25, 0.04, 0, 0.078, 0.066, 0.062));
+  add(body, SHAPES.cone, dark, at(-0.36, 0.035, 0, 0.024, 0.1, 0.024, 0, Math.PI / 2));
+  // The tail: a flattened wedge, narrow where it leaves the body.
+  add(body, SHAPES.cone, dark, at(0.29, 0.005, 0, 0.028, 0.24, 0.1, 0, Math.PI / 2));
+  // The wing runs out along z from its hinge: front edge, back edge, then a swept-back tip.
+  const arm: Parts = [];
+  add(arm, sheet([-0.11, 0, 0, 0.13, 0, 0, 0.12, 0, BIRD.elbow, -0.11, 0, 0, 0.12, 0, BIRD.elbow, -0.14, 0, BIRD.elbow]), plain);
+  const hand: Parts = [];
+  add(hand, sheet([-0.14, 0, 0, 0.12, 0, 0, 0.15, 0, 0.2, -0.14, 0, 0, 0.15, 0, 0.2, 0.1, 0, 0.42]), dark);
+  return { body: fuse(body), arm: fuse(arm), hand: fuse(hand) };
 }
 
 // ── The walkers ─────────────────────────────────────────────────────────────
