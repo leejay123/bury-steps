@@ -52,6 +52,8 @@ export type Hero3DOptions = {
   moving: boolean;
   /** Called once the first picture is on screen. */
   onReady: () => void;
+  /** Called once the real characters are in the picture. */
+  onCast: () => void;
 };
 
 const TAU = Math.PI * 2;
@@ -81,7 +83,7 @@ const DOG = { x: 2.9, z: 0.95 };
 
 type Rig = { update: (t: number) => void };
 
-export function startHero3D({ canvas, host, strip, signs, moving, onReady }: Hero3DOptions): Hero3D {
+export function startHero3D({ canvas, host, strip, signs, moving, onReady, onCast }: Hero3DOptions): Hero3D {
   const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: true, powerPreference: "low-power" });
   renderer.setClearColor(0x000000, 0);
   renderer.shadowMap.enabled = true;
@@ -99,9 +101,13 @@ export function startHero3D({ canvas, host, strip, signs, moving, onReady }: Her
   let frame = 0;
   let seen = true;
   let ready = false;
-  // The characters, once fetched. Nothing is drawn until they are in (or have failed).
+  // The characters, once fetched, and whether that is over (they are in, or have failed).
+  // Until it is, the land is drawn with nobody on it yet.
   let cast: Cast | null = null;
+  let settled = false;
   let started = false;
+  // What the scene as it stands was built with, for adding the walkers to it when they arrive.
+  let stage: { palette: Palette; solid: THREE.Material } | null = null;
   let backdrop = "#ffffff";
   // The scene's own clock: it only runs while the picture is being drawn.
   let now = STILL_AT;
@@ -275,7 +281,12 @@ export function startHero3D({ canvas, host, strip, signs, moving, onReady }: Her
       scene.add(moon);
     }
 
-    // The walkers and the dog.
+    stage = { palette, solid };
+    if (settled) addParty(palette, solid);
+  }
+
+  /** Puts the walkers and the dog into the scene as it stands. */
+  function addParty(palette: Palette, solid: THREE.Material) {
     const beamShape = palette.dark ? keep(buildBeam()) : null;
     const beamSkin = palette.dark
       ? keep(new THREE.MeshBasicMaterial({ color: palette.foreground, transparent: true, opacity: 0.13, depthWrite: false, side: THREE.DoubleSide, fog: false }))
@@ -518,6 +529,18 @@ export function startHero3D({ canvas, host, strip, signs, moving, onReady }: Her
     draw();
   });
 
+  const begin = () => {
+    started = true;
+    paletteKey = "";
+    repaint();
+    measure();
+    refresh();
+  };
+  // The land, the sky and everything in them can be shown at once. The exception is when
+  // the picture remembered from the last visit is up: it has the walkers in it, so it
+  // stays until they are here too, rather than the walkers vanishing and coming back.
+  if (!host.hasAttribute("data-still")) begin();
+
   void loadCast()
     .then((arrived) => {
       if (!stopped) cast = arrived;
@@ -526,11 +549,12 @@ export function startHero3D({ canvas, host, strip, signs, moving, onReady }: Her
     .catch(() => undefined)
     .finally(() => {
       if (stopped) return;
-      started = true;
-      paletteKey = "";
-      repaint();
-      measure();
-      refresh();
+      settled = true;
+      if (started && stage) {
+        addParty(stage.palette, stage.solid);
+        draw();
+      } else begin();
+      if (cast) onCast();
     });
 
   return {

@@ -38,8 +38,8 @@ export default function Hero3DLive({
         strip: strip.current,
         signs: names ? names.split("\n") : [],
         moving,
-        onReady: () => {
-          setDrawn(true);
+        onReady: () => setDrawn(true),
+        onCast: () => {
           // Once things have settled (and the site's font is in, for the signposts), keep a picture for next time.
           wait = setTimeout(() => {
             void (document.fonts?.ready ?? Promise.resolve()).then(() => {
