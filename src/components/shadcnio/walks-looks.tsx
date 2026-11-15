@@ -349,7 +349,7 @@ export function WalksCalendarLook({ walks }: { walks: HomeWalk[] }) {
 export function WalksRoutesLook({ walks, grid }: { walks: HomeWalk[]; grid: WalksGrid }) {
   if (walks.length === 0) return <NoWalks />;
   return (
-    <div className="border-t">
+    <div>
       <MoreRows
         className="grid overflow-hidden pt-px *:relative *:-ms-px *:ps-px *:border-t *:border-l grid-cols-1 sm:grid-cols-2"
         columns={2}
@@ -383,7 +383,7 @@ export function WalksRoutesLook({ walks, grid }: { walks: HomeWalk[]; grid: Walk
 export function WalksHillsLook({ walks, grid }: { walks: HomeWalk[]; grid: WalksGrid }) {
   if (walks.length === 0) return <NoWalks />;
   return (
-    <div className="border-t">
+    <div>
       <MoreRows
         className={grid.columns === 4 ? WALKS_GRID.replace("lg:grid-cols-3", "lg:grid-cols-4") : WALKS_GRID}
         columns={grid.columns}
