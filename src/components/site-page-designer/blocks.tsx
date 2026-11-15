@@ -365,15 +365,18 @@ export function HomeWalksBlock(props: Record<string, unknown>) {
       )}
     />
   );
+  // How many walks the section shows (3 to 6), or unset for each look's usual number.
+  const count = ["3", "4", "5", "6"].includes(String(props.count)) ? Number(props.count) : undefined;
   const walksGrid: WalksGrid = {
     columns: grid.columns,
     rows: props.showFirst === "2" ? 2 : 1,
     readMore: isOn(props.readMore),
-    most: grid.most,
+    most: count ?? grid.most,
     tone: stripTone(props.moreStrip),
   };
-  // Heading on the left, rows with a hill line each: the heading sits beside the list, so it brings its own.
-  if (walksLook === "hillrows")
+  // Heading on the left, rows with a hill line each: the heading sits beside the list, so it brings its
+  // own; chosen "on top", it's the usual heading above the rows (further down).
+  if (walksLook === "hillrows" && props.headPlace !== "top")
     return (
       <Section id="home-walks-heading">
         <WalksHillRowsLook
@@ -396,6 +399,7 @@ export function HomeWalksBlock(props: Record<string, unknown>) {
               )}
             </>
           }
+          most={count}
           walks={data.upcoming}
         />
       </Section>
@@ -411,7 +415,7 @@ export function HomeWalksBlock(props: Record<string, unknown>) {
         title={title}
       />
       {walksLook === "facts" ? (
-        <WalksFactsLook walks={data.upcoming} />
+        <WalksFactsLook most={count} walks={data.upcoming} />
       ) : walksLook === "calendar" ? (
         <WalksCalendarLook walks={data.upcoming} />
       ) : walksLook === "routes" ? (
@@ -419,22 +423,24 @@ export function HomeWalksBlock(props: Record<string, unknown>) {
       ) : walksLook === "hills" ? (
         <WalksHillsLook grid={walksGrid} walks={data.upcoming} />
       ) : walksLook === "timeline" ? (
-        <WalksTimelineLook walks={data.upcoming} />
+        <WalksTimelineLook most={count} walks={data.upcoming} />
       ) : walksLook === "hilltop" ? (
-        <WalksHillTopLook walks={data.upcoming} />
+        <WalksHillTopLook most={count} walks={data.upcoming} />
       ) : walksLook === "dateline" ? (
         <WalksDateLineLook grid={walksGrid} walks={data.upcoming} />
+      ) : walksLook === "hillrows" ? (
+        <WalksHillRowsLook most={count} side={null} walks={data.upcoming} />
       ) : walksLook === "bighill" ? (
-        <WalksBigHillLook walks={data.upcoming} />
+        <WalksBigHillLook most={count} walks={data.upcoming} />
       ) : walksLook === "rows" ? (
-        <WalksRowsLook tone={stripTone(props.moreStrip)} walks={data.upcoming} />
+        <WalksRowsLook most={count} tone={stripTone(props.moreStrip)} walks={data.upcoming} />
       ) : walksLook === "next" ? (
-        <WalksNextLook walks={data.upcoming} />
+        <WalksNextLook most={count} walks={data.upcoming} />
       ) : walksLook === "week" ? (
-        <WalksWeekLook walks={data.upcoming} />
+        <WalksWeekLook most={count} walks={data.upcoming} />
       ) : (
       <MoreRows className={tileGrid(grid.columns)} columns={grid.columns} first={grid.first} label="Walks coming up" tone={stripTone(props.moreStrip)}>
-        {data.upcoming.slice(0, grid.most).map((walk, i, shownWalks) => (
+        {data.upcoming.slice(0, walksGrid.most).map((walk, i, shownWalks) => (
           <Tile
             href={walk.href}
             key={walk.id}

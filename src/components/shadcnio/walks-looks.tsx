@@ -188,7 +188,7 @@ const firstOf = (grid: WalksGrid, across: number) => (grid.readMore ? across * g
 
 // ── I · Next walk with a facts row ──────────────────────────────────────────
 
-export function WalksFactsLook({ walks }: { walks: HomeWalk[] }) {
+export function WalksFactsLook({ walks, most = 4 }: { walks: HomeWalk[]; most?: number }) {
   const [next, ...rest] = walks;
   if (!next) return <NoWalks />;
   const d = at(next);
@@ -215,7 +215,7 @@ export function WalksFactsLook({ walks }: { walks: HomeWalk[] }) {
           </div>
         ))}
       </dl>
-      {rest.slice(0, 3).map((walk) => (
+      {rest.slice(0, most - 1).map((walk) => (
         <Link
           className={cn(PAD, "flex items-center justify-between gap-4 border-t py-4 hover:bg-muted/40")}
           href={walk.href}
@@ -357,7 +357,7 @@ export function WalksRoutesLook({ walks, grid }: { walks: HomeWalk[]; grid: Walk
         label="Walks coming up"
         tone={grid.tone}
       >
-        {walks.slice(0, grid.columns === 4 ? 8 : 6).map((walk) => (
+        {walks.slice(0, grid.most).map((walk) => (
           <li key={walk.id}>
             <Link className="grid h-full gap-3 p-5 hover:bg-muted/40 md:grid-cols-[minmax(0,1fr)_15rem] md:p-6" href={walk.href}>
               <span className="flex min-w-0 flex-col gap-2">
@@ -462,7 +462,7 @@ function NextWalkPanel({ walk, hill }: { walk: HomeWalk; hill?: boolean }) {
   );
 }
 
-export function WalksTimelineLook({ walks }: { walks: HomeWalk[] }) {
+export function WalksTimelineLook({ walks, most = 5 }: { walks: HomeWalk[]; most?: number }) {
   const [next, ...rest] = walks;
   if (!next) return <NoWalks />;
   return (
@@ -472,7 +472,7 @@ export function WalksTimelineLook({ walks }: { walks: HomeWalk[] }) {
       </div>
       {rest.length > 0 ? (
         <div className="flex flex-col max-lg:border-t">
-          <Timeline walks={rest.slice(0, 4)} />
+          <Timeline walks={rest.slice(0, most - 1)} />
         </div>
       ) : null}
     </div>
@@ -504,11 +504,11 @@ function WalkRow({ walk, hill, className }: { walk: HomeWalk; hill?: boolean; cl
   );
 }
 
-export function WalksHillTopLook({ walks }: { walks: HomeWalk[] }) {
+export function WalksHillTopLook({ walks, most = 5 }: { walks: HomeWalk[]; most?: number }) {
   const [next, ...rest] = walks;
   if (!next) return <NoWalks />;
   const d = at(next);
-  const others = rest.slice(0, 4);
+  const others = rest.slice(0, most - 1);
   return (
     <div className="border-t">
       <div className="flex flex-col gap-4 pt-8">
@@ -597,15 +597,15 @@ export function WalksDateLineLook({ walks, grid }: { walks: HomeWalk[]; grid: Wa
 
 // ── P · Heading on the left, rows with a hill line each ─────────────────────
 
-export function WalksHillRowsLook({ walks, side }: { walks: HomeWalk[]; side: ReactNode }) {
+export function WalksHillRowsLook({ walks, side, most = 5 }: { walks: HomeWalk[]; side: ReactNode | null; most?: number }) {
   return (
-    <div className="grid border-t lg:grid-cols-[18rem_minmax(0,1fr)] xl:grid-cols-[22rem_minmax(0,1fr)]">
-      <div className="flex flex-col gap-5 border-b px-5 py-10 md:px-12 lg:border-e lg:border-b-0 lg:px-10">{side}</div>
+    <div className={cn("grid border-t", side && "lg:grid-cols-[18rem_minmax(0,1fr)] xl:grid-cols-[22rem_minmax(0,1fr)]")}>
+      {side ? <div className="flex flex-col gap-5 border-b px-5 py-10 md:px-12 lg:border-e lg:border-b-0 lg:px-10">{side}</div> : null}
       {walks.length === 0 ? (
         <p className="px-5 py-10 text-center text-muted-foreground md:px-12">No walks on the calendar yet.</p>
       ) : (
         <ul className="flex flex-col">
-          {walks.slice(0, 5).map((walk, i) => {
+          {walks.slice(0, most).map((walk, i) => {
             const d = at(walk);
             return (
               <li className={cn("flex flex-1", i > 0 && "border-t")} key={walk.id}>
@@ -644,11 +644,11 @@ export function WalksHillRowsLook({ walks, side }: { walks: HomeWalk[]; side: Re
 
 // ── Q · Next walk big with its hill, three beside ───────────────────────────
 
-export function WalksBigHillLook({ walks }: { walks: HomeWalk[] }) {
+export function WalksBigHillLook({ walks, most = 4 }: { walks: HomeWalk[]; most?: number }) {
   const [next, ...rest] = walks;
   if (!next) return <NoWalks />;
   const d = at(next);
-  const beside = rest.slice(0, 3);
+  const beside = rest.slice(0, most - 1);
   return (
     <div className={cn("grid border-t", beside.length > 0 && "lg:grid-cols-[minmax(0,1.25fr)_minmax(0,1fr)]")}>
       <Link className={cn("flex flex-col bg-muted/30 hover:bg-muted/50", beside.length > 0 && "lg:border-e")} href={next.href}>

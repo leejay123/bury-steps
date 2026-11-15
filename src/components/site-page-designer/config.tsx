@@ -252,6 +252,25 @@ export const homePageConfig = {
             { value: "bighill", label: "Next walk big with its hill, three beside" },
           ],
         },
+        headPlace: {
+          type: "radio",
+          label: "Heading",
+          options: [
+            { label: "Beside the walks", value: "beside" },
+            { label: "On top", value: "top" },
+          ],
+        },
+        count: {
+          type: "radio",
+          label: "How many walks",
+          options: [
+            { label: "Usual", value: "auto" },
+            { label: "3", value: "3" },
+            { label: "4", value: "4" },
+            { label: "5", value: "5" },
+            { label: "6", value: "6" },
+          ],
+        },
         ...headFields,
         ...buttonFields,
         ...gridFields,
@@ -278,8 +297,11 @@ export const homePageConfig = {
         if (!uses.readMore) drop.push("readMore", "showFirst");
         else if (data.props.readMore === "off") drop.push("showFirst");
         if (!uses.strip || (uses.readMore && data.props.readMore === "off")) drop.push("moreStrip");
-        // Only the heading-beside look has nowhere else for the heading's position to go.
-        if (look === "hillrows") drop.push("headAlign");
+        // Heading beside or on top: only the rows-with-a-hill look; beside, its heading has no left/centre.
+        if (look !== "hillrows") drop.push("headPlace");
+        else if (data.props.headPlace !== "top") drop.push("headAlign");
+        // The calendar shows the month; the date line has one walk per column.
+        if (look === "calendar" || look === "dateline") drop.push("count");
         return dropFields(fields, drop);
       },
       render: HomeWalksBlock,

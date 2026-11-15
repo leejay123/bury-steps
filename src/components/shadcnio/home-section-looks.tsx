@@ -62,8 +62,8 @@ function NoWalks() {
 // ── Walks coming up ─────────────────────────────────────────────────────────
 
 /** A: each walk a full-width row with a date block. */
-export function WalksRowsLook({ walks, tone }: { walks: HomeWalk[]; tone: StripTone }) {
-  const { shown, more, open, toggle } = useMore(walks.slice(0, 6), 3);
+export function WalksRowsLook({ walks, tone, most = 6 }: { walks: HomeWalk[]; tone: StripTone; most?: number }) {
+  const { shown, more, open, toggle } = useMore(walks.slice(0, most), 3);
   if (walks.length === 0) return <NoWalks />;
   return (
     <div className="border-t">
@@ -97,7 +97,7 @@ export function WalksRowsLook({ walks, tone }: { walks: HomeWalk[]; tone: StripT
 }
 
 /** B: the next walk big, the following ones stacked beside it. */
-export function WalksNextLook({ walks }: { walks: HomeWalk[] }) {
+export function WalksNextLook({ walks, most = 4 }: { walks: HomeWalk[]; most?: number }) {
   const [first, ...others] = walks;
   if (!first) return <NoWalks />;
   const at = first.startsAt ? new Date(first.startsAt) : null;
@@ -133,7 +133,7 @@ export function WalksNextLook({ walks }: { walks: HomeWalk[] }) {
       </Link>
       {others.length > 0 ? (
         <ul className="flex flex-col max-lg:border-t">
-          {others.slice(0, 3).map((walk, i) => (
+          {others.slice(0, most - 1).map((walk, i) => (
             <li className={cn("flex flex-1", i > 0 && "border-t")} key={walk.id}>
               <Link className={cn(PAD, "flex flex-1 flex-col justify-center gap-1 py-5 hover:bg-muted/40 lg:px-8")} href={walk.href}>
                 <small className="text-muted-foreground text-sm">
@@ -150,10 +150,10 @@ export function WalksNextLook({ walks }: { walks: HomeWalk[] }) {
 }
 
 /** C: grouped by date, a column per day (up to three), each day's walks by start time. */
-export function WalksWeekLook({ walks }: { walks: HomeWalk[] }) {
+export function WalksWeekLook({ walks, most = 6 }: { walks: HomeWalk[]; most?: number }) {
   if (walks.length === 0) return <NoWalks />;
   const days = new Map<string, HomeWalk[]>();
-  for (const walk of walks.slice(0, 6)) {
+  for (const walk of walks.slice(0, most)) {
     const key = walk.startsAt ? LONG_DAY.format(new Date(walk.startsAt)) : walk.when;
     days.set(key, [...(days.get(key) ?? []), walk]);
   }
