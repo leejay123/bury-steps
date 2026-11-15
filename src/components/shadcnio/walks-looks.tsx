@@ -598,8 +598,11 @@ export function WalksDateLineLook({ walks, grid }: { walks: HomeWalk[]; grid: Wa
 // ── P · Heading on the left, rows with a hill line each ─────────────────────
 
 export function WalksHillRowsLook({ walks, side, most = 5 }: { walks: HomeWalk[]; side: ReactNode | null; most?: number }) {
+  // Beside: the look starts the section, so its top line moves up 1px onto the section's guide line
+  // (one line where the guides show, and still a line where they're hidden). Not a margin: that would
+  // collapse through the section and move the guide line with it.
   return (
-    <div className={cn("grid border-t", side && "lg:grid-cols-[18rem_minmax(0,1fr)] xl:grid-cols-[22rem_minmax(0,1fr)]")}>
+    <div className={cn("grid border-t", side && "-translate-y-px lg:grid-cols-[18rem_minmax(0,1fr)] xl:grid-cols-[22rem_minmax(0,1fr)]")}>
       {side ? <div className="flex flex-col gap-5 border-b px-5 py-10 md:px-12 lg:border-e lg:border-b-0 lg:px-10">{side}</div> : null}
       {walks.length === 0 ? (
         <p className="px-5 py-10 text-center text-muted-foreground md:px-12">No walks on the calendar yet.</p>

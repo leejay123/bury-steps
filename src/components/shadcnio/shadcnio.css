@@ -1334,3 +1334,12 @@ html:is([data-remembered-in], [data-guest-dash]):not([data-page-kind="home"], [d
   [data-hero-moving] .hero-w-shoot { animation: hero-w-shoot 8s ease-in infinite; }
   [data-hero-moving] .hero-w-ff { animation: hero-w-ff 6s ease-in-out infinite; }
 }
+
+/* A section whose heading, intro and button are all hidden (SectionHead): its guide line,
+   1px above the section, is already the top edge, so the look's own top line moves up onto
+   it — one line, never two. A border-t wrapper moves 1px; a lined grid (pt-px, its tiles'
+   top lines 1px down), on its own or in a plain wrapper, moves 2px. Moved with translate,
+   not margin: a negative margin collapses through the section and moves the guide line too. */
+section > [data-head-hidden] + * { translate: 0 -1px; }
+section > [data-head-hidden] + ul.pt-px,
+section > [data-head-hidden] + div:not([class]) { translate: 0 -2px; }

@@ -115,8 +115,13 @@ export function SectionHead({
   const showIntro = choice.intro !== false;
   const button = action && choice.button !== false ? { ...action, label: choice.buttonLabel?.trim() || action.label } : null;
   // Nothing left to show: the title stays for screen readers (it names the section), with no gap above the grid.
+  // The look then starts the section; shadcnio.css moves its top line onto the section's guide line.
   if (!showTitle && !showIntro && !button)
-    return <SectionTitle className="sr-only" id={id} text={title} />;
+    return (
+      <h2 className="sr-only" data-head-hidden="" id={id}>
+        {title}
+      </h2>
+    );
   const left = choice.left === true;
   return (
     <div className={cn("px-5 md:px-12 flex flex-col gap-5 py-12 md:py-16", left ? "items-start text-left" : "items-center text-center")}>
