@@ -201,15 +201,16 @@ body {
 }
 
 /*
- * Dialogs with fields (e.g. Edit walk) are centred on the visible area
- * already (useVisualViewportCenterY), but their height was capped in dvh —
- * which iOS Safari does not shrink for the keyboard — so a tall one ran
- * off the top and bottom of what's visible while typing. Cap them to the
- * visible height instead while the keyboard is up, and let them scroll.
+ * Dialogs with fields (e.g. Edit walk, Add someone) are centred on the
+ * visible area already (useVisualViewportCenterY), but nothing kept them
+ * shorter than it — so a tall one ran off the top and bottom of the screen,
+ * and with the page behind locked, a finger couldn't reach its buttons
+ * (on Android it looked frozen, keyboard up or not: Add someone on a walk).
+ * Cap them to the visible height on phones, always, and let them scroll.
  */
 @media (max-width: 639px) {
-  html[data-keyboard-open] [data-slot="dialog-content"],
-  html[data-keyboard-open] [data-slot="alert-dialog-content"] {
+  [data-slot="dialog-content"],
+  [data-slot="alert-dialog-content"] {
     max-height: calc(var(--vv-height, 100dvh) - 1.5rem);
     overflow-y: auto;
     overscroll-behavior-y: contain;
