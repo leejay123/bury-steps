@@ -4,6 +4,7 @@ import { parseExtraFacts } from "@/lib/extra-facts";
 import { revalidatePath } from "@/lib/revalidate";
 import { customAlphabet } from "nanoid";
 import { z } from "zod";
+import { tidyTitle } from "@/lib/tidy-title";
 import { guardForm } from "@/lib/safe-action";
 import { prisma } from "@/lib/db";
 import { requireAdmin } from "@/lib/auth";
@@ -59,7 +60,9 @@ const walkDetailsSchema = z.object({
     .string()
     .trim()
     .min(3, "Give the walk a title of at least 3 characters.")
-    .max(120, "Keep the title to 120 characters or fewer."),
+    .max(120, "Keep the title to 120 characters or fewer.")
+    // Typed in capitals: saved with capital first letters instead (tidy-title.ts).
+    .transform(tidyTitle),
   description: z
     .string({ required_error: "Add a description of the walk." })
     .trim()

@@ -118,6 +118,8 @@ export function WalkAttendanceSection({
             canSeeEmergencyContact={canSeeEmergencyContact}
             canSeeHealthNotes={canSeeHealthNotes}
             heading={{ count: stillInRows.length, label: isCompleted ? "Attended" : "Attendance" }}
+            // Clocked out joins the same list, under its own strip (one line between, no gap).
+            more={clockedOutRows.length > 0 ? { heading: { count: clockedOutRows.length, label: "Clocked out" }, rows: clockedOutRows } : null}
             note={conditionsNote}
             rows={stillInRows}
             walkCompleted={isCompleted}
@@ -125,7 +127,8 @@ export function WalkAttendanceSection({
         )}
       </section>
 
-      {clockedOutRows.length > 0 ? (
+      {/* Its own list only when nobody is still in (the first list is then the empty box). */}
+      {clockedOutRows.length > 0 && stillInRows.length === 0 ? (
         <section className="flex flex-col gap-3">
           <WalkAttendanceTable
             canRemove={!walk.cancelledAt && canManageAttendance}

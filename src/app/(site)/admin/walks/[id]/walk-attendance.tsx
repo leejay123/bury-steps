@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { Fragment, useRef, useState } from "react";
 import { ChevronRight } from "lucide-react";
 import { formatTime, formatWalkDate } from "@/lib/dates";
 import { emergencyPhoneHref } from "@/lib/emergency-contact";
@@ -68,10 +68,15 @@ export function WalkAttendanceTable({
   canSeeEmergencyContact = false,
   canSeeHealthNotes = false,
   heading,
+  more = null,
   note = null,
   rows,
   walkCompleted = false,
 }: {
+  /** A second group (Clocked out) in the same list, under its own header strip —
+   * one list, so one line between the groups and no gap (two lists stacked left a
+   * missing line and a blank strip between them). */
+  more?: { heading: { count: number; label: string }; rows: WalkAttendanceRow[] } | null;
   /** Organiser can delete a mistaken clock-in (not on cancelled walks). */
   canRemove?: boolean;
   /** Attendance access — name and phone from clock-in. Hidden entirely
@@ -95,13 +100,17 @@ export function WalkAttendanceTable({
   const [openId, setOpenId] = useState<string | null>(null);
   // A-Z by name, same ordering the Members list uses — clock time is still
   // visible per-row, just not what determines row order any more.
-  const sortedRows = [...rows].sort((a, b) => a.name.localeCompare(b.name));
-  const selected = sortedRows.find((row) => row.id === openId) ?? null;
+  const byName = (a: WalkAttendanceRow, b: WalkAttendanceRow) => a.name.localeCompare(b.name);
+  const sortedRows = [
+    ...[...rows].sort(byName).map((row) => ({ row, group: 0 })),
+    ...[...(more?.rows ?? [])].sort(byName).map((row) => ({ row, group: 1 })),
+  ];
+  const selected = sortedRows.find((item) => item.row.id === openId)?.row ?? null;
   const listRef = useRef<HTMLDivElement>(null);
   const paging = usePagedList(sortedRows);
 
-  useResetOnChange([openId, rows], () => {
-    if (openId && !rows.some((row) => row.id === openId)) {
+  useResetOnChange([openId, rows, more?.rows], () => {
+    if (openId && !sortedRows.some((item) => item.row.id === openId)) {
       setOpenId(null);
     }
   });
@@ -109,18 +118,23 @@ export function WalkAttendanceTable({
   return (
     <div className="flex flex-col gap-4" ref={listRef}>
       <DataList>
-        <DataListGroupHeader count={heading.count} label={heading.label} />
-        {note ? (
+        {paging.page === 1 || paging.paged[0]?.group === 0 ? (
+          <DataListGroupHeader count={heading.count} label={heading.label} />
+        ) : null}
+        {note && paging.page === 1 ? (
           // One line: the title, then the rest (no dot between them).
           <li className="border-b px-3 py-2 text-sm">
             <span className="font-medium">{note.title}.</span>{" "}
             <span className="text-muted-foreground">{note.text}</span>
           </li>
         ) : null}
-        {paging.paged.map((row) => (
+        {paging.paged.map(({ row, group }, index) => (
+          <Fragment key={row.id}>
+          {group === 1 && more && (index === 0 || paging.paged[index - 1]?.group !== 1) ? (
+            <DataListGroupHeader count={more.heading.count} label={more.heading.label} />
+          ) : null}
           <DataListItem
             className={dataListItemStackClassName}
-            key={row.id}
             onClick={() => setOpenId(row.id)}
           >
             <DataListItemMain className="items-center">
@@ -159,6 +173,7 @@ export function WalkAttendanceTable({
               </DataListActions>
             ) : null}
           </DataListItem>
+          </Fragment>
         ))}
       </DataList>
       <ListPagination

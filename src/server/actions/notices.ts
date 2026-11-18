@@ -1,6 +1,7 @@
 "use server";
 
 import { z } from "zod";
+import { tidyTitle } from "@/lib/tidy-title";
 import { guardArgs, guardCall, guardForm } from "@/lib/safe-action";
 
 import { revalidatePath, revalidateTag } from "@/lib/revalidate";
@@ -100,7 +101,8 @@ function readNoticeCopy(
       categoryId: string | null;
     }
   | { error: string } {
-  const title = String(formData.get("title") ?? "").trim();
+  // Typed in capitals: saved with capital first letters instead (tidy-title.ts).
+  const title = tidyTitle(String(formData.get("title") ?? "").trim());
   const body = String(formData.get("body") ?? "").trim();
   const kindRaw = String(formData.get("kind") ?? "BELL").trim().toUpperCase();
   const kind = kindRaw === "PAGE" ? "PAGE" : "BELL";
@@ -596,7 +598,7 @@ async function reorderSiteNoticeCategoriesWork(ids: string[]): Promise<ActionRes
 }
 
 const noticeFieldsSchema = z.object({
-  title: z.string().trim().min(1, "Add a title."),
+  title: z.string().trim().min(1, "Add a title.").transform(tidyTitle),
   body: z.string().trim().min(1, "Add a short message for the bell."),
 });
 
@@ -609,7 +611,7 @@ function readNoticeFields(formData: FormData) {
 
 const updateNoticeSchema = z.object({
   noticeId: z.string().min(1, "No notice selected."),
-  title: z.string().trim().min(1, "Add a title."),
+  title: z.string().trim().min(1, "Add a title.").transform(tidyTitle),
   body: z.string().trim().min(1, "Add a short message for the bell."),
 });
 
