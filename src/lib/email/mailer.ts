@@ -170,9 +170,9 @@ export async function sendContactMessageReceivedEmail(submission: {
   });
 }
 
-/** Alert every organiser that a new contact form message has arrived. */
+/** Tell a committee mailbox (Chair, Treasurer or Secretary) that a new contact form message has arrived. */
 export async function sendContactMessageAdminAlertEmail(
-  submission: { name: string; email: string; phone: string | null; message: string },
+  submission: { name: string; email: string; phone: string | null; message: string; sentTo: string },
   adminEmails: string[],
 ): Promise<void> {
   if (adminEmails.length === 0) return;

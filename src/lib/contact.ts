@@ -40,3 +40,41 @@ export function parseContactMessage(raw: string): string | "invalid" {
   }
   return message;
 }
+
+/**
+ * What a Contact us message is about. The visitor picks one; it decides which
+ * committee mailbox gets the email (set in Settings → Site behaviour).
+ */
+export const CONTACT_TOPICS = [
+  {
+    value: "SECRETARY",
+    role: "Secretary",
+    label: "Joining a walk, or a general question",
+    defaultEmail: "secretary@burysteps-walkinggroup.co.uk",
+  },
+  {
+    value: "CHAIR",
+    role: "Chair",
+    label: "Partnerships, complaints, safeguarding, media or funding",
+    defaultEmail: "chair@burysteps-walkinggroup.co.uk",
+  },
+  {
+    value: "TREASURER",
+    role: "Treasurer",
+    label: "Money, fundraising or invoices",
+    defaultEmail: "treasurer@burysteps-walkinggroup.co.uk",
+  },
+] as const;
+
+export type ContactTopic = (typeof CONTACT_TOPICS)[number]["value"];
+
+export const DEFAULT_CONTACT_TOPIC: ContactTopic = "SECRETARY";
+
+/** Anything unrecognised goes to the Secretary, the main public contact. */
+export function parseContactTopic(raw: string): ContactTopic {
+  return CONTACT_TOPICS.find((topic) => topic.value === raw)?.value ?? DEFAULT_CONTACT_TOPIC;
+}
+
+export function contactTopicRole(topic: string): string {
+  return CONTACT_TOPICS.find((entry) => entry.value === topic)?.role ?? "Secretary";
+}

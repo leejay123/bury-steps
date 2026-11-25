@@ -182,6 +182,14 @@ export function MessagesFilterChrome() {
           <SelectItem value="30">Last 30 days</SelectItem>
           </SelectContent>
         </Select>
+        <Select onValueChange={() => {}} value="all">
+          <SelectTrigger aria-label="Addressed to" className={`${EDGE_FILTER} sm:w-40`} id="message-topic-hold" tabIndex={-1}>
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">All mailboxes</SelectItem>
+          </SelectContent>
+        </Select>
         {/* As the real bar (contact-messages-list.tsx): Unread only, off. */}
         <Button className={cn(EDGE_FILTER, "gap-1.5")} tabIndex={-1} type="button" variant="outline">
           <Mail />

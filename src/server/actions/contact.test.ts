@@ -74,58 +74,68 @@ beforeEach(() => {
 });
 
 describe("submitContactMessage", () => {
-  it("alerts the designated contact-messages owner, using their address as the reply-to", async () => {
+  it("emails the mailbox for the chosen topic, with the sender as reply-to", async () => {
     prismaMock.contactMessage.create.mockResolvedValueOnce({});
     prismaMock.siteSetting.findUnique.mockResolvedValueOnce({
-      contactMessagesOwner: { email: "owner@example.com", role: "ADMIN" },
+      contactChairEmail: "chair@example.com",
+      contactTreasurerEmail: "treasurer@example.com",
+      contactSecretaryEmail: "secretary@example.com",
     });
+
+    const result = await submitContactMessage(null, contactForm({ ...VALID_FIELDS, topic: "TREASURER" }));
+
+    expect(result.ok).toBe(true);
+    expect(prismaMock.contactMessage.create).toHaveBeenCalledWith({
+      data: expect.objectContaining({ topic: "TREASURER" }),
+    });
+    expect(sendContactMessageAdminAlertEmail).toHaveBeenCalledWith(
+      expect.objectContaining({ name: "Jo Bloggs", email: "jo@example.com", sentTo: "Treasurer" }),
+      ["treasurer@example.com"],
+    );
+  });
+
+  it("sends an unknown or missing topic to the Secretary", async () => {
+    prismaMock.contactMessage.create.mockResolvedValueOnce({});
+    prismaMock.siteSetting.findUnique.mockResolvedValueOnce({
+      contactChairEmail: "chair@example.com",
+      contactTreasurerEmail: "treasurer@example.com",
+      contactSecretaryEmail: "secretary@example.com",
+    });
+
+    await submitContactMessage(null, contactForm({ ...VALID_FIELDS, topic: "SOMETHING" }));
+
+    expect(prismaMock.contactMessage.create).toHaveBeenCalledWith({
+      data: expect.objectContaining({ topic: "SECRETARY" }),
+    });
+    expect(sendContactMessageAdminAlertEmail).toHaveBeenCalledWith(
+      expect.objectContaining({ sentTo: "Secretary" }),
+      ["secretary@example.com"],
+    );
+  });
+
+  it("uses the built-in address when the settings row doesn't exist yet", async () => {
+    prismaMock.contactMessage.create.mockResolvedValueOnce({});
+    prismaMock.siteSetting.findUnique.mockResolvedValueOnce(null);
+
+    await submitContactMessage(null, contactForm({ ...VALID_FIELDS, topic: "CHAIR" }));
+
+    expect(sendContactMessageAdminAlertEmail).toHaveBeenCalledWith(
+      expect.objectContaining({ sentTo: "Chair" }),
+      ["chair@burysteps-walkinggroup.co.uk"],
+    );
+  });
+
+  it("still succeeds for the sender even if looking up the addresses throws", async () => {
+    prismaMock.contactMessage.create.mockResolvedValueOnce({});
+    prismaMock.siteSetting.findUnique.mockRejectedValueOnce(new Error("db down"));
 
     const result = await submitContactMessage(null, contactForm(VALID_FIELDS));
 
     expect(result.ok).toBe(true);
     expect(sendContactMessageAdminAlertEmail).toHaveBeenCalledWith(
-      expect.objectContaining({ name: "Jo Bloggs", email: "jo@example.com" }),
-      ["owner@example.com"],
+      expect.objectContaining({ sentTo: "Secretary" }),
+      ["secretary@burysteps-walkinggroup.co.uk"],
     );
-  });
-
-  it("alerts no one when no owner has been designated", async () => {
-    prismaMock.contactMessage.create.mockResolvedValueOnce({});
-    prismaMock.siteSetting.findUnique.mockResolvedValueOnce({ contactMessagesOwner: null });
-
-    await submitContactMessage(null, contactForm(VALID_FIELDS));
-
-    expect(sendContactMessageAdminAlertEmail).not.toHaveBeenCalled();
-  });
-
-  it("alerts no one when the site setting row doesn't exist yet", async () => {
-    prismaMock.contactMessage.create.mockResolvedValueOnce({});
-    prismaMock.siteSetting.findUnique.mockResolvedValueOnce(null);
-
-    await submitContactMessage(null, contactForm(VALID_FIELDS));
-
-    expect(sendContactMessageAdminAlertEmail).not.toHaveBeenCalled();
-  });
-
-  it("alerts no one when the designated owner is no longer an organiser", async () => {
-    prismaMock.contactMessage.create.mockResolvedValueOnce({});
-    prismaMock.siteSetting.findUnique.mockResolvedValueOnce({
-      contactMessagesOwner: { email: "demoted@example.com", role: "MEMBER" },
-    });
-
-    await submitContactMessage(null, contactForm(VALID_FIELDS));
-
-    expect(sendContactMessageAdminAlertEmail).not.toHaveBeenCalled();
-  });
-
-  it("still succeeds for the sender even if looking up the owner throws", async () => {
-    prismaMock.contactMessage.create.mockResolvedValueOnce({});
-    prismaMock.siteSetting.findUnique.mockRejectedValueOnce(new Error("db down"));
-    vi.spyOn(console, "error").mockImplementation(() => {});
-
-    const result = await submitContactMessage(null, contactForm(VALID_FIELDS));
-
-    expect(result.ok).toBe(true);
   });
 
   it("rejects an invalid message without saving or notifying anyone", async () => {

@@ -1,7 +1,7 @@
 import { Suspense } from "react";
 import { cacheLife } from "next/cache";
 import { PRIVATE_SAVED_COPY } from "@/lib/private-saved-copy";
-import { requireAnySettingsPermission, displayName } from "@/lib/auth";
+import { requireAnySettingsPermission } from "@/lib/auth";
 import { prisma } from "@/lib/db";
 import { SITE_SETTING_ID } from "@/lib/theme";
 import { getSiteTheme } from "@/lib/site-theme";
@@ -85,7 +85,6 @@ async function AdminSettingsPageContent() {
         progressEnabled: true,
         cancelledWalkRetentionDays: true,
         accidentReportRetentionDays: true,
-        contactMessagesOwner: { select: { firstName: true, lastName: true, email: true, role: true } },
       },
     }),
     getSitePageDesigns(),
@@ -95,8 +94,6 @@ async function AdminSettingsPageContent() {
     }),
   ]);
 
-  const contactOwner =
-    settings?.contactMessagesOwner?.role === "ADMIN" ? settings.contactMessagesOwner : null;
   const cancelledDays = settings ? settings.cancelledWalkRetentionDays : DEFAULT_CANCELLED_WALK_RETENTION_DAYS;
   const reportDays = settings ? settings.accidentReportRetentionDays : null;
   const goal = settings?.monthlyClockInGoal ?? null;
@@ -125,12 +122,6 @@ async function AdminSettingsPageContent() {
     },
     "/admin/settings/progress": {
       status: `${goal ? `Goal: ${goal.toLocaleString("en-GB")} a month` : "No goal"}${progressEnabled ? "" : " · page hidden"}`,
-    },
-    "/admin/settings/behaviour": {
-      status: contactOwner ? `Contact messages → ${displayName(contactOwner)}` : undefined,
-      attention: contactOwner
-        ? undefined
-        : "No one is told when someone sends a message through the contact form.",
     },
     "/admin/settings/retention": {
       status: `Cancelled walks: ${keptFor(cancelledDays)} · Reports: ${keptFor(reportDays)}`,

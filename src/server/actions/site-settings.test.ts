@@ -22,7 +22,7 @@ import {
   updateAboutLists,
   updateAccidentReportRetentionDays,
   updateCancelledWalkRetentionDays,
-  updateContactMessagesOwner,
+  updateContactAddresses,
   updateCookieConsentVariant,
   updateFacebookGroupUrl,
   updateSiteFont,
@@ -289,68 +289,33 @@ describe("updateMonthlyClockInGoal", () => {
   });
 });
 
-describe("updateContactMessagesOwner", () => {
-  it("saves the chosen organiser as the owner", async () => {
-    prismaMock.user.findUnique.mockResolvedValueOnce({
-      firstName: "Sam",
-      lastName: "Lee",
-      email: "sam@example.com",
-      role: "ADMIN",
-    });
+describe("updateContactAddresses", () => {
+  const VALID = {
+    contactChairEmail: "Chair@Example.com",
+    contactTreasurerEmail: "treasurer@example.com",
+    contactSecretaryEmail: "secretary@example.com",
+  };
 
-    const result = await updateContactMessagesOwner(
-      null,
-      form({ contactMessagesOwnerId: "admin-2" }),
-    );
+  it("saves the three addresses, lowercased", async () => {
+    const result = await updateContactAddresses(null, form(VALID));
 
     expect(prismaMock.siteSetting.upsert).toHaveBeenCalledWith(
-      expect.objectContaining({ update: { contactMessagesOwnerId: "admin-2" } }),
+      expect.objectContaining({
+        update: {
+          contactChairEmail: "chair@example.com",
+          contactTreasurerEmail: "treasurer@example.com",
+          contactSecretaryEmail: "secretary@example.com",
+        },
+      }),
     );
-    expect(result).toEqual({
-      ok: true,
-      message: "Contact form alerts now go to Sam Lee.",
-    });
+    expect(result).toEqual({ ok: true, message: "Contact form addresses saved." });
   });
 
-  it("clears the owner when nothing is chosen", async () => {
-    const result = await updateContactMessagesOwner(null, form({ contactMessagesOwnerId: "" }));
+  it("rejects an address that isn't an email, saving nothing", async () => {
+    const result = await updateContactAddresses(null, form({ ...VALID, contactTreasurerEmail: "nope" }));
 
-    expect(prismaMock.user.findUnique).not.toHaveBeenCalled();
-    expect(prismaMock.siteSetting.upsert).toHaveBeenCalledWith(
-      expect.objectContaining({ update: { contactMessagesOwnerId: null } }),
-    );
-    expect(result).toEqual({
-      ok: true,
-      message: "No one will be alerted about new contact form messages.",
-    });
-  });
-
-  it("rejects a user id that isn't a current organiser", async () => {
-    prismaMock.user.findUnique.mockResolvedValueOnce({
-      firstName: "Jo",
-      lastName: null,
-      email: "jo@example.com",
-      role: "MEMBER",
-    });
-
-    const result = await updateContactMessagesOwner(
-      null,
-      form({ contactMessagesOwnerId: "member-1" }),
-    );
-
-    expect(result).toEqual({ ok: false, error: "Choose a current organiser." });
+    expect(result).toEqual({ ok: false, error: "Enter a valid Treasurer email address." });
     expect(prismaMock.siteSetting.upsert).not.toHaveBeenCalled();
-  });
-
-  it("rejects a user id that no longer exists", async () => {
-    prismaMock.user.findUnique.mockResolvedValueOnce(null);
-
-    const result = await updateContactMessagesOwner(
-      null,
-      form({ contactMessagesOwnerId: "gone" }),
-    );
-
-    expect(result).toEqual({ ok: false, error: "Choose a current organiser." });
   });
 });
 

@@ -2,7 +2,7 @@ import { Suspense } from "react";
 import { cacheLife } from "next/cache";
 import { PRIVATE_SAVED_COPY } from "@/lib/private-saved-copy";
 import { prisma } from "@/lib/db";
-import { requirePermission, displayName } from "@/lib/auth";
+import { requirePermission } from "@/lib/auth";
 import { getSiteTheme, type SiteTheme } from "@/lib/site-theme";
 import { SITE_SETTING_ID } from "@/lib/theme";
 import { SettingsPage, SettingsSectionGroup } from "../settings-page";
@@ -17,10 +17,15 @@ import { ProgressToggle } from "./progress-toggle";
 import { StoriesToggle } from "./stories-toggle";
 import { OrganiserInviteToggle } from "./organiser-invite-toggle";
 import { EmergencyContactToggle } from "./emergency-contact-toggle";
-import { ContactMessagesOwnerSettings } from "./contact-messages-owner-settings";
+import { ContactAddressesSettings, type ContactAddresses } from "./contact-addresses-settings";
+import { CONTACT_TOPICS } from "@/lib/contact";
 import { PlaceholderPreviewToggle } from "./placeholder-preview-toggle";
 
 
+
+const DEFAULT_ADDRESSES = Object.fromEntries(
+  CONTACT_TOPICS.map((topic) => [topic.value, topic.defaultEmail]),
+) as ContactAddresses;
 
 /** Fetched ahead (from the menu, the Settings table, or its tabs), so it opens with its settings there. */
 export const prefetch = "partial";
@@ -48,17 +53,14 @@ async function SiteBehaviourSettingsPageContent() {
   "use cache: private";
   cacheLife(PRIVATE_SAVED_COPY);
   const admin = await requirePermission("permDisplay");
-  const [theme, organisers, settings] = await Promise.all([
+  const [theme, settings] = await Promise.all([
     getSiteTheme(),
-    prisma.user.findMany({
-      where: { role: "ADMIN" },
-      orderBy: { createdAt: "asc" },
-      select: { id: true, firstName: true, lastName: true, email: true },
-    }),
     prisma.siteSetting.findUnique({
       where: { id: SITE_SETTING_ID },
       select: {
-        contactMessagesOwnerId: true,
+        contactChairEmail: true,
+        contactSecretaryEmail: true,
+        contactTreasurerEmail: true,
         emergencyContactRequired: true,
         organiserInviteRequired: true,
         progressEnabled: true,
@@ -67,20 +69,20 @@ async function SiteBehaviourSettingsPageContent() {
     }),
   ]);
 
-  return <SettingsView admin={admin} organisers={organisers} settings={settings} theme={theme} />;
+  return <SettingsView admin={admin} settings={settings} theme={theme} />;
 }
 
 /** The page drawn from its saved values (also its placeholder, with stand-ins). */
 function SettingsView({
   admin,
-  organisers,
   settings,
   theme,
 }: {
   admin: { isOwner: boolean };
-  organisers: { id: string; firstName: string | null; lastName: string | null; email: string }[];
   settings: {
-    contactMessagesOwnerId: string | null;
+    contactChairEmail: string;
+    contactSecretaryEmail: string;
+    contactTreasurerEmail: string;
     emergencyContactRequired: boolean;
     organiserInviteRequired: boolean;
     progressEnabled: boolean;
@@ -115,13 +117,16 @@ function SettingsView({
       </SettingsSectionGroup>
 
       <SettingsSectionGroup
-        description="Who's responsible for the public contact form."
+        description="Where the public contact form sends its messages."
         id="contact-messages"
-        title="Contact messages"
+        title="Contact form"
       >
-        <ContactMessagesOwnerSettings
-          currentOwnerId={settings?.contactMessagesOwnerId ?? null}
-          organisers={organisers.map((organiser) => ({ id: organiser.id, name: displayName(organiser) }))}
+        <ContactAddressesSettings
+          addresses={{
+            CHAIR: settings?.contactChairEmail ?? DEFAULT_ADDRESSES.CHAIR,
+            SECRETARY: settings?.contactSecretaryEmail ?? DEFAULT_ADDRESSES.SECRETARY,
+            TREASURER: settings?.contactTreasurerEmail ?? DEFAULT_ADDRESSES.TREASURER,
+          }}
         />
       </SettingsSectionGroup>
     </>
@@ -135,7 +140,7 @@ async function SettingsFallback() {
   const theme = await getSiteTheme();
   return (
     <SettingsMask>
-      <SettingsView admin={{ isOwner: true }} organisers={[]} settings={null} theme={theme} />
+      <SettingsView admin={{ isOwner: true }} settings={null} theme={theme} />
     </SettingsMask>
   );
 }

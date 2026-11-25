@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Send } from "lucide-react";
 import { useFormStatus } from "react-dom";
 import { getContactFormDefaults, submitContactMessage } from "@/server/actions";
@@ -11,8 +11,16 @@ import { FormError } from "@/components/form-error";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
-import { MAX_CONTACT_MESSAGE, MAX_CONTACT_NAME, MAX_CONTACT_PHONE, MIN_CONTACT_MESSAGE } from "@/lib/contact";
+import {
+  CONTACT_TOPICS,
+  DEFAULT_CONTACT_TOPIC,
+  MAX_CONTACT_MESSAGE,
+  MAX_CONTACT_NAME,
+  MAX_CONTACT_PHONE,
+  MIN_CONTACT_MESSAGE,
+} from "@/lib/contact";
 
 function Submit() {
   const { pending } = useFormStatus();
@@ -64,6 +72,28 @@ function Honeypot() {
       <Label htmlFor="company">Company</Label>
       <Input autoComplete="off" id="company" name="company" tabIndex={-1} />
     </div>
+  );
+}
+
+/** What the message is about. It decides which committee mailbox the message is emailed to. */
+function TopicSelect({ id }: { id: string }) {
+  const [topic, setTopic] = useState<string>(DEFAULT_CONTACT_TOPIC);
+  return (
+    <>
+      <input name="topic" type="hidden" value={topic} />
+      <Select onValueChange={setTopic} value={topic}>
+        <SelectTrigger className="w-full" id={id}>
+          <SelectValue />
+        </SelectTrigger>
+        <SelectContent>
+          {CONTACT_TOPICS.map((entry) => (
+            <SelectItem key={entry.value} value={entry.value}>
+              {entry.label}
+            </SelectItem>
+          ))}
+        </SelectContent>
+      </Select>
+    </>
   );
 }
 
@@ -150,6 +180,12 @@ export function ShadcnContactForm({ steps }: { steps: string[] }) {
               </div>
             </div>
             <div className={FIELD} data-orientation="vertical" data-slot="field" role="group">
+              <label className={FIELD_LABEL} data-slot="field-label" htmlFor="contact-topic">
+                What is your message about?
+              </label>
+              <TopicSelect id="contact-topic" />
+            </div>
+            <div className={FIELD} data-orientation="vertical" data-slot="field" role="group">
               <label className={FIELD_LABEL} data-slot="field-label" htmlFor="contact-phone">
                 Phone (optional)
               </label>
@@ -206,6 +242,10 @@ export function ContactForm() {
       <div className="flex flex-col gap-2">
         <Label htmlFor="contact-email">Email</Label>
         <Input autoComplete="email" id="contact-email" name="email" ref={emailRef} required type="email" />
+      </div>
+      <div className="flex flex-col gap-2">
+        <Label htmlFor="contact-topic">What is your message about?</Label>
+        <TopicSelect id="contact-topic" />
       </div>
       <div className="flex flex-col gap-2">
         <Label htmlFor="contact-phone">Phone (optional)</Label>

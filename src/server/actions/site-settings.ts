@@ -49,7 +49,7 @@ import {
 import { SITE_SETTING_ID, DEFAULT_PRIMARY_COLOR } from "@/lib/theme";
 import { parseSiteFont } from "@/lib/site-font";
 import { HOMEPAGE_CACHE_TAG } from "@/lib/homepage-cache";
-import { CONTACT_MESSAGES_OWNER_TAG } from "@/lib/contact-messages-owner";
+import { parseContactEmail } from "@/lib/contact";
 import {
   DEFAULT_COOKIE_CONSENT_VARIANT,
   parseCookieConsentVariant,
@@ -310,57 +310,39 @@ async function updateAccidentReportRetentionDaysWork(
   };
 }
 
-/** Sets the single organiser who gets contact-form alert emails and is
- * expected to reply (via the alert email's reply-to). Pass an empty string
- * to designate no one. */
-async function updateContactMessagesOwnerWork(
+/** Saves the three committee mailboxes the Contact us form sends to
+ * (Chair, Treasurer, Secretary). */
+async function updateContactAddressesWork(
   _prev: ActionResult | null,
   formData: FormData,
 ): Promise<ActionResult> {
   const admin = await requireAdmin();
   if (!admin.permDisplay) return permissionDenied("permDisplay");
-  const userId = String(formData.get("contactMessagesOwnerId") ?? "").trim();
+  const chair = parseContactEmail(String(formData.get("contactChairEmail") ?? ""));
+  const treasurer = parseContactEmail(String(formData.get("contactTreasurerEmail") ?? ""));
+  const secretary = parseContactEmail(String(formData.get("contactSecretaryEmail") ?? ""));
+  if (chair === "invalid") return { ok: false, error: "Enter a valid Chair email address." };
+  if (treasurer === "invalid") return { ok: false, error: "Enter a valid Treasurer email address." };
+  if (secretary === "invalid") return { ok: false, error: "Enter a valid Secretary email address." };
 
-  let owner: { firstName: string | null; lastName: string | null; email: string; role: string } | null =
-    null;
-  if (userId) {
-    owner = await prisma.user.findUnique({
-      where: { id: userId },
-      select: { firstName: true, lastName: true, email: true, role: true },
-    });
-    if (!owner || owner.role !== "ADMIN") {
-      return { ok: false, error: "Choose a current organiser." };
-    }
-  }
-
+  const data = {
+    contactChairEmail: chair,
+    contactTreasurerEmail: treasurer,
+    contactSecretaryEmail: secretary,
+  };
   try {
     await prisma.siteSetting.upsert({
       where: { id: SITE_SETTING_ID },
-      create: {
-        id: SITE_SETTING_ID,
-        primaryColor: DEFAULT_PRIMARY_COLOR,
-        contactMessagesOwnerId: userId || null,
-      },
-      update: { contactMessagesOwnerId: userId || null },
+      create: { id: SITE_SETTING_ID, primaryColor: DEFAULT_PRIMARY_COLOR, ...data },
+      update: data,
     });
   } catch (err) {
-    return logActionError(
-      "updateContactMessagesOwner",
-      err,
-      "Could not save that setting. Try again.",
-    );
+    return logActionError("updateContactAddresses", err, "Could not save that setting. Try again.");
   }
 
   revalidatePath("/admin/settings");
   revalidatePath("/admin/settings/behaviour");
-  revalidatePath("/admin/messages");
-  revalidateTag(CONTACT_MESSAGES_OWNER_TAG, { expire: 0 });
-  return {
-    ok: true,
-    message: owner
-      ? `Contact form alerts now go to ${[owner.firstName, owner.lastName].filter(Boolean).join(" ").trim() || owner.email}.`
-      : "No one will be alerted about new contact form messages.",
-  };
+  return { ok: true, message: "Contact form addresses saved." };
 }
 
 async function updateScrollToTopEnabledWork(
@@ -1617,7 +1599,7 @@ export const updateAccidentReportRetentionDays = guardForm(
   (formData) => readStrings(formData, ["accidentReportRetentionDays"] as const),
   updateAccidentReportRetentionDaysWork,
 );
-export const updateContactMessagesOwner = guardForm("organiser", pass, readPass, updateContactMessagesOwnerWork);
+export const updateContactAddresses = guardForm("organiser", pass, readPass, updateContactAddressesWork);
 export const updateScrollToTopEnabled = guardForm("organiser", pass, readPass, updateScrollToTopEnabledWork);
 export const updateAnnouncementBanner = guardForm("organiser", pass, readPass, updateAnnouncementBannerWork);
 export const updateAnnouncementCopy = guardForm("organiser", pass, readPass, updateAnnouncementCopyWork);

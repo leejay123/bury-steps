@@ -89,7 +89,7 @@ export {
   updateStoriesEnabled,
   updateAccidentReportRetentionDays,
   updateCancelledWalkRetentionDays,
-  updateContactMessagesOwner,
+  updateContactAddresses,
   updateOrganiserInviteRequired,
   updateEmergencyContactRequired,
   updateScrollToTopEnabled,

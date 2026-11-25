@@ -5,11 +5,9 @@ import { MessagesFilterChrome } from "@/components/list-chrome";
 import { RememberListCount } from "@/components/remember-list-count";
 import { MessageRowsSkeleton } from "@/components/list-skeletons";
 import { LIST_PAGE_SIZE } from "@/lib/list-page-size";
-import Link from "next/link";
 import { getOptionalAdmin } from "@/lib/auth";
 import { notFound } from "next/navigation";
 import { cacheLife } from "next/cache";
-import { getContactMessagesDescription } from "@/lib/contact-messages-owner";
 import { messagesListRows } from "@/lib/list-counts";
 import { prisma } from "@/lib/db";
 import { AdminPageIntro } from "../admin-page-intro";
@@ -29,32 +27,15 @@ async function getMessagesView() {
   cacheLife({ stale: 300, revalidate: 300, expire: 3600 });
   const admin = await getOptionalAdmin();
   if (!admin?.permMessages) return null;
-  const [messages, description] = await Promise.all([
-    prisma.contactMessage.findMany({
-      orderBy: { createdAt: "desc" },
-      take: 200,
-    }),
-    getContactMessagesDescription(),
-  ]);
-  return { messages, description };
+  const messages = await prisma.contactMessage.findMany({
+    orderBy: { createdAt: "desc" },
+    take: 200,
+  });
+  return { messages };
 }
 
-/** The title and description (who gets alerted, from a saved copy): part of the ready-made page. */
-async function MessagesIntro() {
-  const description = await getContactMessagesDescription();
-  return (
-    <>
-      <AdminPageIntro description={description.text} title="Messages" />
-      {!description.hasOwner ? (
-        <p className="text-sm text-muted-foreground">
-          <Link className="underline underline-offset-2" href="/admin/settings/behaviour#contact-messages">
-            Choose who gets alerted
-          </Link>
-        </p>
-      ) : null}
-    </>
-  );
-}
+const MESSAGES_DESCRIPTION =
+  "Messages from the Contact us form. Each is also emailed to the Chair, Treasurer or Secretary mailbox it was addressed to, set in Site behaviour.";
 
 /** The part that waits for data: the messages (organisers allowed to see them). */
 async function MessagesList() {
@@ -70,6 +51,7 @@ async function MessagesList() {
           name: message.name,
           email: message.email,
           phone: message.phone,
+          topic: message.topic,
           message: message.message,
           createdAt: message.createdAt.toISOString(),
           read: message.readAt !== null,
@@ -91,13 +73,12 @@ async function MessagesListFallback() {
 }
 
 /** Real title, description, search and date filter, then exactly as many
- * message rows as there are (list-counts.ts) — one placeholder from the first paint. The description
- * names who gets alerted, from a saved copy, so it's real too. */
+ * message rows as there are (list-counts.ts) — one placeholder from the first paint. */
 export async function MessagesPageFallback() {
-  const [description, rows] = await Promise.all([getContactMessagesDescription(), messagesListRows()]);
+  const rows = await messagesListRows();
   return (
     <AdminPageFallback
-      description={description.text}
+      description={MESSAGES_DESCRIPTION}
       filters={<MessagesFilterChrome />}
       list={<MessageRowsSkeleton known={rows} remember="messages" />}
       title="Messages"
@@ -115,7 +96,7 @@ export default function AdminMessagesPage() {
   // optimizing-the-static-shell).
   return (
     <div className="flex flex-col gap-6 px-4 py-6 md:px-6">
-      <MessagesIntro />
+      <AdminPageIntro description={MESSAGES_DESCRIPTION} title="Messages" />
       <Suspense fallback={<MessagesListFallback />}>
         <PlaceholderPreview fallback={<MessagesListFallback />}>
           <MessagesList />

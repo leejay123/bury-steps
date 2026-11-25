@@ -1,9 +1,11 @@
 import { describe, expect, it } from "vitest";
 import {
+  contactTopicRole,
   parseContactEmail,
   parseContactMessage,
   parseContactName,
   parseContactPhone,
+  parseContactTopic,
 } from "./contact";
 
 describe("parseContactName", () => {
@@ -68,5 +70,24 @@ describe("parseContactMessage", () => {
 
   it("rejects a message over the max length", () => {
     expect(parseContactMessage("x".repeat(2001))).toBe("invalid");
+  });
+});
+
+describe("parseContactTopic", () => {
+  it("accepts the three committee topics", () => {
+    expect(parseContactTopic("CHAIR")).toBe("CHAIR");
+    expect(parseContactTopic("TREASURER")).toBe("TREASURER");
+    expect(parseContactTopic("SECRETARY")).toBe("SECRETARY");
+  });
+
+  it("sends anything else to the Secretary", () => {
+    expect(parseContactTopic("")).toBe("SECRETARY");
+    expect(parseContactTopic("chair")).toBe("SECRETARY");
+    expect(parseContactTopic("ADMIN")).toBe("SECRETARY");
+  });
+
+  it("names the role for a topic", () => {
+    expect(contactTopicRole("TREASURER")).toBe("Treasurer");
+    expect(contactTopicRole("unknown")).toBe("Secretary");
   });
 });

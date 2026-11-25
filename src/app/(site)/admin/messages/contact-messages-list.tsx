@@ -41,6 +41,7 @@ import {
 } from "@/components/data-list";
 import { EDGE_FILTER, EdgeBar, EdgeFilters, EdgeSearch } from "@/components/edge-search";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { CONTACT_TOPICS, contactTopicRole } from "@/lib/contact";
 import { LIST_PAGE_SIZE } from "@/lib/list-page-size";
 import { MESSAGE_LINES_COOKIE, writeClientCookie } from "@/lib/remembered-rows-key";
 import { ClearFiltersButton } from "@/components/empty-state";
@@ -50,6 +51,8 @@ export type ContactMessageRow = {
   name: string;
   email: string;
   phone: string | null;
+  /** SECRETARY, CHAIR or TREASURER: the mailbox it was addressed to. */
+  topic: string;
   message: string;
   createdAt: string;
   read: boolean;
@@ -203,6 +206,8 @@ function MessageDrawer({
                 ) : null}
                 {" · "}
                 {formatCompactDateTime(shown.createdAt)}
+                {" · For the "}
+                {contactTopicRole(shown.topic)}
               </DrawerDescription>
             </DrawerHeader>
             <div className="min-h-0 flex-1 overflow-y-auto overscroll-y-contain px-4">
@@ -238,6 +243,7 @@ export function ContactMessagesList({ messages }: { messages: ContactMessageRow[
   const [query, setQuery] = useState("");
   const [unreadOnly, setUnreadOnly] = useState(false);
   const [dateRange, setDateRange] = useState<DateRange>("all");
+  const [topic, setTopic] = useState("all");
   const { openSoon, onPointerDownOutside } = useControlledDrawerDismissGuard();
   const active = messages.find((message) => message.id === activeId) ?? null;
 
@@ -249,6 +255,7 @@ export function ContactMessagesList({ messages }: { messages: ContactMessageRow[
   const normalizedQuery = query.trim().toLowerCase();
   const filtered = messages.filter((message) => {
     if (unreadOnly && message.read) return false;
+    if (topic !== "all" && message.topic !== topic) return false;
     if (!withinDateRange(message.createdAt, dateRange)) return false;
     if (!normalizedQuery) return true;
     return (
@@ -277,12 +284,13 @@ export function ContactMessagesList({ messages }: { messages: ContactMessageRow[
     );
   }
 
-  const filtersActive = query !== "" || unreadOnly || dateRange !== "all";
+  const filtersActive = query !== "" || unreadOnly || dateRange !== "all" || topic !== "all";
 
   function clearFilters() {
     setQuery("");
     setUnreadOnly(false);
     setDateRange("all");
+    setTopic("all");
   }
 
   return (
@@ -300,6 +308,19 @@ export function ContactMessagesList({ messages }: { messages: ContactMessageRow[
               <SelectItem value="today">Today</SelectItem>
               <SelectItem value="7">Last 7 days</SelectItem>
               <SelectItem value="30">Last 30 days</SelectItem>
+            </SelectContent>
+          </Select>
+          <Select onValueChange={setTopic} value={topic}>
+            <SelectTrigger aria-label="Addressed to" className={`${EDGE_FILTER} sm:w-40`} id="message-topic">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All mailboxes</SelectItem>
+              {CONTACT_TOPICS.map((entry) => (
+                <SelectItem key={entry.value} value={entry.value}>
+                  {entry.role}
+                </SelectItem>
+              ))}
             </SelectContent>
           </Select>
         <Button
@@ -328,7 +349,7 @@ export function ContactMessagesList({ messages }: { messages: ContactMessageRow[
       {filtered.length === 0 ? (
         <EmptyState
           description={
-            unreadOnly && !query && dateRange === "all"
+            unreadOnly && !query && dateRange === "all" && topic === "all"
               ? "Nothing unread right now."
               : "Try a different name, email, word, or date range."
           }
@@ -357,7 +378,8 @@ export function ContactMessagesList({ messages }: { messages: ContactMessageRow[
                   </p>
                   <p className="text-sm text-muted-foreground">
                     {message.email}
-                    {message.phone ? ` · ${message.phone}` : ""} · {formatCompactDateTime(message.createdAt)}
+                    {message.phone ? ` · ${message.phone}` : ""} · {formatCompactDateTime(message.createdAt)} · For the{" "}
+                    {contactTopicRole(message.topic)}
                   </p>
                   <p className="mt-1 text-sm text-muted-foreground">{preview(message.message)}</p>
                 </DataListBody>

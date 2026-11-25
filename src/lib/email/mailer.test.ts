@@ -135,23 +135,23 @@ describe("sendContactMessageReceivedEmail", () => {
 });
 
 describe("sendContactMessageAdminAlertEmail", () => {
-  it("emails every organiser and sets replyTo to the sender", async () => {
+  it("emails the mailbox and sets replyTo to the sender", async () => {
     await sendContactMessageAdminAlertEmail(
-      { name: "Jane", email: "jane@example.com", phone: null, message: "Hello!" },
-      ["admin1@example.com", "admin2@example.com"],
+      { name: "Jane", email: "jane@example.com", phone: null, message: "Hello!", sentTo: "Chair" },
+      ["chair@example.com"],
     );
 
     expect(sendEmail).toHaveBeenCalledWith(
       expect.objectContaining({
-        to: ["admin1@example.com", "admin2@example.com"],
+        to: ["chair@example.com"],
         replyTo: "jane@example.com",
       }),
     );
   });
 
-  it("skips sending when there are no organisers to notify", async () => {
+  it("skips sending when there is no address to notify", async () => {
     await sendContactMessageAdminAlertEmail(
-      { name: "Jane", email: "jane@example.com", phone: null, message: "Hello!" },
+      { name: "Jane", email: "jane@example.com", phone: null, message: "Hello!", sentTo: "Chair" },
       [],
     );
 

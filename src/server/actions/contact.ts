@@ -10,10 +10,14 @@ import { SITE_SETTING_ID } from "@/lib/theme";
 import { checkRateLimit } from "@/lib/rate-limit";
 import { requesterIpKey } from "@/lib/requester-ip";
 import {
+  CONTACT_TOPICS,
+  type ContactTopic,
+  contactTopicRole,
   parseContactEmail,
   parseContactMessage,
   parseContactName,
   parseContactPhone,
+  parseContactTopic,
 } from "@/lib/contact";
 import { sendContactMessageAdminAlertEmail, sendContactMessageReceivedEmail } from "@/lib/email/mailer";
 import { type ActionResult, isPrismaCode, logActionError, permissionDenied } from "./shared";
@@ -41,6 +45,7 @@ async function submitContactMessageWork(
   const email = parseContactEmail(String(formData.get("email") ?? ""));
   const phone = parseContactPhone(String(formData.get("phone") ?? ""));
   const message = parseContactMessage(String(formData.get("message") ?? ""));
+  const topic = parseContactTopic(String(formData.get("topic") ?? ""));
   if (name === "invalid") return { ok: false, error: "Enter your name." };
   if (email === "invalid") return { ok: false, error: "Enter a valid email address." };
   if (phone === "invalid") return { ok: false, error: "Enter a valid phone number, or leave it blank." };
@@ -58,7 +63,7 @@ async function submitContactMessageWork(
 
   try {
     await prisma.contactMessage.create({
-      data: { name, email, phone: phone || null, message },
+      data: { name, email, phone: phone || null, message, topic },
     });
   } catch (err) {
     return logActionError("submitContactMessage", err, "Could not send that. Try again.");
@@ -72,33 +77,45 @@ async function submitContactMessageWork(
     sendContactMessageReceivedEmail({ name, email, message }).catch((err) => {
       console.error("submitContactMessage: failed to send sender confirmation", err);
     }),
-    notifyAdminsOfContactMessage({ name, email, phone: phone || null, message }),
+    notifyCommitteeOfContactMessage({ name, email, phone: phone || null, message, topic }),
   ]);
 
   return { ok: true, message: "Thanks — we'll get back to you soon." };
 }
 
-/** Alerts the single organiser designated in Settings → Site behaviour → "Contact
- * messages" (SiteSetting.contactMessagesOwnerId) — not every organiser, so
- * exactly one person is expected to reply, via the alert email's reply-to.
- * Silently does nothing if no one has been designated yet, or the
- * designated organiser is no longer an organiser. */
-async function notifyAdminsOfContactMessage(submission: {
+/** Emails the committee mailbox that matches the topic the visitor chose
+ * (Settings → Site behaviour → Contact form addresses). The visitor's address
+ * is the reply-to, so whoever reads the mailbox can just reply. If the saved
+ * addresses can't be read, the built-in ones are used, so a message is never
+ * left without an email. */
+async function notifyCommitteeOfContactMessage(submission: {
   name: string;
   email: string;
   phone: string | null;
   message: string;
+  topic: ContactTopic;
 }): Promise<void> {
   try {
-    const setting = await prisma.siteSetting.findUnique({
-      where: { id: SITE_SETTING_ID },
-      select: { contactMessagesOwner: { select: { email: true, role: true } } },
-    });
-    const owner = setting?.contactMessagesOwner;
-    if (!owner || owner.role !== "ADMIN") return;
-    await sendContactMessageAdminAlertEmail(submission, [owner.email]);
+    const setting = await prisma.siteSetting
+      .findUnique({
+        where: { id: SITE_SETTING_ID },
+        select: { contactChairEmail: true, contactTreasurerEmail: true, contactSecretaryEmail: true },
+      })
+      .catch(() => null);
+    const saved: Record<ContactTopic, string | undefined> = {
+      CHAIR: setting?.contactChairEmail,
+      TREASURER: setting?.contactTreasurerEmail,
+      SECRETARY: setting?.contactSecretaryEmail,
+    };
+    const fallback = CONTACT_TOPICS.find((entry) => entry.value === submission.topic)?.defaultEmail;
+    const to = saved[submission.topic]?.trim() || fallback;
+    if (!to) return;
+    await sendContactMessageAdminAlertEmail(
+      { name: submission.name, email: submission.email, phone: submission.phone, message: submission.message, sentTo: contactTopicRole(submission.topic) },
+      [to],
+    );
   } catch (err) {
-    console.error("submitContactMessage: failed to notify the contact messages owner", err);
+    console.error("submitContactMessage: failed to email the committee mailbox", err);
   }
 }
 
@@ -149,6 +166,7 @@ const contactSchema = z
     email: z.string(),
     phone: z.string(),
     message: z.string(),
+    topic: z.string(),
   })
   .superRefine((value, ctx) => {
     if (value.company.trim().length > 0) return;
@@ -188,6 +206,7 @@ function readContact(formData: FormData) {
     email: String(formData.get("email") ?? ""),
     phone: String(formData.get("phone") ?? ""),
     message: String(formData.get("message") ?? ""),
+    topic: String(formData.get("topic") ?? ""),
   };
 }
 

@@ -486,6 +486,11 @@ model SiteSetting {
   /// is notified. Cleared automatically if that organiser is removed
   /// (onDelete: SetNull) or demoted (see setMemberRole).
   contactMessagesOwnerId      String?
+  /// Where the Contact us form sends each kind of message (the mailboxes the
+  /// committee share). Which one is chosen by the visitor's topic.
+  contactChairEmail           String   @default("chair@burysteps-walkinggroup.co.uk")
+  contactTreasurerEmail       String   @default("treasurer@burysteps-walkinggroup.co.uk")
+  contactSecretaryEmail       String   @default("secretary@burysteps-walkinggroup.co.uk")
   /// When on, promoting a member to organiser sends an email invite
   /// instead of taking effect immediately — they only become an organiser
   /// once they accept it. Off by default (instant promotion, as before).
@@ -593,6 +598,8 @@ model ContactMessage {
   /// Optional — the form doesn't require it.
   phone     String?
   message   String
+  /// Who it was addressed to: SECRETARY, CHAIR or TREASURER (src/lib/contact.ts).
+  topic     String    @default("SECRETARY")
   readAt    DateTime?
   createdAt DateTime  @default(now())
 

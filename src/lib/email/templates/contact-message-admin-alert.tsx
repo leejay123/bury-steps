@@ -13,18 +13,19 @@ export type ContactMessageAdminAlertEmailProps = EmailBrand & {
   email: string;
   phone: string | null;
   message: string;
+  /** The committee role the visitor chose to write to: Chair, Treasurer or Secretary. */
+  sentTo: string;
   bodyParagraphs: string[];
 };
 
-/** This is sent to every opted-in organiser at once (one `to:` with every
- * address in it — organisers already know each other, unlike members), so
- * the preferences link goes to the signed-in /email-preferences page rather
- * than a per-recipient token link. */
+/** Sent to one committee mailbox, so the preferences link goes to the
+ * signed-in /email-preferences page rather than a per-recipient token link. */
 export function ContactMessageAdminAlertEmail({
   name,
   email,
   phone,
   message,
+  sentTo,
   bodyParagraphs,
   ...brand
 }: ContactMessageAdminAlertEmailProps) {
@@ -36,6 +37,7 @@ export function ContactMessageAdminAlertEmail({
       {...brand}
     >
       <EmailParagraphs paragraphs={bodyParagraphs} />
+      <EmailFact label="Sent to" value={sentTo} />
       <EmailFact label="From" value={name} />
       <EmailFact label="Email" value={email} />
       {phone ? <EmailFact label="Phone" value={phone} /> : null}

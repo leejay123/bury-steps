@@ -136,9 +136,9 @@ export const EMAIL_TEMPLATES: EmailTemplateMeta[] = [
   },
   {
     key: "contactAdminAlert",
-    label: "Contact form — alert to organisers",
+    label: "Contact form — alert to the committee",
     trigger:
-      "Sent when the contact form is submitted, to the organiser chosen under Settings → Site behaviour → Contact messages (nobody, if no one is chosen).",
+      "Sent when the contact form is submitted, to the Chair, Treasurer or Secretary mailbox that matches the topic the visitor chose (addresses under Settings → Site behaviour → Contact form addresses).",
     category: "Organiser alerts",
     placeholders: [
       { token: "name", description: "The sender's name" },

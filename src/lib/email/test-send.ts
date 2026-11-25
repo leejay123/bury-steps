@@ -155,6 +155,7 @@ export async function sendTestEmail(key: EmailTemplateKey, admin: TestRecipient)
           ...brand,
           ...SAMPLE_SENDER,
           message: SAMPLE_MESSAGE,
+          sentTo: "Secretary",
           bodyParagraphs: copy.bodyParagraphs,
         }),
       );

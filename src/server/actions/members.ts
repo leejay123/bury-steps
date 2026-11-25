@@ -3,8 +3,7 @@
 import { z } from "zod";
 import { guardForm } from "@/lib/safe-action";
 
-import { revalidatePath, revalidateTag } from "@/lib/revalidate";
-import { CONTACT_MESSAGES_OWNER_TAG } from "@/lib/contact-messages-owner";
+import { revalidatePath } from "@/lib/revalidate";
 import { clerkClient } from "@clerk/nextjs/server";
 import { syncClerkRoleFor } from "@/lib/clerk-role";
 import { requireAdmin, displayName, getOptionalUser } from "@/lib/auth";
@@ -246,7 +245,6 @@ async function deleteMemberWork(_prev: ActionResult | null, formData: FormData):
       revalidatePath("/admin/walks");
       revalidatePath("/admin/members");
       revalidatePath("/admin/messages");
-      revalidateTag(CONTACT_MESSAGES_OWNER_TAG, { expire: 0 });
       revalidatePath("/admin/settings");
       revalidatePath("/walks");
       return {
@@ -260,10 +258,7 @@ async function deleteMemberWork(_prev: ActionResult | null, formData: FormData):
   revalidatePath("/admin");
   revalidatePath("/admin/walks");
   revalidatePath("/admin/members");
-  // contactMessagesOwnerId SetNulls on delete — refresh messages + settings
-  // so a stale "messages go to …" label does not linger.
   revalidatePath("/admin/messages");
-  revalidateTag(CONTACT_MESSAGES_OWNER_TAG, { expire: 0 });
   revalidatePath("/admin/settings");
   revalidatePath("/walks");
 
@@ -411,8 +406,6 @@ async function setMemberRoleWork(
   revalidatePath("/admin/members");
   revalidatePath(`/admin/members/${target.id}`);
   revalidatePath("/walks");
-  // Made a member again: no longer the one alerted about messages.
-  revalidateTag(CONTACT_MESSAGES_OWNER_TAG, { expire: 0 });
   // Layout nav (Members / Reports / Settings) depends on role for this person.
   revalidatePath("/", "layout");
 
