@@ -2,6 +2,7 @@ import type { ReactNode } from "react";
 import { ShadcnLegal, type ShadcnLegalDocs, type ShadcnLegalIcon } from "@/components/shadcnio/legal";
 
 export const LEGAL_LAST_UPDATED = "28 August 2026";
+export const PRIVACY_LAST_UPDATED = "27 November 2026";
 
 export type LegalSection = {
   id: string;
@@ -50,7 +51,13 @@ export async function LegalPage({
       rest={props.rest}
       sections={sections}
       title={title}
-      updated={props.updated === undefined ? LEGAL_LAST_UPDATED : props.updated}
+      updated={
+        props.updated === undefined
+          ? title === "Privacy Policy"
+            ? PRIVACY_LAST_UPDATED
+            : LEGAL_LAST_UPDATED
+          : props.updated
+      }
     />
   );
 }

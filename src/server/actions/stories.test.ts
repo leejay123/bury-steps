@@ -3,7 +3,12 @@ import { describe, expect, it, vi, beforeEach } from "vitest";
 const { requireUser, prismaMock, uploadStoryPhoto } = vi.hoisted(() => ({
   requireUser: vi.fn(),
   prismaMock: {
-    story: { count: vi.fn(async () => 0), create: vi.fn(async () => ({})) },
+    story: {
+      count: vi.fn(async () => 0),
+      create: vi.fn(async () => ({})),
+      findUnique: vi.fn(),
+    },
+    storyView: { createMany: vi.fn(async () => ({ count: 1 })) },
   },
   uploadStoryPhoto: vi.fn(async () => {}),
 }));
@@ -25,7 +30,7 @@ vi.mock("@/lib/auth", async () => {
   return { ...actual, requireUser };
 });
 
-import { postStory } from "./stories";
+import { postStory, recordStoryView } from "./stories";
 
 /** A tiny JPEG with an EXIF block (where a phone keeps GPS) after the start marker. */
 function jpegWithExif(): Uint8Array {
@@ -73,5 +78,32 @@ describe("postStory", () => {
     const result = await postStory(null, form(big, "image/jpeg"));
     expect(result).toEqual({ ok: false, error: "That photo is too big. Try another one." });
     expect(uploadStoryPhoto).not.toHaveBeenCalled();
+  });
+});
+
+describe("recordStoryView", () => {
+  const live = () => ({ userId: "member-2", expiresAt: new Date(Date.now() + 60_000) });
+
+  it("records someone else's live story, once per person", async () => {
+    prismaMock.story.findUnique.mockResolvedValue(live());
+    expect((await recordStoryView({ id: "s1" })).ok).toBe(true);
+    expect(prismaMock.storyView.createMany).toHaveBeenCalledWith({
+      data: [{ storyId: "s1", userId: "member-1" }],
+      skipDuplicates: true,
+    });
+  });
+
+  it("never counts your own view", async () => {
+    prismaMock.story.findUnique.mockResolvedValue({ ...live(), userId: "member-1" });
+    expect((await recordStoryView({ id: "s1" })).ok).toBe(true);
+    expect(prismaMock.storyView.createMany).not.toHaveBeenCalled();
+  });
+
+  it("quietly ignores a story that has expired or gone", async () => {
+    for (const story of [null, { userId: "member-2", expiresAt: new Date(Date.now() - 1) }]) {
+      prismaMock.story.findUnique.mockResolvedValue(story);
+      expect((await recordStoryView({ id: "s1" })).ok).toBe(true);
+    }
+    expect(prismaMock.storyView.createMany).not.toHaveBeenCalled();
   });
 });

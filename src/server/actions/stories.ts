@@ -82,6 +82,25 @@ export const deleteStory = guardArgs(
   },
 );
 
+/** Someone else's live story came up on screen: note it, the first time only. */
+export const recordStoryView = guardArgs(
+  "member",
+  z.object({ id: z.string().min(1) }),
+  async ({ id }): Promise<ActionResult> => {
+    const user = await requireUser();
+    const story = await prisma.story.findUnique({
+      where: { id },
+      select: { userId: true, expiresAt: true },
+    });
+    if (story && story.userId !== user.id && story.expiresAt > new Date())
+      await prisma.storyView.createMany({
+        data: [{ storyId: id, userId: user.id }],
+        skipDuplicates: true,
+      });
+    return { ok: true };
+  },
+);
+
 /** Report someone else's story: organisers see it flagged, and can remove it. */
 export const reportStory = guardArgs(
   "member",

@@ -87,6 +87,7 @@ model User {
   pushSubscriptions       PushSubscription[]
   stories                 Story[]
   storyReports            StoryReport[]
+  storyViews              StoryView[]
 
   @@index([createdAt])
 }
@@ -657,6 +658,7 @@ model Story {
   expiresAt DateTime
   user      User          @relation(fields: [userId], references: [id], onDelete: Cascade)
   reports   StoryReport[]
+  views     StoryView[]
 
   @@index([expiresAt])
   @@index([userId])
@@ -672,4 +674,18 @@ model StoryReport {
   user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([storyId, userId])
+}
+
+/// Who has viewed a story (first time only). Only the person who posted the
+/// story can see this list; it goes when the story does.
+model StoryView {
+  id       String   @id @default(cuid())
+  storyId  String
+  userId   String
+  viewedAt DateTime @default(now())
+  story    Story    @relation(fields: [storyId], references: [id], onDelete: Cascade)
+  user     User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([storyId, userId])
+  @@index([userId])
 }

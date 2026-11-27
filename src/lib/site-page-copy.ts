@@ -13,6 +13,7 @@ import { DEFAULT_FAQS, DEFAULT_TESTIMONIALS } from "@/lib/site-defaults";
 import { puckBlock, puckPage, type PuckBlock, type PuckData } from "./site-page-designs";
 
 const LEGAL_UPDATED = "28 August 2026";
+const PRIVACY_UPDATED = "27 November 2026";
 
 export const HOME_HOW_IT_WORKS_STEPS = [
   { title: "Create an account", sub: "Email or Google, one minute" },
@@ -285,6 +286,7 @@ export const PRIVACY_SECTIONS: { title: string; body: string }[] = [
       "Walk records: which walks you are listed on, when you clock in, and if you clock out.",
       "Optional health notes at clock-in: only if you choose to provide them, so a walk leader can help if you need it. You must tick a consent box before this is saved.",
       "Emergency contact: a name and phone number you can add when you clock in, so an organiser can call someone if you need help. An organiser can choose to make this required. It is saved on your account until you change it or your account is removed.",
+      "Stories: photos you post show to signed-in members for 24 hours. If you view someone’s story, they can see your name, photo and when you viewed it. Organisers can remove stories and see reports about them.",
     ]),
   },
   {
@@ -429,6 +431,7 @@ export function seedPrivacyDesign(): PuckData {
     current: "/privacy-policy",
     closing: "By using Bury Steps, you agree to this Privacy Policy.",
     sections: PRIVACY_SECTIONS,
+    updated: PRIVACY_UPDATED,
   });
 }
 

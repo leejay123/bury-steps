@@ -16,7 +16,7 @@ const SWIPE_PERSON_PX = 50;
 /** A press shorter than this (that barely moved) is a tap; longer is a hold. */
 const TAP_MS = 250;
 
-function initials(name: string) {
+export function initials(name: string) {
   return (
     name
       .split(/\s+/)
@@ -27,7 +27,7 @@ function initials(name: string) {
   );
 }
 
-function ago(iso: string) {
+export function ago(iso: string) {
   const minutes = Math.max(0, Math.round((Date.now() - Date.parse(iso)) / 60_000));
   if (minutes < 1) return "now";
   if (minutes < 60) return `${minutes}m`;
@@ -47,6 +47,9 @@ export function StoryViewer({
   paused = false,
   onClose,
   onChange,
+  onShown,
+  overlay,
+  onOverlayClose,
   children,
 }: {
   people: StoryFeedPerson[];
@@ -55,7 +58,12 @@ export function StoryViewer({
   paused?: boolean;
   onClose: () => void;
   onChange: (position: StoryPosition) => void;
-  /** Extra buttons along the bottom (report, delete). */
+  /** A story's photo has actually appeared (not just been asked for). */
+  onShown: (storyId: string) => void;
+  /** A panel over the story, e.g. who viewed it. Taps and swipes stay in it. */
+  overlay?: React.ReactNode;
+  onOverlayClose: () => void;
+  /** Along the bottom: report, delete, who viewed it. */
   children?: React.ReactNode;
 }) {
   const [pos, setPos] = useState(start);
@@ -117,13 +125,15 @@ export function StoryViewer({
 
   useEffect(() => {
     const onKey = (event: KeyboardEvent) => {
-      if (event.key === "Escape") onClose();
+      if (overlay) {
+        if (event.key === "Escape") onOverlayClose();
+      } else if (event.key === "Escape") onClose();
       else if (event.key === "ArrowRight") next();
       else if (event.key === "ArrowLeft") previous();
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, [onClose, next, previous]);
+  }, [onClose, next, previous, overlay, onOverlayClose]);
 
   if (!person || !story) return null;
 
@@ -213,10 +223,15 @@ export function StoryViewer({
           draggable={false}
           key={story.id}
           onError={() => setLoadedId(story.id)}
-          onLoad={() => setLoadedId(story.id)}
+          onLoad={() => {
+            setLoadedId(story.id);
+            onShown(story.id);
+          }}
           ref={(img) => {
-            if (img?.complete && img.naturalWidth > 0 && loadedId !== story.id)
+            if (img?.complete && img.naturalWidth > 0 && loadedId !== story.id) {
               setLoadedId(story.id);
+              onShown(story.id);
+            }
           }}
           src={story.src}
         />
@@ -280,11 +295,12 @@ export function StoryViewer({
         )}
 
         {children ? (
-          <div className="absolute inset-x-0 bottom-[max(env(safe-area-inset-bottom),1.5rem)] flex justify-center gap-2">
+          <div className="absolute inset-x-0 bottom-[max(env(safe-area-inset-bottom),1.5rem)] flex flex-col items-center gap-2 px-3">
             {children}
           </div>
         ) : null}
       </div>
+      {overlay}
     </div>,
     document.body,
   );

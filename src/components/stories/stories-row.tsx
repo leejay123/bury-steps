@@ -15,7 +15,8 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { cn } from "@/lib/utils";
 import { Skeleton } from "@/components/ui/skeleton";
 import { StoryViewer, type StoryPosition } from "@/components/stories/story-viewer";
-import { deleteStory, postStory, reportStory } from "@/server/actions/stories";
+import { useStoryViewers, ViewedByButton, ViewedByPanel } from "@/components/stories/story-viewed-by";
+import { deleteStory, postStory, recordStoryView, reportStory } from "@/server/actions/stories";
 import type { StoryFeed } from "@/app/api/stories/route";
 
 const SEEN_KEY = "bs-seen-stories";
@@ -138,6 +139,10 @@ export function StoriesRow() {
     story: 0,
   });
   const [confirmDelete, setConfirmDelete] = useState(false);
+  const [viewersOpen, setViewersOpen] = useState(false);
+  const closeViewers = useCallback(() => setViewersOpen(false), []);
+  // Views already sent from this screen, so going back doesn't send them again.
+  const recorded = useRef(new Set<string>());
   const [uploading, startUpload] = useTransition();
   const [busy, startBusy] = useTransition();
   const fileRef = useRef<HTMLInputElement>(null);
@@ -178,6 +183,7 @@ export function StoriesRow() {
     (at: StoryPosition) => {
       setCurrent(at);
       setConfirmDelete(false);
+      setViewersOpen(false);
       markSeen(people[at.user]?.stories[at.story]?.id);
     },
     [people, markSeen],
@@ -195,6 +201,26 @@ export function StoriesRow() {
       saveCount((canAdd ? 1 : 0) + feed.people.length);
     }
   }, [feed, off]);
+
+  const onStoryShown = useCallback(
+    (id: string) => {
+      const owner = people.find((person) => person.stories.some((story) => story.id === id));
+      if (!owner || owner.isMe || recorded.current.has(id)) return;
+      recorded.current.add(id);
+      // If it doesn't get through, the next time they open it tries again.
+      recordStoryView({ id }).then(
+        (result) => {
+          if (!result.ok) recorded.current.delete(id);
+        },
+        () => recorded.current.delete(id),
+      );
+    },
+    [people],
+  );
+
+  const onScreen = open ? people[current.user] : undefined;
+  const myShownId = onScreen?.isMe ? onScreen.stories[current.story]?.id : undefined;
+  const viewers = useStoryViewers(myShownId, viewersOpen);
 
   if (off) return null;
   // Grey circles while it loads, as many as there were last time, so the
@@ -236,6 +262,7 @@ export function StoriesRow() {
     setCurrent({ user: index, story });
     setOpen({ user: index, story });
     setConfirmDelete(false);
+    setViewersOpen(false);
     markSeen(people[index].stories[story]?.id);
   }
 
@@ -372,37 +399,54 @@ export function StoriesRow() {
         <StoryViewer
           onChange={onStoryChange}
           onClose={() => setOpen(null)}
-          paused={confirmDelete || busy}
+          onOverlayClose={closeViewers}
+          onShown={onStoryShown}
+          overlay={
+            viewersOpen && myShownId ? (
+              <ViewedByPanel onClose={closeViewers} viewers={viewers} />
+            ) : null
+          }
+          paused={confirmDelete || busy || viewersOpen}
           people={people}
           start={open}
         >
           {shown && (shown.canDelete || shown.canReport) ? (
             <>
-              {shown.reports > 0 ? (
-                <span className="rounded-full bg-black/60 px-3 py-1.5 text-xs text-white">
-                  Reported by {shown.reports}
-                </span>
-              ) : null}
+              <div className="flex flex-wrap justify-center gap-2">
+                {myShownId ? (
+                  <ViewedByButton onClick={() => setViewersOpen(true)} viewers={viewers} />
+                ) : null}
+                {shown.reports > 0 ? (
+                  <span className="rounded-full bg-black/60 px-3 py-1.5 text-xs text-white">
+                    Reported by {shown.reports}
+                  </span>
+                ) : null}
+                {shown.canReport ? (
+                  <button
+                    className="flex cursor-pointer items-center gap-1.5 rounded-full bg-black/60 px-3 py-1.5 text-xs text-white"
+                    disabled={busy}
+                    onClick={onReport}
+                    type="button"
+                  >
+                    <Flag className="size-3.5" /> Report
+                  </button>
+                ) : null}
+                {shown.canDelete ? (
+                  <button
+                    className="flex cursor-pointer items-center gap-1.5 rounded-full bg-black/60 px-3 py-1.5 text-xs text-white"
+                    disabled={busy}
+                    onClick={onDelete}
+                    type="button"
+                  >
+                    <Trash2 className="size-3.5" />{" "}
+                    {confirmDelete ? "Tap again to delete" : "Delete"}
+                  </button>
+                ) : null}
+              </div>
               {shown.canReport ? (
-                <button
-                  className="flex cursor-pointer items-center gap-1.5 rounded-full bg-black/60 px-3 py-1.5 text-xs text-white"
-                  disabled={busy}
-                  onClick={onReport}
-                  type="button"
-                >
-                  <Flag className="size-3.5" /> Report
-                </button>
-              ) : null}
-              {shown.canDelete ? (
-                <button
-                  className="flex cursor-pointer items-center gap-1.5 rounded-full bg-black/60 px-3 py-1.5 text-xs text-white"
-                  disabled={busy}
-                  onClick={onDelete}
-                  type="button"
-                >
-                  <Trash2 className="size-3.5" />{" "}
-                  {confirmDelete ? "Tap again to delete" : "Delete"}
-                </button>
+                <p className="rounded-full bg-black/60 px-3 py-1 text-center text-xs text-white/80">
+                  They can see you viewed this.
+                </p>
               ) : null}
             </>
           ) : null}

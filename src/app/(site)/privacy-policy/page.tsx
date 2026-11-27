@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { LEGAL_LAST_UPDATED, LegalPage } from "@/components/legal-page";
+import { PRIVACY_LAST_UPDATED, LegalPage } from "@/components/legal-page";
 import { DesignedSitePage } from "@/components/site-page-designer/designed-page";
 
 export const metadata: Metadata = {
@@ -11,7 +11,7 @@ export default function PrivacyPolicyPage() {
   return (
     <DesignedSitePage page="privacy">
     <LegalPage
-      description={`How Bury Steps uses personal information. Last updated ${LEGAL_LAST_UPDATED}.`}
+      description={`How Bury Steps uses personal information. Last updated ${PRIVACY_LAST_UPDATED}.`}
       sections={[
         {
           id: "about",
@@ -64,6 +64,11 @@ export default function PrivacyPolicyPage() {
                 organiser can call someone if you need help. An organiser can choose to make this
                 required. It is saved on your account until you change it or your account is
                 removed.
+              </li>
+              <li>
+                Stories: photos you post show to signed-in members for 24 hours. If you view
+                someone’s story, they can see your name, photo and when you viewed it. Organisers
+                can remove stories and see reports about them.
               </li>
             </ul>
           ),
